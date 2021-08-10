@@ -24,8 +24,6 @@ class DPendulum:
     def nqv(self): return [self.nq,self.nv]
     @property
     def nx(self): return self.nq*self.nv
-#    @property
-#    def nu(self): return self.nu
     @property
     def goal(self): return self.x2i(self.c2d([0.,0.]))
     
