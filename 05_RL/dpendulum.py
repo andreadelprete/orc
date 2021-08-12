@@ -3,11 +3,21 @@ import numpy as np
 from numpy import pi
 import time
 
+def plot_V_table(env, V):
+    import matplotlib.pyplot as plt
+    Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
+                        [env.d2cv(i) for i in range(env.nv)])
+    plt.pcolormesh(Q, DQ, V.reshape((env.nv,env.nq)), cmap=plt.cm.get_cmap('Blues'))
+    plt.colorbar()
+    plt.title('V table')
+    plt.xlabel("q")
+    plt.ylabel("dq")
+    plt.show()
+    
 # --- Discretized PENDULUM
-
 class DPendulum:
-    def __init__(self, nq=51, nv=21, nu=11, vMax=5, uMax=5, dt=0.2, ndt=1):
-        self.pendulum = Pendulum(1)
+    def __init__(self, nq=51, nv=21, nu=11, vMax=5, uMax=5, dt=0.2, ndt=1, noise_stddev=0):
+        self.pendulum = Pendulum(1,noise_stddev)
         self.pendulum.DT  = dt
         self.pendulum.NDT = ndt
         self.nq = nq        # Discretization steps for position

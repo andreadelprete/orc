@@ -21,17 +21,13 @@ VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
 POLICY_THR        = 1e-4    # convergence threshold for policy improvement
 NPRINT            = 1
 DISCOUNT        = 0.9          # Discount factor 
-#nq=51, nv=21, nu=11
+
 nq=51
 nv=21
 nu=11
 
 ### --- Environment
 env = DPendulum(nq, nv, nu)
-NX  = env.nx                     # Number of (discrete) states
-NQ, NV = env.nq, env.nv
-NU  = env.nu                     # Number of (discrete) controls
-
 V  = np.zeros(env.nx)           # Value function initialized to 0
 pi = env.c2du(0.0)*np.ones(env.nx, np.int)   # policy
 

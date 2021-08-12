@@ -51,13 +51,14 @@ class Pendulum:
     See tp1.py for an example of use.
     '''
 
-    def __init__(self,nbJoint=1):
+    def __init__(self,nbJoint=1, noise_stddev=0.0):
         '''Create a Pinocchio model of a N-pendulum, with N the argument <nbJoint>.'''
         self.viewer     = Display()
         self.visuals    = []
         self.model      = pin.Model()
         self.createPendulum(nbJoint)
         self.data       = self.model.createData()
+        self.noise_stddev = noise_stddev
 
         self.q0         = zero(self.model.nq)
 
@@ -165,7 +166,7 @@ class Pendulum:
             b   = self.data.nle
             #tau = u-self.Kf*v
             a   = inv(M)*(u-self.Kf*v-b)
-            a = a.reshape(self.nv)
+            a = a.reshape(self.nv) + np.random.randn(self.nv)*self.noise_stddev
             self.a = a
 
             q    += (v+0.5*DT*a)*DT

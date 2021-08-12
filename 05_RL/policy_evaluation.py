@@ -3,7 +3,7 @@ Example of policy evaluation with a simple discretized 1-DoF pendulum.
 '''
 
 import numpy as np
-from dpendulum import DPendulum
+from dpendulum import DPendulum, plot_V_table
 import matplotlib.pyplot as plt
 import signal
 import time
@@ -32,17 +32,6 @@ def render_policy(env, pi, x0=None, T=30):
 #              "dq=%.3f"%dq, "ddq=%.3f"%env.pendulum.a[0])
 #        if l!=0: print('Cost not zero!');
         x = x_next
-        
-
-def plot_V_table(env, V):
-    Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
-                        [env.d2cv(i) for i in range(env.nv)])
-    plt.pcolormesh(Q, DQ, V.reshape((env.nv,env.nq)), cmap=plt.cm.get_cmap('Blues'))
-    plt.colorbar()
-    plt.title('V table')
-    plt.xlabel("q")
-    plt.ylabel("dq")
-    plt.show()
 
 def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000):
     for k in range(1, maxIters):
@@ -66,6 +55,7 @@ def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000)
             print('Iter #%d done' % (k))
             print("|V - V_old|=%.5f"%(V_err))
             if(plot): plot_V_table(env, V)
+    print("Policy eval did NOT converge in %d iters. Error"%k, V_err)
     return V
 
 if __name__=="__main__":
@@ -81,10 +71,10 @@ if __name__=="__main__":
     DISCOUNT          = 0.9          # Discount factor 
     
     ### --- Environment
-    env = DPendulum()
-    NX  = env.nx                     # Number of (discrete) states
-    NQ, NV = env.nq, env.nv
-    NU  = env.nu                     # Number of (discrete) controls
+    nq=21
+    nv=11
+    nu=11
+    env = DPendulum(nq, nv, nu)
     kd = 1.0/env.dt
     kp = kd**2 / 2
     V     = np.zeros([env.nx])       # V-table initialized to 0
