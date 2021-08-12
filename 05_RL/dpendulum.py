@@ -14,6 +14,17 @@ def plot_V_table(env, V):
     plt.ylabel("dq")
     plt.show()
     
+def plot_policy(env, pi):
+    import matplotlib.pyplot as plt
+    Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
+                        [env.d2cv(i) for i in range(env.nv)])
+    plt.pcolormesh(Q, DQ, pi.reshape((env.nv,env.nq)), cmap=plt.cm.get_cmap('RdBu'))
+    plt.colorbar()
+    plt.title('Policy')
+    plt.xlabel("q")
+    plt.ylabel("dq")
+    plt.show()
+    
 # --- Discretized PENDULUM
 class DPendulum:
     def __init__(self, nq=51, nv=21, nu=11, vMax=5, uMax=5, dt=0.2, ndt=1, noise_stddev=0):

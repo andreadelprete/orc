@@ -3,9 +3,8 @@ Example of policy iteration with a simple discretized 1-DoF pendulum.
 '''
 
 import numpy as np
-from dpendulum import DPendulum
-from policy_evaluation import policy_eval, plot_V_table, render_policy
-import matplotlib.pyplot as plt
+from dpendulum import DPendulum, plot_policy, plot_V_table
+from policy_evaluation import policy_eval, render_policy
 import signal
 import time
 
@@ -33,16 +32,6 @@ pi = env.c2du(0.0)*np.ones(env.nx, np.int)   # policy
 
 def policy(env, x):
     return pi[x]
-
-def plot_policy(env, pi):
-    Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
-                        [env.d2cv(i) for i in range(env.nv)])
-    plt.pcolormesh(Q, DQ, pi.reshape((env.nv,env.nq)), cmap=plt.cm.get_cmap('RdBu'))
-    plt.colorbar()
-    plt.title('Policy')
-    plt.xlabel("q")
-    plt.ylabel("dq")
-    plt.show()
     
 Q  = np.zeros(env.nu)           # temporary array to store value of different controls
 for k in range(MAX_IMPR_ITERS):
