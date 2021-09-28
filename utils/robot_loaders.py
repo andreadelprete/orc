@@ -32,8 +32,8 @@ def loadUR(robotNum=5, limited=False, gripper=False, URDF_FILENAME='', path=''):
         return robot
     except Exception as e:
         # if that did not work => use the one of example_robot_data
-        from example_robot_data.robots_loader import loadUR
-        return loadUR(robotNum, limited, gripper)
+        from example_robot_data.robots_loader import loadUR, load
+        return load('ur5')
         
 def loadUR_urdf(robot=5, limited=False, gripper=False):
     assert (not (gripper and (robot == 10 or limited)))
