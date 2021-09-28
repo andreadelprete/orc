@@ -8,6 +8,7 @@ from orc.utils.robot_loaders import loadUR
 from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 import ex_1_conf as conf
+import solutions.ex_1_solution as solution
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" Cartesian Space Control - Manipulator ".center(conf.LINE_WIDTH, '#'))
@@ -80,26 +81,8 @@ for i in range(0, N):
     
     # implement your control law here
     ddx_des[:,i] = ddx_ref[:,i] + kp*(x_ref[:,i] - x[:,i]) + kd*(dx_ref[:,i] - dx[:,i])
-    Minv = inv(M)
-    J_Minv = J @ Minv
-    Lambda = inv(J_Minv @ J.T)
-#    if(not np.isfinite(Lambda).all()):
-#    print('Eigenvalues J*Minv*J.T', np.linalg.eigvals(J_Minv @ J.T))
-    mu = Lambda @ (J_Minv @ h - dJdq)
-    f = Lambda @ ddx_des[:,i] + mu
-    tau[:,i] = J.T @ f
-    # secondary task
-    J_T_pinv = Lambda @ J_Minv
-    NJ = np.eye(robot.nv) - J.T @ J_T_pinv
-    tau_0 = M @ (conf.kp_j * (conf.q0 - q[:,i]) - conf.kd_j*v[:,i]) + h
-    tau[:,i] += NJ @ tau_0
-    
-#    tau[:,i] = h + J.T @ Lambda @ ddx_des[:,i] + NJ @ tau_0
-    
-#    print("tau", tau[:,i].T)
-#    print("JT*f", (J.T @ f).T)
-#    print("dJdq", (J.T @ Lambda @ dJdq).T)
-    
+    tau[:,i] = solution.operational_motion_control(q[:,i], v[:,i], ddx_des[:,i], h, M, J, dJdq, conf)
+        
     # send joint torques to simulator
     simu.simulate(tau[:,i], conf.dt, conf.ndt)
     tau_c[:,i] = simu.tau_c

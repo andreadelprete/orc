@@ -8,6 +8,7 @@ from orc.utils.robot_loaders import loadUR
 from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 import ex_0_conf as conf
+import solutions.ex_0_solution as solution
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" Joint Space Control - Manipulator ".center(conf.LINE_WIDTH, '#'))
@@ -60,11 +61,7 @@ for i in range(0, N):
     g = robot.gravity(q[:,i])
     
     # implement your control law here
-    tau[:,i] = h + M @ (dv_ref[:,i] + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i]))
-#    tau[:,i] = h + M @ (dv_ref[:,i]) + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
-#    tau[:,i] = h + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
-#    tau[:,i] = g + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
-#    tau[:,i] = kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
+    tau[:,i] = solution.joint_motion_control(q[:,i], v[:,i], q_ref[:,i],  v_ref[:,i], dv_ref[:,i], kp, kd, h, M)
     
     # send joint torques to simulator
     simu.simulate(tau[:,i], dt, conf.ndt)
