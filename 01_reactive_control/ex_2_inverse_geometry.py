@@ -2,12 +2,13 @@ import numpy as np
 from numpy import nan
 from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
-import arc.utils.plot_utils as plut
+import orc.utils.plot_utils as plut
 import time
-from arc.utils.robot_loaders import loadUR
-from arc.utils.robot_wrapper import RobotWrapper
-from arc.utils.robot_simulator import RobotSimulator
-import ex_1_conf as conf
+from orc.utils.robot_loaders import loadUR
+from orc.utils.robot_wrapper import RobotWrapper
+from orc.utils.robot_simulator import RobotSimulator
+import ex_2_conf as conf
+import solutions.ex_2_solution as solution
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" Inverse Geometry- Manipulator ".center(conf.LINE_WIDTH, '#'))
@@ -50,7 +51,6 @@ for i in range(N):
     x[:,i] = H.translation  # take the 3d position of the end-effector
     J = J6[:3,:]            # take first 3 rows of J6
     
-    # implement your inverse geometry here
     ''' The problem to solve is:
             minimize g(q) 
         where:
@@ -70,58 +70,20 @@ for i in range(N):
             \Delta q = -H^{-1} b = -(J^T J)^{-1} J^T e = -J^{+} e
         where the overscript + indicates the Moore-Penrose pseudo-inverse.
     '''
-    e = x_des - x[:,i]
-    cost[i] = norm(e)
+    result = solution.inverse_geometry_step(q[:,i], x[:,i], x_des, J, regu, i, N, robot, frame_id, conf)
     
-    # gradient descent
-#    q[:,i+1] = q[:,i] + alpha*J.T.dot(e)
-    
-    # Newton method
-    B = J.T.dot(J) + regu*np.eye(robot.nv) # approximate regularized Hessian
-    gradient = J.T.dot(e)   # gradient
-    delta_q = inv(B).dot(gradient)
-    q[:,i+1] = q[:,i] + delta_q
-    
-    # if gradient is null you are done
-    grad_norm[i] = norm(gradient)
-    if(grad_norm[i]<conf.gradient_threshold):
-        print("Terminate because gradient is (almost) zero:", grad_norm[i])
-        print("Problem solved after %d iterations with error %f"%(i, norm(e)))
+    if(result is None):
         break
-    
-#    if(norm(e)<conf.absolute_threshold):
-#        print("Problem solved after %d iterations with error %f"%(i, norm(e)))
-#        break
-    
-    if(not conf.line_search):
-        q[:,i+1] = q[:,i] + delta_q
     else:
-        # back-tracking line search
-        alpha = 1.0
-        iter_line_search = 0
-        while True:
-            q[:,i+1] = q[:,i] + alpha*delta_q
-            robot.computeJointJacobians(q[:,i+1])
-            robot.framesForwardKinematics(q[:,i+1])
-            x_new = robot.framePlacement(q[:,i+1], frame_id).translation
-            cost_new = norm(x_des - x_new)
-            if cost_new < (1.0-alpha*conf.gamma)*cost[i]:
-    #            print("Backtracking line search converged with log(alpha)=%.1f"%np.log10(alpha))
-                break
-            else:
-                alpha *= conf.beta
-                iter_line_search += 1
-                if(iter_line_search==N):
-                    print("Backtracking line search could not converge. log(alpha)=%.1f"%np.log10(alpha))
-                    break
+        q_next, c, g = result
+        q[:,i+1] = q_next
+        cost[i] = c
+        grad_norm[i] = g
     
     # display current configuration in viewer
     if i%conf.DISPLAY_N==0:
         simu.display(q[:,i])
         time.sleep(0.1)
-        
-    if i%conf.PRINT_N == 0:
-        print("Iteration %d, ||x_des-x||=%f, norm(gradient)=%f"%(i, norm(e), grad_norm[i]))
         
     if(iter_line_search==N):
         break
