@@ -2,12 +2,12 @@ import numpy as np
 from numpy import nan
 from numpy.linalg import inv, norm
 import matplotlib.pyplot as plt
-import arc.utils.plot_utils as plut
+import orc.utils.plot_utils as plut
 import time, sys
-from arc.utils.robot_loaders import loadUR
-from arc.utils.robot_wrapper import RobotWrapper
-from arc.utils.robot_simulator import RobotSimulator
-import ex_4_conf as conf
+from orc.utils.robot_loaders import loadUR
+from orc.utils.robot_wrapper import RobotWrapper
+from orc.utils.robot_simulator import RobotSimulator
+import ex_3_conf as conf
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" IC Control - Manipulator ".center(conf.LINE_WIDTH, '#'))

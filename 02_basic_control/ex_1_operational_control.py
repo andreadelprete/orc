@@ -2,12 +2,12 @@ import numpy as np
 from numpy import nan
 from numpy.linalg import inv
 import matplotlib.pyplot as plt
-import arc.utils.plot_utils as plut
+import orc.utils.plot_utils as plut
 import time
-from arc.utils.robot_loaders import loadUR
-from arc.utils.robot_wrapper import RobotWrapper
-from arc.utils.robot_simulator import RobotSimulator
-import ex_2_conf as conf
+from orc.utils.robot_loaders import loadUR
+from orc.utils.robot_wrapper import RobotWrapper
+from orc.utils.robot_simulator import RobotSimulator
+import ex_1_conf as conf
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" Cartesian Space Control - Manipulator ".center(conf.LINE_WIDTH, '#'))
@@ -16,10 +16,11 @@ print("".center(conf.LINE_WIDTH,'#'), '\n')
 PLOT_JOINT_POS = 0
 PLOT_JOINT_VEL = 0
 PLOT_JOINT_ACC = 0
-PLOT_TORQUES = 1
+PLOT_TORQUES = 0
 PLOT_EE_POS = 1
 
 r = loadUR()
+#r = load('ur5')
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
 simu = RobotSimulator(conf, robot)
 
@@ -43,8 +44,8 @@ ddx_ref = np.empty((ndx, N))*nan        # end-effector reference acceleration
 ddx_des = np.empty((ndx, N))*nan        # end-effector desired acceleration
 
 two_pi_f             = 2*np.pi*conf.freq   # frequency (time 2 PI)
-two_pi_f_amp         = np.multiply(two_pi_f, conf.amp)
-two_pi_f_squared_amp = np.multiply(two_pi_f, two_pi_f_amp)
+two_pi_f_amp         = two_pi_f * conf.amp
+two_pi_f_squared_amp = two_pi_f * two_pi_f_amp
 
 t = 0.0
 kp, kd = conf.kp, conf.kd
@@ -74,30 +75,30 @@ for i in range(0, N):
     x[:,i] = H.translation # take the 3d position of the end-effector
     v_frame = robot.frameVelocity(q[:,i], v[:,i], frame_id, False)
     dx[:,i] = v_frame.linear # take linear part of 6d velocity
-#    dx[:,i] = J.dot(v[:,i])
+#    dx[:,i] = J @ v[:,i]
     dJdq = robot.frameAcceleration(q[:,i], v[:,i], None, frame_id, False).linear
     
     # implement your control law here
-    ddx_des[:,i] = ddx_ref[:,i] + kp * (x_ref[:,i] - x[:,i]) + kd*(dx_ref[:,i] - dx[:,i])
+    ddx_des[:,i] = ddx_ref[:,i] + kp*(x_ref[:,i] - x[:,i]) + kd*(dx_ref[:,i] - dx[:,i])
     Minv = inv(M)
-    J_Minv = J.dot(Minv)
-    Lambda = inv(J_Minv.dot(J.T))
+    J_Minv = J @ Minv
+    Lambda = inv(J_Minv @ J.T)
 #    if(not np.isfinite(Lambda).all()):
-#    print('Eigenvalues J*Minv*J.T', np.linalg.eigvals(J_Minv.dot(J.T)))
-    mu = Lambda.dot(J_Minv.dot(h) - dJdq)
-    f = Lambda.dot(ddx_des[:,i]) + mu
-    tau[:,i] = J.T.dot(f)
+#    print('Eigenvalues J*Minv*J.T', np.linalg.eigvals(J_Minv @ J.T))
+    mu = Lambda @ (J_Minv @ h - dJdq)
+    f = Lambda @ ddx_des[:,i] + mu
+    tau[:,i] = J.T @ f
     # secondary task
-    J_T_pinv = Lambda.dot(J_Minv)
-    NJ = np.eye(robot.nv) - J.T.dot(J_T_pinv)
-    tau_0 = M.dot(conf.kp_j * (conf.q0 - q[:,i]) - conf.kd_j*v[:,i]) + h
-    tau[:,i] += NJ.dot(tau_0)
+    J_T_pinv = Lambda @ J_Minv
+    NJ = np.eye(robot.nv) - J.T @ J_T_pinv
+    tau_0 = M @ (conf.kp_j * (conf.q0 - q[:,i]) - conf.kd_j*v[:,i]) + h
+    tau[:,i] += NJ @ tau_0
     
-#    tau[:,i] = h + J.T.dot(Lambda.dot(ddx_des[:,i])) + NJ.dot(tau_0)
+#    tau[:,i] = h + J.T @ Lambda @ ddx_des[:,i] + NJ @ tau_0
     
 #    print("tau", tau[:,i].T)
-#    print("JT*f", J.T.dot(f).T)
-#    print("dJdq",J.T.dot(Lambda.dot(dJdq)).T)
+#    print("JT*f", (J.T @ f).T)
+#    print("dJdq", (J.T @ Lambda @ dJdq).T)
     
     # send joint torques to simulator
     simu.simulate(tau[:,i], conf.dt, conf.ndt)

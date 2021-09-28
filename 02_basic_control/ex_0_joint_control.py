@@ -1,21 +1,22 @@
 import numpy as np
 from numpy import nan
+from numpy.linalg import norm
 import matplotlib.pyplot as plt
-import arc.utils.plot_utils as plut
+import orc.utils.plot_utils as plut
 import time
-from arc.utils.robot_loaders import loadUR
-from arc.utils.robot_wrapper import RobotWrapper
-from arc.utils.robot_simulator import RobotSimulator
+from orc.utils.robot_loaders import loadUR
+from orc.utils.robot_wrapper import RobotWrapper
+from orc.utils.robot_simulator import RobotSimulator
 import ex_0_conf as conf
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" Joint Space Control - Manipulator ".center(conf.LINE_WIDTH, '#'))
 print("".center(conf.LINE_WIDTH,'#'), '\n')
 
-PLOT_JOINT_POS = 1
-PLOT_JOINT_VEL = 1
+PLOT_JOINT_POS = 0
+PLOT_JOINT_VEL = 0
 PLOT_JOINT_ACC = 0
-PLOT_TORQUES = 1
+PLOT_TORQUES = 0
 
 r = loadUR()
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
@@ -24,16 +25,16 @@ simu = RobotSimulator(conf, robot)
 N = int(conf.T_SIMULATION/conf.dt)      # number of time steps
 tau    = np.empty((robot.na, N))*nan    # joint torques
 tau_c  = np.empty((robot.na, N))*nan    # joint Coulomb torques
-q      = np.empty((robot.nq, N+1))*nan  # joint angles
-v      = np.empty((robot.nv, N+1))*nan  # joint velocities
-dv     = np.empty((robot.nv, N+1))*nan  # joint accelerations
+q      = np.empty((robot.nq, N))*nan  # joint angles
+v      = np.empty((robot.nv, N))*nan  # joint velocities
+dv     = np.empty((robot.nv, N))*nan  # joint accelerations
 q_ref  = np.empty((robot.nq, N))*nan
 v_ref  = np.empty((robot.nv, N))*nan
 dv_ref = np.empty((robot.nv, N))*nan
 
 two_pi_f             = 2*np.pi*conf.freq   # frequency (time 2 PI)
-two_pi_f_amp         = np.multiply(two_pi_f, conf.amp)
-two_pi_f_squared_amp = np.multiply(two_pi_f, two_pi_f_amp)
+two_pi_f_amp         = two_pi_f*conf.amp
+two_pi_f_squared_amp = two_pi_f*two_pi_f_amp
 
 t = 0.0
 dt = conf.dt
@@ -59,11 +60,11 @@ for i in range(0, N):
     g = robot.gravity(q[:,i])
     
     # implement your control law here
-    tau[:,i] = h + M.dot(dv_ref[:,i] + kp * (q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i]))
-#    tau[:,i] = h + M.dot(dv_ref[:,i]) + kp * (q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
-#    tau[:,i] = h + kp * (q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
-#    tau[:,i] = g + kp * (q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
-#    tau[:,i] = kp * (q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
+    tau[:,i] = h + M @ (dv_ref[:,i] + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i]))
+#    tau[:,i] = h + M @ (dv_ref[:,i]) + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
+#    tau[:,i] = h + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
+#    tau[:,i] = g + kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
+#    tau[:,i] = kp*(q_ref[:,i] - q[:,i]) + kd*(v_ref[:,i] - v[:,i])
     
     # send joint torques to simulator
     simu.simulate(tau[:,i], dt, conf.ndt)
@@ -76,6 +77,8 @@ for i in range(0, N):
     time_spent = time.time() - time_start
     if(conf.simulate_real_time and time_spent < conf.dt): 
         time.sleep(conf.dt-time_spent)
+
+print("Average tracking error norm:", 1e3*norm(q-q_ref)/N, "mm")
 
 # PLOT STUFF
 time = np.arange(0.0, N*conf.dt, conf.dt)

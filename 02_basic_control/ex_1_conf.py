@@ -13,40 +13,36 @@ np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
-x_des = -np.array([0.7, 0.1, 0.2])  # test 01
-#x_des = -np.array([1.2, 0.0, 0.2]) # test 02/03 hessian_regu=1e-8 ||x_des-x||=0.284725, norm(gradient)=0.016408
-#x_des = -np.array([1.2, 0.0, 0.2]) # test 04    hessian_regu=1e-4 ||x_des-x||=0.284500, norm(gradient)=0.007199
-#x_des = -np.array([1.2, 0.0, 0.2]) # test 05    hessian_regu=1e-3 ||x_des-x||=0.284414, norm(gradient)=0.000328
-#x_des = -np.array([1.2, 0.0, 0.2]) # test 06    hessian_regu=1e-1 Iter 76, ||x_des-x||=0.284414, norm(gradient)=0.000001
-#x_des = -np.array([1.2, 0.0, 0.2]) # test 07    hessian_regu=1e0  ||x_des-x||=0.288447, norm(gradient)=0.006598
-#x_des = -np.array([0.7, 0.1, 0.2])  # test 08    hessian_regu=1e-1 
-frame_name = 'tool0'
-MAX_ITER = 100
-absolute_threshold = 1e-4    # absolute tolerance on position error
-gradient_threshold = 1e-6   # absolute tolerance on gradient's norm
-hessian_regu = 1e-1         # Hessian regularization
-beta = 0.1                  # backtracking line search parameter
-gamma = 0.0                # line search convergence parameter
-line_search = 1         # flag to enable/disable line search
+T_SIMULATION = 2             # simulation time
+dt = 0.001                   # controller time step
+ndt = 10                      # number of integration steps for each control loop
+
+kp = 10                 # proportional gain of end effector task
+kd = 2*sqrt(kp)         # derivative gain of end effector task
+kp_j = 1                 # proportional gain of end effector task
+kd_j = 2*sqrt(kp)         # derivative gain of end effector task
+frame_name = 'tool0'    # name of the frame to control (end-effector)
+
+# PARAMETERS OF REFERENCE SINUSOIDAL TRAJECTORY
+x0          = np.array([0.6, 0.2, 0.4])         # offset
+amp         = np.array([0.1, 0.1, 0.0])           # amplitude
+phi         = np.array([0.0, 0.5*np.pi, 0.0])     # phase
+freq        = np.array([0.5, 0.5, 0.3])           # frequency (time 2 PI)
+
+amp         = np.array([0.1, 0.1, 0.0])           # amplitude
+freq        = np.array([1.0, 1.0, 0.3])           # frequency (time 2 PI)
+
+simulate_coulomb_friction = 0    # flag specifying whether coulomb friction is simulated
+simulation_type = 'timestepping' # either 'timestepping' or 'euler'
+tau_coulomb_max = 5*np.ones(6)   # expressed as percentage of torque max
 
 randomize_robot_model = 0
 model_variation = 30.0
-simulate_coulomb_friction = 1
-simulation_type = 'timestepping' #either 'timestepping' or 'euler'
-tau_coulomb_max = 10*np.ones(6) # expressed as percentage of torque max
 
 use_viewer = True
+simulate_real_time = 1          # flag specifying whether simulation should be real time or as fast as possible
 show_floor = False
-PRINT_N = 1                   # print every PRINT_N time steps
-DISPLAY_N = 1              # update robot configuration in viwewer every DISPLAY_N time steps
-DISPLAY_T = 0.1
-CAMERA_TRANSFORM = [2.582354784011841, 1.620774507522583, 1.0674564838409424, 0.2770655155181885, 0.5401807427406311, 0.6969326734542847, 0.3817386031150818]
-REF_SPHERE_RADIUS = 0.05
-REF_SPHERE_COLOR = (1., 0., 0., 1.)
-
-#ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
-#path      = os.environ.get('UR5_MODEL_DIR', ERROR_MSG)
-#urdf      = path + "/ur_description/urdf/ur5_robot.urdf";
-#srdf      = path + '/ur_description/srdf/ur5_robot.srdf'
-#frame_name = 'ee_link'
-#frame_name = 'wrist_3_link'
+PRINT_T = 1                   # print some info every PRINT_T seconds
+DISPLAY_T = 0.02              # update robot configuration in viwewer every DISPLAY_T seconds
+CAMERA_TRANSFORM = [2.582354784011841, 1.620774507522583, 1.0674564838409424, 
+                    0.2770655155181885, 0.5401807427406311, 0.6969326734542847, 0.3817386031150818]
