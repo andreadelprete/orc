@@ -21,12 +21,12 @@ x_des = -np.array([0.7, 0.1, 0.2])  # test 01
 #x_des = -np.array([1.2, 0.0, 0.2]) # test 07    hessian_regu=1e0  ||x_des-x||=0.288447, norm(gradient)=0.006598
 #x_des = -np.array([0.7, 0.1, 0.2])  # test 08    hessian_regu=1e-1 
 frame_name = 'tool0'
-MAX_ITER = 100
+MAX_ITER = 300
 absolute_threshold = 1e-4    # absolute tolerance on position error
 gradient_threshold = 1e-6   # absolute tolerance on gradient's norm
 hessian_regu = 1e-1         # Hessian regularization
 beta = 0.1                  # backtracking line search parameter
-gamma = 0.0                # line search convergence parameter
+gamma = 0                # line search convergence parameter
 line_search = 1         # flag to enable/disable line search
 
 randomize_robot_model = 0
@@ -43,10 +43,3 @@ DISPLAY_T = 0.1
 CAMERA_TRANSFORM = [2.582354784011841, 1.620774507522583, 1.0674564838409424, 0.2770655155181885, 0.5401807427406311, 0.6969326734542847, 0.3817386031150818]
 REF_SPHERE_RADIUS = 0.05
 REF_SPHERE_COLOR = (1., 0., 0., 1.)
-
-#ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
-#path      = os.environ.get('UR5_MODEL_DIR', ERROR_MSG)
-#urdf      = path + "/ur_description/urdf/ur5_robot.urdf";
-#srdf      = path + '/ur_description/srdf/ur5_robot.srdf'
-#frame_name = 'ee_link'
-#frame_name = 'wrist_3_link'
