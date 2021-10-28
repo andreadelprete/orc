@@ -21,7 +21,6 @@ PLOT_TORQUES = 0
 PLOT_EE_POS = 1
 
 r = loadUR()
-#r = load('ur5')
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
 simu = RobotSimulator(conf, robot)
 
