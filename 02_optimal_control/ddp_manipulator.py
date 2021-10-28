@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jul 14 15:52:58 2016
 
 @author: adelpret
 """
@@ -11,8 +10,8 @@ from ddp_linear import DDPSolverLinearDyn
 import pinocchio as pin
     
 class DDPSolverManipulator(DDPSolverLinearDyn):
-    ''' The linear system dynamics are defined by:
-            x_{t+1} = A x_t + B u_t
+    ''' 
+        Derived class of DDPSolverLinearDyn implementing the multi-body dynamics of a manipulator.
         The task is defined by a quadratic cost: sum_{i=0}^N 0.5 x' H_{xx,i} x + h_{x,i} x + h_{s,i}
         plus a control regularization: sum_{i=0}^{N-1} lmbda ||u_i||.
     '''
@@ -29,7 +28,7 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
         self.dt = dt
         self.simu = simu
         
-        nq, nv = self.robot.nq, self.robot.nv
+        nv = self.robot.nv # number of joints
         self.Fx = np.zeros((self.nx, self.nx))
         self.Fx[:nv, nv:] = np.identity(nv)
         self.Fu = np.zeros((self.nx, self.nu))
@@ -49,6 +48,7 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
         return x + self.dt * self.dx
            
     def f_x_fin_diff(self, x, u, delta=1e-8):
+        ''' Partial derivatives of system dynamics w.r.t. u computed with finite differences'''
         f0 = self.f(x, u)
         Fx = np.zeros((self.nx, self.nx))
         for i in range(self.nx):
@@ -59,7 +59,7 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
         return Fx
         
     def f_u_fin_diff(self, x, u, delta=1e-8):
-        ''' Partial derivatives of system dynamics w.r.t. u '''
+        ''' Partial derivatives of system dynamics w.r.t. u computed with finite differences'''
         f0 = self.f(x, u)
         Fu = np.zeros((self.nx, self.nu))
         for i in range(self.nu):
@@ -134,11 +134,11 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
     
 if __name__=='__main__':
     import matplotlib.pyplot as plt
-    import arc.utils.plot_utils as plut
+    import orc.utils.plot_utils as plut
     import time
-    from arc.utils.robot_loaders import loadUR
-    from arc.utils.robot_wrapper import RobotWrapper
-    from arc.utils.robot_simulator import RobotSimulator
+    from orc.utils.robot_loaders import loadUR
+    from orc.utils.robot_wrapper import RobotWrapper
+    from orc.utils.robot_simulator import RobotSimulator
     import ddp_manipulator_conf as conf
     np.set_printoptions(precision=3, suppress=True);
     

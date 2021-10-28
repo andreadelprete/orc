@@ -44,41 +44,41 @@ class DDPSolver:
         
     ''' Simulate system forward with computed control law '''
     def simulate_system(self, x0, U_bar, KK, X_bar):
-        n = x0.shape[0];
-        m = U_bar.shape[1];
-        N = U_bar.shape[0];
-        X = np.zeros((N+1, n));
-        U = np.zeros((N, m));
-        X[0,:] = x0;
+        n = x0.shape[0]
+        m = U_bar.shape[1]
+        N = U_bar.shape[0]
+        X = np.zeros((N+1, n))
+        U = np.zeros((N, m))
+        X[0,:] = x0
         for i in range(N):
-            U[i,:] = U_bar[i,:] - np.dot(KK[i,:,:], (X[i,:]-X_bar[i,:]));
-            X[i+1,:] = self.f(X[i,:], U[i,:]);
-        return (X,U);
+            U[i,:] = U_bar[i,:] - KK[i,:,:] @ (X[i,:]-X_bar[i,:])
+            X[i+1,:] = self.f(X[i,:], U[i,:])
+        return (X,U)
         
         
     def backward_pass(self, X_bar, U_bar, mu):
         n = X_bar.shape[1]
         m = U_bar.shape[1]
         N = U_bar.shape[0]
-        rx = list(range(0,n));
-        ru = list(range(0,m));
+        rx = list(range(0,n))
+        ru = list(range(0,m))
         
         # the task is defined by a quadratic cost: 
         # sum_{i=0}^N 0.5 x' l_{xx,i} x + l_{x,i} x +  0.5 u' l_{uu,i} u + l_{u,i} u + x' l_{xu,i} u
         
         # the Value function is defined by a quadratic function: 0.5 x' V_{xx,i} x + V_{x,i} x
-        V_xx = np.zeros((N+1, n, n));
-        V_x  = np.zeros((N+1, n));
+        V_xx = np.zeros((N+1, n, n))
+        V_x  = np.zeros((N+1, n))
         
-        # dynamics derivatives
-        A = np.zeros((N, n, n));
-        B = np.zeros((N, n, m));
+        # dynamics derivatives w.r.t. x and u
+        A = np.zeros((N, n, n))
+        B = np.zeros((N, n, m))
         
         # initialize value function
         self.l_x[-1,:]  = self.cost_final_x(X_bar[-1,:])
         self.l_xx[-1,:,:] = self.cost_final_xx(X_bar[-1,:])
-        V_xx[N,:,:] = self.l_xx[N,:,:];
-        V_x[N,:]    = self.l_x[N,:];
+        V_xx[N,:,:] = self.l_xx[N,:,:]
+        V_x[N,:]    = self.l_x[N,:]
         
         for i in range(N-1, -1, -1):
             if(self.DEBUG):
@@ -118,7 +118,7 @@ class DDPSolver:
             V_x[i,:]    = self.Q_x[i,:]  - self.Q_xu[i,:,:] @ Qbar_uu_pinv @ self.Q_u[i,:]
             V_xx[i,:]   = self.Q_xx[i,:] - self.Q_xu[i,:,:] @ Qbar_uu_pinv @ self.Q_xu[i,:,:].T
                     
-        return (self.kk, self.KK);
+        return (self.kk, self.KK)
         
     def update_expected_cost_improvement(self):
         self.d1 = 0.0
@@ -134,29 +134,29 @@ class DDPSolver:
     '''
     def solve(self, x0, U_bar, mu):                    
         # each control law is composed by a feedforward kk and a feedback KK
-        self.N = N = U_bar.shape[0]
-        m = U_bar.shape[1]
-        n = x0.shape[0]
-        self.kk  = np.zeros((N,m));
-        self.KK  = np.zeros((N,m,n));
+        self.N = N = U_bar.shape[0]     # horizon length
+        m = U_bar.shape[1]              # size of u
+        n = x0.shape[0]                 # size of x
+        self.kk  = np.zeros((N,m))      # feedforward control inputs
+        self.KK  = np.zeros((N,m,n))    # feedback gains
                 
-        X_bar = np.zeros((N,n));    # nominal state trajectory
+        X_bar = np.zeros((N,n))    # nominal state trajectory
         
-        # derivatives of the cost function
-        self.l_x = np.zeros((N+1, n));
-        self.l_xx = np.zeros((N+1, n, n));
-        self.l_u = np.zeros((N, m));
-        self.l_uu = np.zeros((N, m, m));
-        self.l_xu = np.zeros((N, n, m));
+        # derivatives of the cost function w.r.t. x and u
+        self.l_x = np.zeros((N+1, n))
+        self.l_xx = np.zeros((N+1, n, n))
+        self.l_u = np.zeros((N, m))
+        self.l_uu = np.zeros((N, m, m))
+        self.l_xu = np.zeros((N, n, m))
         
         # the cost-to-go is defined by a quadratic function: 0.5 x' Q_{xx,i} x + Q_{x,i} x + ...
-        self.Q_xx = np.zeros((N, n, n));
-        self.Q_x  = np.zeros((N, n));
-        self.Q_uu = np.zeros((N, m, m));
-        self.Q_u  = np.zeros((N, m));
-        self.Q_xu = np.zeros((N, n, m));
+        self.Q_xx = np.zeros((N, n, n))
+        self.Q_x  = np.zeros((N, n))
+        self.Q_uu = np.zeros((N, m, m))
+        self.Q_u  = np.zeros((N, m))
+        self.Q_xu = np.zeros((N, n, m))
         
-        converged = False;
+        converged = False
         for j in range(self.max_iter):
             print("\n*** Iter %d" % j)
             
@@ -227,7 +227,7 @@ class DDPSolver:
     
     def print_statistics(self, x0, U_bar, KK, X_bar):
         # simulate system forward with computed control law
-        (X, U) = self.simulate_system( x0, U_bar, KK, X_bar);
+        (X, U) = self.simulate_system( x0, U_bar, KK, X_bar)
         print("\n**************************************** RESULTS ****************************************")
         
         # compute cost of each task
@@ -237,15 +237,15 @@ class DDPSolver:
         
     ''' Discrete-time system dynamics '''
     def f(x, u):
-        return None;
+        return None
            
     ''' Partial derivatives of discrete-time system dynamics w.r.t. x '''
     def f_x(x, u):
-        return None;
+        return None
     
     ''' Partial derivatives of discrete-time system dynamics w.r.t. u '''       
     def f_u(x, u):
-        return None;
+        return None
         
     def cost(self, X, U):
         ''' total cost (running+final) for state trajectory X and control trajectory U '''
