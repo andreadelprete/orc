@@ -17,7 +17,7 @@ dt = 0.01                      # controller time step
 ndt = 10
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ]).T  # initial configuration
 
-kp = 100               # proportional gain of joint posture task
+kp = 50               # proportional gain of joint posture task
 kd = 2*sqrt(kp)        # derivative gain of joint posture task
 
 # PARAMETERS OF REFERENCE SINUSOIDAL TRAJECTORY
@@ -25,15 +25,15 @@ amp                  = np.array([0.0, 0.3, 0.0, 0.0, 0.0, 0.0])           # ampl
 phi                  = np.array([0.0, 0.5*np.pi, 0.0, 0.0, 0.0, 0.0])     # phase
 freq                 = np.array([1.0, 0.5, 0.3, 0.0, 0.0, 0.0])           # frequency (time 2 PI)
 
-simulate_coulomb_friction = 1
+simulate_coulomb_friction = 0
 simulation_type = 'timestepping' #either 'timestepping' or 'euler'
-tau_coulomb_max = 10*np.ones(6) # expressed as percentage of torque max
+tau_coulomb_max = 1.0*np.ones(6) # expressed as percentage of torque max
 
 randomize_robot_model = 0
 model_variation = 30.0
 
-use_viewer = False
-simulate_real_time = False
+use_viewer = True
+simulate_real_time = True
 show_floor = False
 PRINT_T = 1                   # print every PRINT_N time steps
 DISPLAY_T = 0.02              # update robot configuration in viwewer every DISPLAY_N time steps

@@ -14,7 +14,7 @@ print("".center(conf.LINE_WIDTH,'#'))
 print(" Joint Space Control - Manipulator ".center(conf.LINE_WIDTH, '#'))
 print("".center(conf.LINE_WIDTH,'#'), '\n')
 
-PLOT_JOINT_POS = 0
+PLOT_JOINT_POS = 1
 PLOT_JOINT_VEL = 0
 PLOT_JOINT_ACC = 0
 PLOT_TORQUES = 0
@@ -61,11 +61,11 @@ for i in range(0, N):
     g = robot.gravity(q[:,i])
     
     # implement your control law here
-    tau[:,i] = solution.joint_motion_control(q[:,i], v[:,i], q_ref[:,i],  v_ref[:,i], dv_ref[:,i], kp, kd, h, M)
+    tau[:,i] = solution.joint_motion_control(q[:,i], v[:,i], q_ref[:,i], v_ref[:,i], dv_ref[:,i], kp, kd, h, g, M)
     
     # send joint torques to simulator
     simu.simulate(tau[:,i], dt, conf.ndt)
-    tau_c[:,i] = simu.tau_c
+    tau_c[:,i] = simu.tau_c # joint Coulomb friction torque
         
     if i%PRINT_N == 0:
         print("Time %.3f"%(t))
@@ -84,7 +84,7 @@ if(PLOT_JOINT_POS):
     (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)
     ax = ax.reshape(robot.nv)
     for i in range(robot.nv):
-        ax[i].plot(time, q[i,:-1], label='q')
+        ax[i].plot(time, q[i,:], label='q')
         ax[i].plot(time, q_ref[i,:], '--', label='q ref')
         ax[i].set_xlabel('Time [s]')
         ax[i].set_ylabel(r'$q_'+str(i)+'$ [rad]')
@@ -95,7 +95,7 @@ if(PLOT_JOINT_VEL):
     (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)
     ax = ax.reshape(robot.nv)
     for i in range(robot.nv):
-        ax[i].plot(time, v[i,:-1], label='v')
+        ax[i].plot(time, v[i,:], label='v')
         ax[i].plot(time, v_ref[i,:], '--', label='v ref')
         ax[i].set_xlabel('Time [s]')
         ax[i].set_ylabel(r'v_'+str(i)+' [rad/s]')
@@ -106,7 +106,7 @@ if(PLOT_JOINT_ACC):
     (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)
     ax = ax.reshape(robot.nv)
     for i in range(robot.nv):
-        ax[i].plot(time, dv[i,:-1], label=r'$\dot{v}$')
+        ax[i].plot(time, dv[i,:], label=r'$\dot{v}$')
         ax[i].plot(time, dv_ref[i,:], '--', label=r'$\dot{v}$ ref')
         ax[i].set_xlabel('Time [s]')
         ax[i].set_ylabel(r'$\dot{v}_'+str(i)+'$ [rad/s^2]')
