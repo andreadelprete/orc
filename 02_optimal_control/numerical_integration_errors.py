@@ -11,10 +11,10 @@ import numpy as np
     
 if __name__=='__main__':
     import matplotlib.pyplot as plt
-    import arc.utils.plot_utils as plut
-    from arc.utils.robot_loaders import loadUR, loadPendulum
+    import orc.utils.plot_utils as plut
+    from orc.utils.robot_loaders import loadUR, loadPendulum
     from example_robot_data.robots_loader import loadDoublePendulum
-    from arc.utils.robot_wrapper import RobotWrapper
+    from orc.utils.robot_wrapper import RobotWrapper
     from numerical_integration import Integrator
     from ode import ODELinear, ODESin, ODERobot, ODEStiffDiehl, ODEPendulum
     import numerical_integration_conf as conf
@@ -43,9 +43,9 @@ if __name__=='__main__':
     
     integrators = []
     integrators += [{'scheme': 'RK-1'      , 'nf': 1}]
-    integrators += [{'scheme': 'RK-2'      , 'nf': 2}] # nf = number of function evaluation per step
+#    integrators += [{'scheme': 'RK-2'      , 'nf': 2}] # nf = number of function evaluation per step
 #    integrators += [{'scheme': 'RK-2-Heun', 'nf': 2}]
-    integrators += [{'scheme': 'RK-3'      , 'nf': 3}]
+#    integrators += [{'scheme': 'RK-3'      , 'nf': 3}]
     integrators += [{'scheme': 'RK-4'      , 'nf': 4}]
 #    integrators += [{'scheme': 'ImpEul'    , 'nf': 1}]
 #    integrators += [{'scheme': 'SemiImpEul', 'nf': 1}]
