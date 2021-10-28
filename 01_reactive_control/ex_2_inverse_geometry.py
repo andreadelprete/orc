@@ -37,7 +37,6 @@ grad_norm = np.empty(N)*nan         # gradient norm
 q[:,0] = conf.q0
 x_des = conf.x_des
 iter_line_search = 0
-alpha = 1e-1
 regu = conf.hessian_regu
 
 for i in range(N):    
@@ -52,14 +51,14 @@ for i in range(N):
     J = J6[:3,:]            # take first 3 rows of J6
     
     ''' The problem to solve is:
-            minimize g(q) 
+            minimize c(q) 
         where:
-            g(q) = 0.5 || x(q) - x_{des} ||^2
-            g(q) = 0.5 || e(q) ||^2
-            g(q) = 0.5 e^T e
-        The gradient of g(q) is:
-            b = dg/dq = de/dq e = J^T e
-        The exact Hessian of g(q) is:
+            c(q) = 0.5 || x(q) - x_{des} ||^2
+            c(q) = 0.5 || e(q) ||^2
+            c(q) = 0.5 e^T e
+        The gradient of c(q) is:
+            g = dc/dq = de/dq e = J^T e
+        The exact Hessian of c(q) is:
             H = J^T J + e^T dJ/dq
         We use an approximate Hessian to save computation time and ensure
         Hessian is always positive semidefinite (which is needed to ensure that
@@ -67,7 +66,7 @@ for i in range(N):
             H = J^T J
         This is known as Gauss-Newton Hessian approximation.
         Newton's step direction is:
-            \Delta q = -H^{-1} b = -(J^T J)^{-1} J^T e = -J^{+} e
+            \Delta q = -H^{-1} g = -(J^T J)^{-1} J^T e = -J^{+} e
         where the overscript + indicates the Moore-Penrose pseudo-inverse.
     '''
     result = solution.inverse_geometry_step(q[:,i], x[:,i], x_des, J, regu, i, N, robot, frame_id, conf)
