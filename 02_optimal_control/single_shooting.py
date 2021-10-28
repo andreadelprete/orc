@@ -142,7 +142,7 @@ class SingleShootingProblem:
         return (cost, grad)
         
         
-    def solve(self, y0=None, method='BFGS'):
+    def solve(self, y0=None, method='BFGS', use_finite_diff=False):
         ''' Solve the optimal control problem '''
         # if no initial guess is given => initialize with zeros
         if(y0 is None):
@@ -150,8 +150,12 @@ class SingleShootingProblem:
             
         self.iter = 0
         print('Start optimizing')
-        r = minimize(self.compute_cost_w_gradient, y0, jac=True, method=method, 
-                     callback=self.clbk, options={'maxiter': 100, 'disp': True})
+        if(use_finite_diff):
+            r = minimize(self.compute_cost_w_gradient_fd, y0, jac=True, method=method, 
+                     callback=self.clbk, tol=1e-4, options={'maxiter': 200, 'disp': True})
+        else:
+            r = minimize(self.compute_cost_w_gradient, y0, jac=True, method=method, 
+                     callback=self.clbk, tol=1e-4, options={'maxiter': 200, 'disp': True})
         return r
         
     def sanity_check_cost_gradient(self, N_TESTS=10):
@@ -180,7 +184,8 @@ class SingleShootingProblem:
     def clbk(self, xk):
         print('Iter %3d, cost %5f'%(self.iter, self.last_cost))
         self.iter += 1
-        self.display_motion()
+        if(self.iter%10==0):
+            self.display_motion()
         return False
         
     def display_motion(self, slow_down_factor=1):
@@ -194,12 +199,12 @@ class SingleShootingProblem:
         
 
 if __name__=='__main__':
-    import arc.utils.plot_utils as plut
+    import orc.utils.plot_utils as plut
     import matplotlib.pyplot as plt
-    from arc.utils.robot_loaders import loadUR, loadPendulum
+    from orc.utils.robot_loaders import loadUR, loadPendulum
     from example_robot_data.robots_loader import loadDoublePendulum
-    from arc.utils.robot_wrapper import RobotWrapper
-    from arc.utils.robot_simulator import RobotSimulator
+    from orc.utils.robot_wrapper import RobotWrapper
+    from orc.utils.robot_simulator import RobotSimulator
     import time, sys
     import single_shooting_conf as conf
     from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPRunningCostQuadraticControl, OCPFinalCostFrame
@@ -246,20 +251,21 @@ if __name__=='__main__':
             time.sleep(dt-time_spent)
       
     # create cost function terms
-    final_cost = OCPFinalCostFramePos(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
+#    final_cost = OCPFinalCostFramePos(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
 #    final_cost = OCPFinalCostFrame(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
-    problem.add_final_cost(final_cost)
+#    problem.add_final_cost(final_cost)
     final_cost_state = OCPFinalCostState(robot, conf.q_des, np.zeros(nq), conf.weight_vel)
     problem.add_final_cost(final_cost_state)
     effort_cost = OCPRunningCostQuadraticControl(robot, dt)
     problem.add_running_cost(effort_cost, conf.weight_u)    
-    problem.sanity_check_cost_gradient(5)
-    import os
-    os.exit()
+
+#    problem.sanity_check_cost_gradient(5)
+#    import os
+#    os.exit()
     
     # solve OCP
 #    problem.solve(method='Nelder-Mead')
-    problem.solve()
+    problem.solve(use_finite_diff=conf.use_finite_diff)
     print('U norm:', norm(problem.U))
     print('X_N\n', problem.X[-1,:].T)
     
