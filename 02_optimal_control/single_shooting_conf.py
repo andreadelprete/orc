@@ -15,6 +15,7 @@ LINE_WIDTH = 60
 T = 2.0                         # OCP horizon
 dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
+use_finite_diff = True
 system = 'ur'
 #frame_name = " mamma" 
 frame_name = 'ee_link'    # name of the frame to control (end-effector)
@@ -25,13 +26,13 @@ frame_name = 'ee_link'    # name of the frame to control (end-effector)
 #system='pendulum'
 #frame_name = 'joint1'
 
-weight_vel = 1e-2   # cost function weight for final velocity
-weight_u = 1e-4     # cost function weight for control
+weight_vel = 1e-1   # cost function weight for final velocity
+weight_u = 1e-6     # cost function weight for control
 
 if(system=='ur'):
     nq = 6
     q0    = np.array([ 0. , -1.0,      0.7,   0. ,  0. ,  0. ])  # initial configuration
-    q_des = np.array([ 0. , -np.pi/2, -0.7 ,  0. ,  0. ,  0. ])  # final configuration
+    q_des = np.array([ 0. , -np.pi/2,  0.0 ,  0. ,  0. ,  0. ])  # final configuration
     p_des = np.array([0.6, 0.2, 0.4])   # desired end-effector final position
     R_des = np.identity(3)              # desired end-effector final orientation
 elif(system=='pendulum'):
