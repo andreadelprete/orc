@@ -13,7 +13,7 @@ np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
-T_SIMULATION = 2             # simulation time
+T_SIMULATION = 4             # simulation time
 dt = 0.001                   # controller time step
 ndt = 10                      # number of integration steps for each control loop
 
@@ -34,7 +34,7 @@ freq        = np.array([1.0, 1.0, 0.3])           # frequency (time 2 PI)
 
 simulate_coulomb_friction = 0    # flag specifying whether coulomb friction is simulated
 simulation_type = 'timestepping' # either 'timestepping' or 'euler'
-tau_coulomb_max = 5*np.ones(6)   # expressed as percentage of torque max
+tau_coulomb_max = 0*np.ones(6)   # expressed as percentage of torque max
 
 randomize_robot_model = 0
 model_variation = 30.0
