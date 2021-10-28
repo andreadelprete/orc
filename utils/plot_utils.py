@@ -8,7 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-DEFAULT_FONT_SIZE = 25;
+DEFAULT_FONT_SIZE = 15;
 DEFAULT_AXIS_FONT_SIZE = DEFAULT_FONT_SIZE;
 DEFAULT_LINE_WIDTH = 4; #13;
 DEFAULT_MARKER_SIZE = 4;
@@ -39,7 +39,7 @@ mpl.rcParams['axes.grid']           = True
 mpl.rcParams['legend.fontsize']     = DEFAULT_LEGEND_FONT_SIZE;
 mpl.rcParams['legend.framealpha']   = 0.5                           # opacity of of legend frame
 mpl.rcParams['figure.facecolor']    = DEFAULT_FIGURE_FACE_COLOR;
-mpl.rcParams['figure.figsize']      = 15, 9 #12, 9 #
+mpl.rcParams['figure.figsize']      = 8, 7 #12, 9 #
 
 
 def create_empty_figure(nRows=1, nCols=1, spinesPos=None,sharex=True):
