@@ -4,6 +4,7 @@ from numpy import pi
 import time
 
 def plot_V_table(env, V):
+    ''' Plot the given Value table V '''
     import matplotlib.pyplot as plt
     Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
                         [env.d2cv(i) for i in range(env.nv)])
@@ -15,6 +16,7 @@ def plot_V_table(env, V):
     plt.show()
     
 def plot_policy(env, pi):
+    ''' Plot the given policy table pi '''
     import matplotlib.pyplot as plt
     Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
                         [env.d2cv(i) for i in range(env.nv)])
@@ -25,21 +27,26 @@ def plot_policy(env, pi):
     plt.ylabel("dq")
     plt.show()
     
-# --- Discretized PENDULUM
+
 class DPendulum:
+    ''' Discrete Pendulum environment. Joint angle, velocity and torque are discretized
+        with the specified steps. Joint velocity and torque are saturated. 
+        Guassian noise can be added in the dynamics. 
+        Cost is -1 if the goal state has been reached, zero otherwise.
+    '''
     def __init__(self, nq=51, nv=21, nu=11, vMax=5, uMax=5, dt=0.2, ndt=1, noise_stddev=0):
         self.pendulum = Pendulum(1,noise_stddev)
         self.pendulum.DT  = dt
         self.pendulum.NDT = ndt
-        self.nq = nq        # Discretization steps for position
-        self.nv = nv        # Discretization steps for velocity
+        self.nq = nq        # Number of discretization steps for joint angle
+        self.nv = nv        # Number of discretization steps for joint velocity
         self.vMax = vMax    # Max velocity (v in [-vmax,vmax])
-        self.nu = nu        # Discretization steps for torque
+        self.nu = nu        # Number of discretization steps for joint torque
         self.uMax = uMax    # Max torque (u in [-umax,umax])
-        self.dt = dt
-        self.DQ = 2*pi/nq
-        self.DV = 2*vMax/nv
-        self.DU = 2*uMax/nu
+        self.dt = dt        # time step
+        self.DQ = 2*pi/nq   # discretization resolution for joint angle
+        self.DV = 2*vMax/nv # discretization resolution for joint velocity
+        self.DU = 2*uMax/nu # discretization resolution for joint torque
 
     @property
     def nqv(self): return [self.nq,self.nv]
@@ -82,6 +89,7 @@ class DPendulum:
         '''From 2d discrete to continuous'''
         return np.array([self.d2cq(iqv[0]), self.d2cv(iqv[1])])
     
+    ''' From 2d discrete to 1d discrete '''
     def x2i(self, x): return x[0]+x[1]*self.nq
     
     ''' From 1d discrete to 2d discrete '''
@@ -97,7 +105,7 @@ class DPendulum:
 
     def step(self,iu):
         cost     = -1 if self.x2i(self.x)==self.goal else 0
-        self.x     = self.dynamics(self.x,iu)
+        self.x   = self.dynamics(self.x,iu)
         return self.x2i(self.x), cost
 
     def render(self):
@@ -118,6 +126,7 @@ if __name__=="__main__":
     nq = env.nq
     nv = env.nv
     
+    # sanity checks
     for i in range(nq*nv):
         x = env.i2x(i)
         i_test = env.x2i(x)
