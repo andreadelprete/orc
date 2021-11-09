@@ -12,8 +12,10 @@ import pinocchio as pin
 class DDPSolverManipulator(DDPSolverLinearDyn):
     ''' 
         Derived class of DDPSolverLinearDyn implementing the multi-body dynamics of a manipulator.
-        The task is defined by a quadratic cost: sum_{i=0}^N 0.5 x' H_{xx,i} x + h_{x,i} x + h_{s,i}
-        plus a control regularization: sum_{i=0}^{N-1} lmbda ||u_i||.
+        The task is defined by a quadratic cost: 
+            sum_{i=0}^N 0.5 x' H_{xx,i} x + h_{x,i} x + h_{s,i}
+        plus a control regularization: 
+            sum_{i=0}^{N-1} lmbda ||u_i||.
     '''
     
     def __init__(self, name, robot, ddp_params, H_xx, h_x, h_s, lmbda, dt, DEBUG=False, simu=None):
@@ -159,7 +161,7 @@ if __name__=='__main__':
     ddp_params['min_cost_impr'] = 1e-1
     ddp_params['max_line_search_iter'] = 10
     ddp_params['exp_improvement_threshold'] = 1e-3
-    ddp_params['max_iter'] = 50
+    ddp_params['max_iter'] = 100
     DEBUG = False;
         
     r = loadUR()

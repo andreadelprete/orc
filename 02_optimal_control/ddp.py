@@ -7,7 +7,7 @@ System dynamics and cost functions must be specified in child classes.
 """
 
 import numpy as np
-import solutions.ddp_sol as sol
+import solutions.ddp_sol_prof as sol
 
 class DDPSolver:
     
@@ -186,6 +186,10 @@ class DDPSolver:
         
     def cost_final_x(self, x):
         ''' Gradient of the final cost w.r.t. x '''
+        return None
+    
+    def cost_final_xx(self, x):
+        ''' Hessian of the final cost w.r.t. x '''
         return None
         
     def cost_running_u(self, i, x, u):
