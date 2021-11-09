@@ -85,7 +85,16 @@ def backward_pass(solver, X_bar, U_bar, mu):
                 print("kk, KK", a2s(solver.kk[i,ru]), a2s(solver.KK[i,ru,rx]));
                 
             # update Value function
-            V_x[i,:]    = solver.Q_x[i,:]  - solver.Q_xu[i,:,:] @ Qbar_uu_pinv @ solver.Q_u[i,:]
-            V_xx[i,:]   = solver.Q_xx[i,:] - solver.Q_xu[i,:,:] @ Qbar_uu_pinv @ solver.Q_xu[i,:,:].T
+            V_x[i,:]    = (solver.Q_x[i,:] - 
+                solver.KK[i,:,:].T @ solver.Q_u[i,:] -
+                solver.KK[i,:,:].T @ solver.Q_uu[i,:,:] @ solver.kk[i,:] +
+                solver.Q_xu[i,:,:] @ solver.kk[i,:])
+            V_xx[i,:]   = (solver.Q_xx[i,:,:] + 
+                solver.KK[i,:,:].T @ solver.Q_uu[i,:,:] @ solver.KK[i,:,:] - 
+                solver.Q_xu[i,:,:] @ solver.KK[i,:,:] - 
+                solver.KK[i,:,:].T @ solver.Q_xu[i,:,:].T)
+                
+            # V_x[i,:]    = solver.Q_x[i,:]  - solver.Q_xu[i,:,:] @ Qbar_uu_pinv @ solver.Q_u[i,:]
+            # V_xx[i,:]   = solver.Q_xx[i,:] - solver.Q_xu[i,:,:] @ Qbar_uu_pinv @ solver.Q_xu[i,:,:].T
                     
         return (solver.kk, solver.KK)
