@@ -1,9 +1,10 @@
 # Typical header of a Python script using Pinocchio
 from pinocchio.utils import *
-from pinocchio.explog import exp,log
-from numpy.linalg import pinv,norm
 import pinocchio as pin
 import gepetto.corbaserver
+import subprocess
+import os
+import time
 
 # Example of a class Display that connect to Gepetto-viewer and implement a
 # 'place' method to set the position/rotation of a 3D visual object in a scene.
@@ -18,7 +19,11 @@ class Display():
         If the window already exists, it is kept in the current state. Otherwise, the newly-created
         window is set up with a scene named 'world'.
         '''
-
+        l = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
+        if int(l[1]) == 0:
+            os.system('gepetto-gui &')
+        time.sleep(2)
+        
         # Create the client and connect it with the display server.
         try:
             self.viewer=gepetto.corbaserver.Client()
