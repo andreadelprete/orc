@@ -23,7 +23,11 @@ def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000)
         V_old = np.copy(V) # make a copy of the V table
         for x in range(env.nx): # for every state
             env.reset(x) # reset the environment state
-            u = pi(env, x) # apply the given policy
+            # apply the given policy
+            if(callable(pi)):   # check if the policy is a function
+                u = pi(env, x) 
+            else:   # otherwise assume it's a vector
+                u = pi[x]
             x_next, cost = env.step(u)
             
             # Update V-Table with Bellman's equation
