@@ -4,7 +4,8 @@ Example of policy evaluation with a simple discretized 1-DoF pendulum.
 
 import numpy as np
 from dpendulum import DPendulum
-from sol.ex_0_policy_evaluation_prof import policy_eval
+from sol.ex_0_policy_evaluation_sol_prof import policy_eval
+#from sol.ex_0_policy_evaluation_sol import policy_eval
 
 def policy(env, x):
     ''' The policy to be evaluated '''

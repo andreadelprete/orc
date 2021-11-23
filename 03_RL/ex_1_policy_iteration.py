@@ -5,7 +5,8 @@ Example of policy iteration with a simple discretized 1-DoF pendulum.
 import numpy as np
 from dpendulum import DPendulum
 from ex_0_policy_evaluation import render_policy
-from sol.ex_1_policy_iteration_prof import policy_iteration
+from sol.ex_1_policy_iteration_sol_prof import policy_iteration
+#from sol.ex_1_policy_iteration_sol import policy_iteration
 import time
 
 ### --- Random seed
