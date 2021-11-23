@@ -10,14 +10,16 @@ from dpendulum import plot_V_table, plot_policy
 from sol.ex_0_policy_evaluation_prof import policy_eval
 #from ex_0_policy_evaluation import policy_eval
 
-def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, policy_thr, value_thr, plot=False, nprint=1000):
+def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, value_thr, policy_thr, plot=False, nprint=1000):
     ''' Policy iteration algorithm 
         env: environment used for evaluating the policy
         gamma: discount factor
         pi: initial guess for the policy
         V: initial guess of the Value table
-        maxIters: max number of iterations of the algorithm
-        threshold: convergence threshold
+        maxEvalIters: max number of iterations for policy evaluation
+        maxImprIters: max number of iterations for policy improvement
+        value_thr: convergence threshold for policy evaluation
+        policy_thr: convergence threshold for policy improvement
         plot: if True it plots the V table every nprint iterations
         nprint: print some info every nprint iterations
     '''
@@ -27,8 +29,9 @@ def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, policy_thr, 
         V = policy_eval(env, gamma, pi, V, maxEvalIters, value_thr, False)
         if not k%nprint: 
             print('PI - Iter #%d done' % (k))
-            plot_policy(env, pi)
-            plot_V_table(env, V)
+            if(plot):
+                plot_policy(env, pi)
+                plot_V_table(env, V)
         
         pi_old = np.copy(pi) # make a copy of current policy table
         for x in range(env.nx):     # for every state
@@ -56,8 +59,9 @@ def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, policy_thr, 
             print("PI converged after %d iters with error"%k, pi_err)
             print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
             # 4.699 -9.99999 -3.13810
-            plot_policy(env, pi)
-            plot_V_table(env, V)
+            if(plot):
+                plot_policy(env, pi)
+                plot_V_table(env, V)
             return pi
             
         if not k%nprint: 

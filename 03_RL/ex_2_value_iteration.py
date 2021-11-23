@@ -4,13 +4,15 @@ Example of Value iteration with a simple discretized 1-DoF pendulum.
 
 import numpy as np
 from dpendulum import DPendulum
-from dpendulum import plot_policy, plot_V_table
-from policy_evaluation import render_policy
+from dpendulum import plot_policy
+from ex_0_policy_evaluation import render_policy
+from sol.ex_2_value_iteration_prof import value_iteration
 
 ### --- Hyper paramaters
 MAX_ITERS       = 200     # Max number of iterations for the algorirthm
 VALUE_THR       = 1e-4    # convergence threshold
 NPRINT          = 3       # print some info every NPRINT iterations
+PLOT            = False   # where to plot stuff during the algorithm
 DISCOUNT        = 0.9     # Discount factor 
 nq=51   # number of discretization steps for the joint angle q
 nv=21   # number of discretization steps for the joint velocity v
@@ -45,31 +47,7 @@ def compute_policy_from_V(env, V):
         
     return pi
     
-Q  = np.zeros(env.nu)           # temporary array to store value of different controls
-for k in range(MAX_ITERS):
-    if not k%NPRINT: 
-        plot_V_table(env, V)
-    
-    V_old = np.copy(V)  # make a copy of current Value table
-    for x in range(env.nx):                     # for every state x
-        for u in range(env.nu):                 # for every action u
-            env.reset(x)                        # reset state to x
-            x_next,cost = env.step(u)           # apply action u
-            Q[u] = cost + DISCOUNT * V[x_next]  # store cost associated to u
-        V[x] = np.min(Q)                        # update Value table
-            
-    # check for convergence
-    V_err = np.max(np.abs(V-V_old))
-    if(V_err<VALUE_THR):
-        print("VI converged after %d iters with error"%k, V_err)
-        print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
-        # -4.699560419916913 -9.999994614527743 -3.1381005754277433
-        plot_V_table(env, V)
-        break
-        
-    if not k%NPRINT: 
-        print('VI - Iter #%d done' % (k))
-        print("|V - V_old|=%.5f"%(V_err))
+V = value_iteration(env, DISCOUNT, V, MAX_ITERS, VALUE_THR, PLOT, NPRINT)
   
 pi = compute_policy_from_V(env, V)      
 plot_policy(env, pi)

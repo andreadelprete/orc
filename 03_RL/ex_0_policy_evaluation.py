@@ -24,7 +24,10 @@ def render_policy(env, pi, x0=None, T=30):
     '''Roll-out (i.e., simulate) from state x0 using policy pi for T time steps'''
     x = env.reset(x0)
     for i in range(T):
-        u = pi(env, x)
+        if(callable(pi)):   # if pi is a function
+            u = pi(env, x)
+        else:   # otherwise assume it's a vector
+            u = pi[x]
         x_next,l = env.step(u)
         env.render()
 #        q,dq = env.d2c(env.i2x(x))
