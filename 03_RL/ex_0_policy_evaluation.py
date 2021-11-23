@@ -3,7 +3,8 @@ Example of policy evaluation with a simple discretized 1-DoF pendulum.
 '''
 
 import numpy as np
-from dpendulum import DPendulum, plot_V_table
+from dpendulum import DPendulum
+from sol.ex_0_policy_evaluation_prof import policy_eval
 
 def policy(env, x):
     ''' The policy to be evaluated '''
@@ -16,11 +17,11 @@ def policy(env, x):
         return env.c2du(-env.uMax) # decelerate as much as possible
     if(q>0): # if velocity is null and q>0
         return env.c2du(env.uMax) # accelerate as much as possible
-    return env.c2du(-env.uMax) # if velocity is nul and q<=0 decelerate as much as possible
+    return env.c2du(-env.uMax) # if velocity is null and q<=0 decelerate as much as possible
 
 
 def render_policy(env, pi, x0=None, T=30):
-    '''Roll-out from state x0 using policy pi for T time steps'''
+    '''Roll-out (i.e., simulate) from state x0 using policy pi for T time steps'''
     x = env.reset(x0)
     for i in range(T):
         u = pi(env, x)
@@ -33,47 +34,12 @@ def render_policy(env, pi, x0=None, T=30):
         x = x_next
 
 
-def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000):
-    ''' Policy evaluation algorithm 
-        env: environment used for evaluating the policy
-        gamma: discount factor
-        pi: policy to evaluate
-        V: initial guess of the Value table
-        maxIters: max number of iterations of the algorithm
-        threshold: convergence threshold
-        plot: if True it plots the V table every nprint iterations
-        nprint: print some info every nprint iterations
-    '''
-    for k in range(1, maxIters):
-        V_old = np.copy(V) # make a copy of the V table
-        for x in range(env.nx): # for every state
-            env.reset(x) # reset the environment state
-            u = pi(env, x) # apply the given policy
-            x_next, cost = env.step(u)
-            
-            # Update V-Table with Bellman's equation
-            V[x] = cost + gamma*V_old[x_next]
-    
-        # compute the difference between the current and previous V table
-        V_err = np.max(np.abs(V-V_old))
-        if(V_err<threshold):    # check convergence
-            print("Policy eval converged after %d iters with error"%k, V_err)
-            if(plot): plot_V_table(env, V)
-            return V
-            
-        if not k%nprint: 
-            print('Iter #%d done' % (k))
-            print("|V - V_old|=%.5f"%(V_err))
-            if(plot): plot_V_table(env, V)
-    print("Policy eval did NOT converge in %d iters. Error"%k, V_err)
-    return V
-
-
 if __name__=="__main__":    
     ### --- Hyper paramaters
     MAX_ITERS         = 200         # Max number of iterations
     CONVERGENCE_THR   = 1e-4        # convergence threshold
     NPRINT            = 5           # Print info every NPRINT iterations
+    PLOT              = True        # Plot the V table
     DISCOUNT          = 0.9         # Discount factor 
     
     ### --- Environment
@@ -88,5 +54,5 @@ if __name__=="__main__":
     # display policy behavior
     render_policy(env, policy)
     
-    V = policy_eval(env, DISCOUNT, policy, V, MAX_ITERS, CONVERGENCE_THR, True, NPRINT)
+    V = policy_eval(env, DISCOUNT, policy, V, MAX_ITERS, CONVERGENCE_THR, PLOT, NPRINT)
     
