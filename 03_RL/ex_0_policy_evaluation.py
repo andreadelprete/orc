@@ -56,7 +56,7 @@ if __name__=="__main__":
     V  = np.zeros([env.nx])     # V-table initialized to 0
     
     # display policy behavior
-    render_policy(env, policy)
+#    render_policy(env, policy)
     
     V = policy_eval(env, DISCOUNT, policy, V, MAX_ITERS, CONVERGENCE_THR, PLOT, NPRINT)
     
