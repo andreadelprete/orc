@@ -6,7 +6,6 @@ Created on Tue Nov 23 05:30:56 2021
 @author: adelprete
 """
 import numpy as np
-from dpendulum import plot_V_table
 
 def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000):
     ''' Policy evaluation algorithm 
@@ -29,7 +28,7 @@ def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000)
     # To simulate the system use env.step(u) which returns the next state and the cost
     # Update V-Table with Bellman's equation
     # Check for convergence using the difference between the current and previous V table
-    # You can plot the V table with the function plot_V_table(env, V)
+    # You can plot the V table with the function env.plot_V_table(V)
     # At the env return the V table
     
     return V

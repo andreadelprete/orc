@@ -6,7 +6,6 @@ Created on Tue Nov 23 05:30:56 2021
 @author: adelprete
 """
 import numpy as np
-from dpendulum import plot_V_table, plot_policy
 #from sol.ex_0_policy_evaluation_prof import policy_eval
 from ex_0_policy_evaluation import policy_eval
 
@@ -35,7 +34,7 @@ def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, value_thr, p
     # You can simulate the robot using: x_next,cost = env.step(u)
     # You can find the index corresponding to the minimum of an array with np.argmin(Q)
     # Check for convergence based on how much the policy has changed from the previous loop
-    # you can plot the policy with: plot_policy(env, pi)
-    # You can plot the Value table with: plot_V_table(env, V)
+    # you can plot the policy with: env.plot_policy(pi)
+    # You can plot the Value table with: env.plot_V_table(V)
     # At the end return the policy pi
     return pi

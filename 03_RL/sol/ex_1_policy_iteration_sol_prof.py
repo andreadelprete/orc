@@ -6,8 +6,7 @@ Created on Tue Nov 23 05:30:56 2021
 @author: adelprete
 """
 import numpy as np
-from dpendulum import plot_V_table, plot_policy
-from sol.ex_0_policy_evaluation_prof import policy_eval
+from sol.ex_0_policy_evaluation_sol_prof import policy_eval
 #from ex_0_policy_evaluation import policy_eval
 
 def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, value_thr, policy_thr, plot=False, nprint=1000):
@@ -30,8 +29,8 @@ def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, value_thr, p
         if not k%nprint: 
             print('PI - Iter #%d done' % (k))
             if(plot):
-                plot_policy(env, pi)
-                plot_V_table(env, V)
+                env.plot_policy(pi)
+                env.plot_V_table(V)
         
         pi_old = np.copy(pi) # make a copy of current policy table
         for x in range(env.nx):     # for every state
@@ -60,8 +59,8 @@ def policy_iteration(env, gamma, pi, V, maxEvalIters, maxImprIters, value_thr, p
             print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
             # 4.699 -9.99999 -3.13810
             if(plot):
-                plot_policy(env, pi)
-                plot_V_table(env, V)
+                env.plot_policy(pi)
+                env.plot_V_table(V)
             return pi
             
         if not k%nprint: 

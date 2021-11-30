@@ -6,7 +6,6 @@ Created on Tue Nov 23 05:30:56 2021
 @author: adelprete
 """
 import numpy as np
-from dpendulum import plot_V_table
 
 def value_iteration(env, gamma, V, maxIters, value_thr, plot=False, nprint=1000):
     ''' Policy iteration algorithm 

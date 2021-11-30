@@ -6,7 +6,6 @@ Created on Tue Nov 23 05:30:56 2021
 @author: adelprete
 """
 import numpy as np
-from dpendulum import plot_V_table
 
 def value_iteration(env, gamma, V, maxIters, value_thr, plot=False, nprint=1000):
     ''' Policy iteration algorithm 
@@ -21,7 +20,7 @@ def value_iteration(env, gamma, V, maxIters, value_thr, plot=False, nprint=1000)
     Q  = np.zeros(env.nu)           # temporary array to store value of different controls
     for k in range(maxIters):
         if not k%nprint and plot: 
-            plot_V_table(env, V)
+            env.plot_V_table(V)
         
         V_old = np.copy(V)  # make a copy of current Value table
         for x in range(env.nx):                     # for every state x
@@ -37,7 +36,7 @@ def value_iteration(env, gamma, V, maxIters, value_thr, plot=False, nprint=1000)
             print("VI converged after %d iters with error"%k, V_err)
             print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
             # -4.699560419916913 -9.999994614527743 -3.1381005754277433
-            if(plot): plot_V_table(env, V)
+            if(plot): env.plot_V_table(V)
             return V
             
         if not k%nprint: 

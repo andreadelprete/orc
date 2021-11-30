@@ -6,7 +6,6 @@ Created on Tue Nov 23 05:30:56 2021
 @author: adelprete
 """
 import numpy as np
-from dpendulum import plot_V_table
 
 def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000):
     ''' Policy evaluation algorithm 
@@ -37,12 +36,12 @@ def policy_eval(env, gamma, pi, V, maxIters, threshold, plot=False, nprint=1000)
         V_err = np.max(np.abs(V-V_old))
         if(V_err<threshold):    # check convergence
             print("Policy eval converged after %d iters with error"%k, V_err)
-            if(plot): plot_V_table(env, V)
+            if(plot): env.plot_V_table(V)
             return V
             
         if not k%nprint: 
             print('Iter #%d done' % (k))
             print("|V - V_old|=%.5f"%(V_err))
-            if(plot): plot_V_table(env, V)
+            if(plot): env.plot_V_table(V)
     print("Policy eval did NOT converge in %d iters. Error"%k, V_err)
     return V

@@ -2,30 +2,6 @@ from pendulum import Pendulum
 import numpy as np
 from numpy import pi
 import time
-
-def plot_V_table(env, V):
-    ''' Plot the given Value table V '''
-    import matplotlib.pyplot as plt
-    Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
-                        [env.d2cv(i) for i in range(env.nv)])
-    plt.pcolormesh(Q, DQ, V.reshape((env.nv,env.nq)), cmap=plt.cm.get_cmap('Blues'))
-    plt.colorbar()
-    plt.title('V table')
-    plt.xlabel("q")
-    plt.ylabel("dq")
-    plt.show()
-    
-def plot_policy(env, pi):
-    ''' Plot the given policy table pi '''
-    import matplotlib.pyplot as plt
-    Q,DQ = np.meshgrid([env.d2cq(i) for i in range(env.nq)], 
-                        [env.d2cv(i) for i in range(env.nv)])
-    plt.pcolormesh(Q, DQ, pi.reshape((env.nv,env.nq)), cmap=plt.cm.get_cmap('RdBu'))
-    plt.colorbar()
-    plt.title('Policy')
-    plt.xlabel("q")
-    plt.ylabel("dq")
-    plt.show()
     
 
 class DPendulum:
@@ -97,28 +73,51 @@ class DPendulum:
 
     def reset(self,x=None):
         if x is None:
-            x = [ np.random.randint(0,self.nq), np.random.randint(0,self.nv) ]
-        else: x = self.i2x(x)
-        assert(len(x)==2)
-        self.x = x
-        return self.x2i(self.x)
+            self.x = np.random.randint(0,self.nx)
+        else: 
+            self.x = x
+        return self.x
 
     def step(self,iu):
-        cost     = -1 if self.x2i(self.x)==self.goal else 0
+        cost     = -1 if self.x==self.goal else 0
         self.x   = self.dynamics(self.x,iu)
-        return self.x2i(self.x), cost
+        return self.x, cost
 
     def render(self):
-        q = self.d2cq(self.x[0])
-        self.pendulum.display(np.matrix([q,]))
+        q = self.d2cq(self.i2x(self.x)[0])
+        self.pendulum.display(np.array([q,]))
         time.sleep(self.pendulum.DT)
 
     def dynamics(self,ix,iu):
-        x   = self.d2c(ix)
+        x   = self.d2c(self.i2x(ix))
         u   = self.d2cu(iu)
         
         self.xc,_ = self.pendulum.dynamics(x,u)
-        return self.c2d(self.xc)
+        return self.x2i(self.c2d(self.xc))
+    
+    def plot_V_table(self, V):
+        ''' Plot the given Value table V '''
+        import matplotlib.pyplot as plt
+        Q,DQ = np.meshgrid([self.d2cq(i) for i in range(self.nq)], 
+                            [self.d2cv(i) for i in range(self.nv)])
+        plt.pcolormesh(Q, DQ, V.reshape((self.nv,self.nq)), cmap=plt.cm.get_cmap('Blues'))
+        plt.colorbar()
+        plt.title('V table')
+        plt.xlabel("q")
+        plt.ylabel("dq")
+        plt.show()
+        
+    def plot_policy(self, pi):
+        ''' Plot the given policy table pi '''
+        import matplotlib.pyplot as plt
+        Q,DQ = np.meshgrid([self.d2cq(i) for i in range(self.nq)], 
+                            [self.d2cv(i) for i in range(self.nv)])
+        plt.pcolormesh(Q, DQ, pi.reshape((self.nv,self.nq)), cmap=plt.cm.get_cmap('RdBu'))
+        plt.colorbar()
+        plt.title('Policy')
+        plt.xlabel("q")
+        plt.ylabel("dq")
+        plt.show()
     
 if __name__=="__main__":
     print("Start tests")
