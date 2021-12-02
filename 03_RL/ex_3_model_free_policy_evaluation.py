@@ -5,7 +5,8 @@ Example of model-free policy evaluation with a simple discretized 1-DoF pendulum
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from sol.ex_3_model_free_policy_evaluation_sol_prof import mc_policy_eval, td0_policy_eval
+#from sol.ex_3_model_free_policy_evaluation_sol_prof import mc_policy_eval, td0_policy_eval
+from sol.ex_3_model_free_policy_evaluation_sol import mc_policy_eval, td0_policy_eval
 
 def policy_pendulum(env, x):
     ''' The policy to be evaluated '''
@@ -29,9 +30,7 @@ if __name__=="__main__":
     np.random.seed(RANDOM_SEED)
     
     ### --- Hyper paramaters
-    CONVERGENCE_THR   = 1e-3    # convergence threshold of policy evaluation
     DO_PLOTS          = 1   # if True it plots the Value table every NPRINT iterations
-    NOISE_STDDEV      = 0.1     # standard deviation of the noise acting on the dynamics
     
     ### --- Environment
     env_name = 'pendulum'
@@ -42,6 +41,8 @@ if __name__=="__main__":
         N_EPISODS         = 1000    # number of episodes
         MAX_EPISOD_LENGTH = 100     # max length of an episode
         LEARNING_RATES    = [0.5, 0.8, 1.0]     # TD0 learning rates
+        CONVERGENCE_THR   = 1e-3    # convergence threshold of policy evaluation
+        NOISE_STDDEV      = 0.1     # standard deviation of the noise acting on the dynamics
         NPRINT            = 100     # print some info every NPRINT iterations
         
         from dpendulum import DPendulum
