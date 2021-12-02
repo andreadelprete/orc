@@ -3,8 +3,8 @@ Example of Q-table learning with a simple discretized 1-pendulum environment.
 '''
 
 import numpy as np
-from dpendulum import DPendulum, plot_V_table, plot_policy
-from policy_evaluation import policy_eval
+from dpendulum import DPendulum
+from sol.ex_0_policy_evaluation_sol_prof import policy_eval
 import matplotlib.pyplot as plt
 import time
 
@@ -107,14 +107,14 @@ for episode in range(1,NEPISODES):
 #        plot_Q_table(Q)
 #        render_greedy_policy(env, Q)
         V, pi = compute_V_pi_from_Q(env, Q)
-        plot_V_table(env, V)
-        plot_policy(env, pi)
+        env.plot_V_table(V)
+        env.plot_policy(pi)
         Q_old = np.copy(Q)
 
 print("\nTraining finished")
 V, pi = compute_V_pi_from_Q(env,Q)
-plot_V_table(env, V)
-plot_policy(env, pi)
+env.plot_V_table(V)
+env.plot_policy(pi)
 print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
 
 print("Compute real Value function of greedy policy")
@@ -123,10 +123,11 @@ def policy(env, x):
 MAX_EVAL_ITERS    = 200     # Max number of iterations for policy evaluation
 VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
 V_pi = policy_eval(env, DISCOUNT, policy, V, MAX_EVAL_ITERS, VALUE_THR, False)
-plot_V_table(env, V_pi)
+env.plot_V_table(V_pi)
 print("Average/min/max Value:", np.mean(V_pi), np.min(V_pi), np.max(V_pi)) 
 
 print("Total rate of success: %.3f" % (-sum(h_rwd)/NEPISODES))
 render_greedy_policy(env, Q)
 plt.plot( np.cumsum(h_rwd)/range(1,NEPISODES) )
+plt.title ("Average cost-to-go")
 plt.show()
