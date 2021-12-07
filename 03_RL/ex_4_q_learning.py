@@ -9,7 +9,7 @@ from sol.ex_4_q_learning_sol_prof import q_learning
 import matplotlib.pyplot as plt
 import time
 
-def render_greedy_policy(env, Q, x0=None, maxiter=100):
+def render_greedy_policy(env, Q, gamma, x0=None, maxiter=100):
     '''Roll-out from random state using greedy policy.'''
     x0 = x = env.reset(x0)
     costToGo = 0.0
@@ -19,7 +19,7 @@ def render_greedy_policy(env, Q, x0=None, maxiter=100):
 #        print("State", x, "Control", u, "Q", Q[x,u])
         x,c = env.step(u)
         costToGo += gamma_i*c
-        gamma_i *= DISCOUNT
+        gamma_i *= gamma
         env.render()
     print("Real cost to go of state", x0, ":", costToGo)
     
@@ -44,50 +44,52 @@ def compute_V_pi_from_Q(env, Q):
 
     return V, pi
 
-### --- Random seed
-RANDOM_SEED = int((time.time()%10)*1000)
-print("Seed = %d" % RANDOM_SEED)
-np.random.seed(RANDOM_SEED)
 
-### --- Hyper paramaters
-NEPISODES               = 5000          # Number of training episodes
-NPRINT                  = 500           # print something every NPRINT episodes
-MAX_EPISODE_LENGTH      = 100           # Max episode length
-LEARNING_RATE           = 0.8           # alpha coefficient of Q learning algorithm
-DISCOUNT                = 0.9           # Discount factor 
-PLOT                    = True          # Plot stuff if True
-exploration_prob                = 1     # initialize the exploration probability to 1
-exploration_decreasing_decay    = 0.001 # exploration decay for exponential decreasing
-min_exploration_prob            = 0.001 # minimum of exploration proba
-
-### --- Environment
-nq=51   # number of discretization steps for the joint angle q
-nv=21   # number of discretization steps for the joint velocity v
-nu=11   # number of discretization steps for the joint torque u
-env = DPendulum(nq, nv, nu)
-Q   = np.zeros([env.nx,env.nu])       # Q-table initialized to 0
-
-Q, h_costs = q_learning(env, DISCOUNT, Q, NEPISODES, MAX_EPISODE_LENGTH, 
-                        LEARNING_RATE, exploration_prob, exploration_decreasing_decay,
-                        min_exploration_prob, compute_V_pi_from_Q, PLOT, NPRINT)
-
-print("\nTraining finished")
-V, pi = compute_V_pi_from_Q(env,Q)
-env.plot_V_table(V)
-env.plot_policy(pi)
-print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
-
-print("Compute real Value function of greedy policy")
-def policy(env, x):
-    return pi[x]
-MAX_EVAL_ITERS    = 200     # Max number of iterations for policy evaluation
-VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
-V_pi = policy_eval(env, DISCOUNT, policy, V, MAX_EVAL_ITERS, VALUE_THR, False)
-env.plot_V_table(V_pi)
-print("Average/min/max Value:", np.mean(V_pi), np.min(V_pi), np.max(V_pi)) 
-
-print("Total rate of success: %.3f" % (-sum(h_costs)/NEPISODES))
-render_greedy_policy(env, Q)
-plt.plot( np.cumsum(h_costs)/range(1,NEPISODES) )
-plt.title ("Average cost-to-go")
-plt.show()
+if __name__=='__main__':
+    ### --- Random seed
+    RANDOM_SEED = int((time.time()%10)*1000)
+    print("Seed = %d" % RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    
+    ### --- Hyper paramaters
+    NEPISODES               = 5000          # Number of training episodes
+    NPRINT                  = 500           # print something every NPRINT episodes
+    MAX_EPISODE_LENGTH      = 100           # Max episode length
+    LEARNING_RATE           = 0.8           # alpha coefficient of Q learning algorithm
+    DISCOUNT                = 0.9           # Discount factor 
+    PLOT                    = True          # Plot stuff if True
+    exploration_prob                = 1     # initial exploration probability of eps-greedy policy
+    exploration_decreasing_decay    = 0.001 # exploration decay for exponential decreasing
+    min_exploration_prob            = 0.001 # minimum of exploration proba
+    
+    ### --- Environment
+    nq=51   # number of discretization steps for the joint angle q
+    nv=21   # number of discretization steps for the joint velocity v
+    nu=11   # number of discretization steps for the joint torque u
+    env = DPendulum(nq, nv, nu)
+    Q   = np.zeros([env.nx,env.nu])       # Q-table initialized to 0
+    
+    Q, h_ctg = q_learning(env, DISCOUNT, Q, NEPISODES, MAX_EPISODE_LENGTH, 
+                            LEARNING_RATE, exploration_prob, exploration_decreasing_decay,
+                            min_exploration_prob, compute_V_pi_from_Q, PLOT, NPRINT)
+    
+    print("\nTraining finished")
+    V, pi = compute_V_pi_from_Q(env,Q)
+    env.plot_V_table(V)
+    env.plot_policy(pi)
+    print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
+    
+    print("Compute real Value function of greedy policy")
+#    def policy(env, x):
+#        return pi[x]
+    MAX_EVAL_ITERS    = 200     # Max number of iterations for policy evaluation
+    VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
+    V_pi = policy_eval(env, DISCOUNT, pi, V, MAX_EVAL_ITERS, VALUE_THR, False)
+    env.plot_V_table(V_pi)
+    print("Average/min/max Value:", np.mean(V_pi), np.min(V_pi), np.max(V_pi)) 
+    
+    print("Total rate of success: %.3f" % (-sum(h_ctg)/NEPISODES))
+    render_greedy_policy(env, Q, DISCOUNT)
+    plt.plot( np.cumsum(h_ctg)/range(1,NEPISODES) )
+    plt.title ("Average cost-to-go")
+    plt.show()
