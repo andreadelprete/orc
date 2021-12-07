@@ -40,8 +40,8 @@ if __name__=="__main__":
         DISCOUNT          = 0.9     # Discount factor 
         N_EPISODS         = 1000    # number of episodes
         MAX_EPISOD_LENGTH = 100     # max length of an episode
-        LEARNING_RATES    = [0.5, 0.8, 1.0]     # TD0 learning rates
-        CONVERGENCE_THR   = 1e-3    # convergence threshold of policy evaluation
+        LEARNING_RATES    = [0.5, 1.0]     # TD0 learning rates
+        CONVERGENCE_THR   = 1e-5    # convergence threshold of policy evaluation
         NOISE_STDDEV      = 0.1     # standard deviation of the noise acting on the dynamics
         NPRINT            = 100     # print some info every NPRINT iterations
         
@@ -87,7 +87,7 @@ if __name__=="__main__":
     err_td = len(LEARNING_RATES)*[None]
     for i,alpha in enumerate(LEARNING_RATES):
         print("\nEstimate Value function with TD0. Learning rate", alpha)
-        time.sleep(2)
+        time.sleep(1)
         V_td[i], err_td[i] = td0_policy_eval(env, DISCOUNT, policy, V, N_EPISODS, 
                                         MAX_EPISOD_LENGTH, V_real, alpha, DO_PLOTS, NPRINT)
     
