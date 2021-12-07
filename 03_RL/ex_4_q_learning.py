@@ -80,8 +80,6 @@ if __name__=='__main__':
     print("Average/min/max Value:", np.mean(V), np.min(V), np.max(V)) 
     
     print("Compute real Value function of greedy policy")
-#    def policy(env, x):
-#        return pi[x]
     MAX_EVAL_ITERS    = 200     # Max number of iterations for policy evaluation
     VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
     V_pi = policy_eval(env, DISCOUNT, pi, V, MAX_EVAL_ITERS, VALUE_THR, False)

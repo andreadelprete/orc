@@ -18,14 +18,19 @@ def q_learning(env, gamma, Q, nEpisodes, maxEpisodeLength,
         nEpisodes: number of episodes to be used for evaluation
         maxEpisodeLength: maximum length of an episode
         learningRate: learning rate of the algorithm
+        exploration_prob: initial exploration probability for epsilon-greedy policy
+        exploration_decreasing_decay: rate of exponential decay of exploration prob
+        min_exploration_prob: lower bound of exploration probability
+        compute_V_pi_from_Q: function to compute V and pi from Q
         plot: if True plot the V table every nprint iterations
         nprint: print some info every nprint iterations
     '''
-    h_costs = []                              # Learning history (for plot).
+    h_ctg = []                              # Learning history (for plot).
     Q_old = np.copy(Q)
     for episode in range(1,nEpisodes):
         x    = env.reset()
         costToGo = 0.0
+        gamma_i = 1
         for steps in range(maxEpisodeLength):
             if uniform(0,1) < exploration_prob:
                 u = randint(env.nu)
@@ -40,14 +45,15 @@ def q_learning(env, gamma, Q, nEpisodes, maxEpisodeLength,
             # Update Q-Table to better fit HJB
             Q[x,u]      += learningRate*(Qref-Q[x,u])
             x           = x_next
-            costToGo    = cost + gamma*costToGo
+            costToGo    += gamma_i*cost
+            gamma_i     *= gamma
     
         exploration_prob = max(min_exploration_prob, 
                                np.exp(-exploration_decreasing_decay*episode))
-        h_costs.append(costToGo)
+        h_ctg.append(costToGo)
         if not episode%nprint: 
             print('Episode #%d done with cost %d and %.1f exploration prob' % (
-                  episode, np.mean(h_costs[-nprint:]), 100*exploration_prob))
+                  episode, np.mean(h_ctg[-nprint:]), 100*exploration_prob))
             print("max|Q - Q_old|=%.2f"%(np.max(np.abs(Q-Q_old))))
             print("avg|Q - Q_old|=%.2f"%(np.mean(np.abs(Q-Q_old))))
             if(plot):
@@ -58,4 +64,4 @@ def q_learning(env, gamma, Q, nEpisodes, maxEpisodeLength,
 #                env.plot_policy(pi)
             Q_old = np.copy(Q)
     
-    return Q, h_costs
+    return Q, h_ctg

@@ -37,6 +37,7 @@ def sarsa(env, gamma, Q, pi, nIter, nEpisodes, maxEpisodeLength,
             episode += 1
             x    = env.reset()
             costToGo = 0.0
+            gamma_i = 1
             for steps in range(maxEpisodeLength):
                 if uniform(0,1) < exploration_prob:
                     u = randint(env.nu)
@@ -48,7 +49,8 @@ def sarsa(env, gamma, Q, pi, nIter, nEpisodes, maxEpisodeLength,
                 # Update Q-Table
                 Q[x,u] += learningRate*(Qref-Q[x,u])
                 x       = x_next
-                costToGo   = cost + gamma*costToGo
+                costToGo    += gamma_i*cost
+                gamma_i     *= gamma
 
             exploration_prob = max(min_exploration_prob, 
                                np.exp(-exploration_decreasing_decay*episode))
@@ -80,7 +82,7 @@ def sarsa(env, gamma, Q, pi, nIter, nEpisodes, maxEpisodeLength,
     #        render_greedy_policy(env, Q)
             V, pi = compute_V_pi_from_Q(env, Q)
             env.plot_V_table(V)
-            env.plot_policy(pi)
+#            env.plot_policy(pi)
             Q_old = np.copy(Q)
     
     return Q, h_ctg
