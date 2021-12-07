@@ -118,6 +118,17 @@ class DPendulum:
         plt.xlabel("q")
         plt.ylabel("dq")
         plt.show()
+        
+    def plot_Q_table(self, Q):
+        ''' Plot the given Q table '''
+        import matplotlib.pyplot as plt
+        X,U = np.meshgrid(range(Q.shape[0]),range(Q.shape[1]))
+        plt.pcolormesh(X, U, Q.T, cmap=plt.cm.get_cmap('Blues'))
+        plt.colorbar()
+        plt.title('Q table')
+        plt.xlabel("x")
+        plt.ylabel("u")
+        plt.show()
     
 if __name__=="__main__":
     print("Start tests")
