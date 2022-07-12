@@ -5,7 +5,7 @@ Example of Q-table learning with a simple discretized 1-pendulum environment.
 import numpy as np
 from dpendulum import DPendulum
 from sol.ex_0_policy_evaluation_sol_prof import policy_eval
-from sol.ex_5_sarsa_sol_prof import sarsa
+from sol.ex_5_sarsa_sol import sarsa
 import matplotlib.pyplot as plt
 import time
 from ex_4_q_learning import render_greedy_policy, compute_V_pi_from_Q
