@@ -5,7 +5,7 @@ Example of Q-table learning with a simple discretized 1-pendulum environment.
 import numpy as np
 from dpendulum import DPendulum
 from sol.ex_0_policy_evaluation_sol_prof import policy_eval
-from sol.ex_4_q_learning_sol_prof import q_learning
+from sol.ex_4_q_learning_sol import q_learning
 import matplotlib.pyplot as plt
 import time
 
@@ -85,9 +85,22 @@ if __name__=='__main__':
     V_pi = policy_eval(env, DISCOUNT, pi, V, MAX_EVAL_ITERS, VALUE_THR, False)
     env.plot_V_table(V_pi)
     print("Average/min/max Value:", np.mean(V_pi), np.min(V_pi), np.max(V_pi)) 
+        
+    # compute real optimal Value function
+    print("Compute optimal Value table using policy iteratiton")
+    from sol.ex_1_policy_iteration_sol_prof import policy_iteration
+    MAX_EVAL_ITERS    = 200     # Max number of iterations for policy evaluation
+    MAX_IMPR_ITERS    = 20      # Max number of iterations for policy improvement
+    VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
+    POLICY_THR        = 1e-4    # convergence threshold for policy improvement
+    V_opt  = np.zeros(env.nx)                       # Value table initialized to 0
+    pi_opt = env.c2du(0.0)*np.ones(env.nx, np.int)  # policy table initialized to zero torque
+    pi_opt = policy_iteration(env, DISCOUNT, pi_opt, V_opt, MAX_EVAL_ITERS, MAX_IMPR_ITERS, VALUE_THR, POLICY_THR, False, 10000)
+    env.plot_V_table(V_opt)
+    print("Average/min/max Value:", np.mean(V_opt), np.min(V_opt), np.max(V_opt)) 
     
     print("Total rate of success: %.3f" % (-sum(h_ctg)/NEPISODES))
     render_greedy_policy(env, Q, DISCOUNT)
-    plt.plot( np.cumsum(h_ctg)/range(1,NEPISODES) )
+    plt.plot( np.cumsum(h_ctg)/range(1,NEPISODES+1) )
     plt.title ("Average cost-to-go")
     plt.show()
