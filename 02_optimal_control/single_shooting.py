@@ -215,9 +215,12 @@ class SingleShootingProblem:
         ''' Compute all the the inequality constraints '''
         # compute state trajectory X from control y
         U = y.reshape((self.N, self.nu))
-        t0, ndt = 0.0, 1
-        X = self.integrator.integrate(self.ode, self.x0, U, t0, self.dt, ndt, 
-                                      self.N, self.integration_scheme)
+        if(norm(self.U-U)!=0.0):
+            t0, ndt = 0.0, 1
+            X = self.integrator.integrate(self.ode, self.x0, U, t0, self.dt, ndt, 
+                                          self.N, self.integration_scheme)
+        else:
+            X = self.X
         # compute inequalities
         run_ineq = self.path_ineq(X, U)
         fin_ineq = self.final_ineq(X[-1,:])
@@ -284,9 +287,11 @@ class SingleShootingProblem:
             print("\t Final cost   %25s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
         for c in self.path_ineqs:
             print('\t Path ineq    %25s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+        for c in self.final_ineqs:
+            print('\t Final ineq   %25s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
-        if(self.iter%5==0):
+        if(self.iter%10==0):
             self.display_motion()
         return False
         
@@ -311,7 +316,7 @@ if __name__=='__main__':
     import single_shooting_conf as conf
     from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPFinalCostFrame
     from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticControl
-    from inequality_constraints import OCPPathPlaneCollisionAvoidance
+    from inequality_constraints import OCPFinalPlaneCollisionAvoidance, OCPPathPlaneCollisionAvoidance
     from inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
     import pinocchio as pin
     np.set_printoptions(precision=3, linewidth=200, suppress=True)
@@ -375,7 +380,7 @@ if __name__=='__main__':
     # create cost function terms
     final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
 #    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
-    problem.add_final_cost(final_cost)
+    problem.add_final_cost(final_cost, conf.weight_final_pos)
     
 #    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), conf.weight_vel)
 #    problem.add_final_cost(final_cost_state)
@@ -402,6 +407,10 @@ if __name__=='__main__':
         table_avoidance = OCPPathPlaneCollisionAvoidance("table coll "+frame, robot, frame, 
                                                          conf.table_normal, conf.table_height+conf.safety_margin)
         problem.add_path_ineq(table_avoidance)
+        
+        table_avoidance = OCPFinalPlaneCollisionAvoidance("table coll fin "+frame, robot, frame, 
+                                                         conf.table_normal, conf.table_height+conf.safety_margin)
+        problem.add_final_ineq(table_avoidance)
         
     simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
     simu.gui.applyConfiguration('world/target', conf.p_des.tolist()+[0.,0.,0.,1.])

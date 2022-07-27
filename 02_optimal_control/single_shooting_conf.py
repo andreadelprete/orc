@@ -26,6 +26,7 @@ table_normal = np.array([0., 0., 1.])
 table_height = -0.7
 safety_margin = 0.05
 
+weight_final_pos = 10 # cost weight for final end-effector position
 weight_vel = 1e-1   # cost function weight for final end-effector velocity
 weight_dq = 1e-3     # cost function weight for joint velocities
 weight_u = 1e-6     # cost function weight for joint torques

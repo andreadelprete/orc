@@ -10,7 +10,7 @@ from numpy.linalg import norm
 import pinocchio as pin
         
 
-class OCPPathPlaneCollisionAvoidance:
+class OCPFinalPlaneCollisionAvoidance:
     ''' Path inequality constraint for collision avoidance with a frame of the robot
         (typically the end-effector). The constraint is defined as:
             n.T * x >= b
@@ -25,7 +25,7 @@ class OCPPathPlaneCollisionAvoidance:
         self.n = n   # normal direction of the plane to avoid collision with
         self.b = b   # bias
         
-    def compute(self, x, u, t, recompute=True):
+    def compute(self, x, recompute=True):
         ''' Compute the cost given the state x '''
         q = x[:self.nq]
         H = self.robot.framePlacement(q, self.frame_id, recompute)
@@ -33,24 +33,23 @@ class OCPPathPlaneCollisionAvoidance:
         ineq = self.n.dot(p) - self.b
         return np.array([ineq])
     
-    def compute_w_gradient(self, x, u, t, recompute=True):
+    def compute_w_gradient(self, x, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         q = x[:self.nq]
-        v = x[self.nq:]
         H = self.robot.framePlacement(q, self.frame_id, recompute)
         p = H.translation # take the 3d position of the end-effector
         ineq = self.n.dot(p) - self.b
         
         # compute Jacobian J
-        self.robot.computeAllTerms(q, v)
+        self.robot.computeJointJacobians(q)
+        self.robot.framesForwardKinematics(q)
         J6 = self.robot.frameJacobian(q, self.frame_id)
         J = J6[:3,:]            # take first 3 rows of J6
             
         grad_x = np.zeros_like(x)
-        grad_u = np.zeros_like(u)
         grad_x[:self.nq] =  self.n.dot(J)
 
-        return (np.array([ineq]), grad_x, grad_u)
+        return (np.array([ineq]), grad_x)
     
 class OCPFinalJointBounds:
     ''' Final inequality constraint for joint bounds. The constraint is defined as:
@@ -94,6 +93,28 @@ class OCPFinalJointBounds:
 
         return (ineq, grad_x)
 
+
+class OCPPathPlaneCollisionAvoidance:
+    '''' Path inequality constraint for collision avoidance with a frame of the robot
+        (typically the end-effector). The constraint is defined as:
+            n.T * x >= b
+        where x is the 3d position of the specified frame, while n and b are user-defined values
+    '''
+    def __init__(self, name, robot, frame_name, n, b):
+        self.c = OCPFinalPlaneCollisionAvoidance(name, robot, frame_name, n, b)
+        self.name = name
+        
+    def compute(self, x, u, t, recompute=True):
+        ''' Compute the cost given the state x '''
+        return self.c.compute(x, recompute)
+    
+    def compute_w_gradient(self, x, u, t, recompute=True):
+        ''' Compute the cost and its gradient given the final state x '''
+        (ineq, grad_x) = self.c.compute(x, recompute)
+        grad_u = np.zeros((ineq.shape[0], u.shape[0]))
+        return (ineq, grad_x, grad_u)
+    
+    
 class OCPPathJointBounds:
     ''' Path inequality constraint for joint bounds. The constraint is defined as:
             q >= q_min
@@ -110,6 +131,6 @@ class OCPPathJointBounds:
     def compute_w_gradient(self, x, u, t, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         (ineq, grad_x) = self.c.compute(x, recompute)
-        grad_u = np.zeros((2*x.shape[0], u.shape[0]))
+        grad_u = np.zeros((ineq.shape[0], u.shape[0]))
         return (ineq, grad_x, grad_u)
     
