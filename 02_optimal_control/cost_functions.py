@@ -18,7 +18,8 @@ class Empty:
 class OCPFinalCostState:
     ''' Cost function for reaching a desired state of the robot
     '''
-    def __init__(self, robot, q_des, v_des, weight_vel):
+    def __init__(self, name, robot, q_des, v_des, weight_vel):
+        self.name = name
         self.robot = robot
         self.nq = robot.model.nq
         self.q_des = q_des   # desired joint angles
@@ -47,7 +48,8 @@ class OCPFinalCostState:
         
 class OCPRunningCostQuadraticControl:
     ''' Quadratic cost function for penalizing control inputs '''
-    def __init__(self, robot, dt):
+    def __init__(self, name, robot, dt):
+        self.name = name
         self.robot = robot
         self.dt = dt
         
@@ -67,7 +69,8 @@ class OCPRunningCostQuadraticControl:
 class OCPRunningCostQuadraticJointVel:
     ''' Quadratic cost function for penalizing the joint velocities 
     '''
-    def __init__(self, robot):
+    def __init__(self, name, robot):
+        self.name = name
         self.robot = robot
         self.nq = robot.model.nq
         
@@ -93,7 +96,8 @@ class OCPRunningCostQuadraticJointVel:
 class OCPRunningCostQuadraticPosition:
     ''' Quadratic cost function for penalizing time to reach the desired frame position 
     '''
-    def __init__(self, robot, dt , frame_name, p_des):
+    def __init__(self, name, robot, dt , frame_name, p_des):
+        self.name = name
         self.robot = robot
         self.dt = dt
         self.nq = robot.model.nq
@@ -138,7 +142,8 @@ class OCPFinalCostFrame:
     ''' Cost function for reaching a desired configuration-velocity (in 6d) with a frame of the robot
         (typically the end-effector).
     '''
-    def __init__(self, robot, frame_name, p_des, dp_des, R_des, w_des, weight_vel):
+    def __init__(self, name, robot, frame_name, p_des, dp_des, R_des, w_des, weight_vel):
+        self.name = name
         self.robot = robot
         self.nq = robot.model.nq
         self.frame_id = robot.model.getFrameId(frame_name)
@@ -211,7 +216,8 @@ class OCPFinalCostFramePos:
     ''' Cost function for reaching a desired position-velocity with a frame of the robot
         (typically the end-effector).
     '''
-    def __init__(self, robot, frame_name, p_des, dp_des, weight_vel):
+    def __init__(self, name, robot, frame_name, p_des, dp_des, weight_vel):
+        self.name = name
         self.robot = robot
         self.nq = robot.model.nq
         self.frame_id = robot.model.getFrameId(frame_name)

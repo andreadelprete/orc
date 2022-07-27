@@ -35,23 +35,51 @@ class SingleShootingProblem:
         self.nu = self.ode.nu
         self.X = np.zeros((N, self.x0.shape[0]))
         self.U = np.zeros((N, self.nu))
-        self.last_cost = 0.0
+        
+        self.last_values = Empty()
+        self.last_values.cost = 0.0
+        self.last_values.running_cost = 0.0
+        self.last_values.final_cost = 0.0
+    
         self.running_costs = []
         self.final_costs = []
+        self.path_ineqs = []
+        self.final_ineqs = []
         
     def add_running_cost(self, c, weight=1):
         self.running_costs += [(weight,c)]
+        self.last_values.__dict__[c.name] = 0.0
     
     def add_final_cost(self, c, weight=1):
         self.final_costs += [(weight,c)]
+        self.last_values.__dict__[c.name] = 0.0
         
+    def add_path_ineq(self, c):
+        self.path_ineqs += [c]
+        self.last_values.__dict__[c.name] = 0.0
+    
+    def add_final_ineq(self, c):
+        self.final_ineqs += [c]
+        self.last_values.__dict__[c.name] = 0.0
+        
+    '''*************************************************'''
+    '''                 COST FUNCTIONS                  '''
+    '''*************************************************'''
+    
     def running_cost(self, X, U):
         ''' Compute the running cost integral '''
         cost = 0.0
         t = 0.0
+        
+        # reset the variables storing the costs
+        for (w,c) in self.running_costs:
+            self.last_values.__dict__[c.name] = 0.0
+            
         for i in range(U.shape[0]):
             for (w,c) in self.running_costs:
-                cost += w * dt * c.compute(X[i,:], U[i,:], t, recompute=True)
+                tmp = w * dt * c.compute(X[i,:], U[i,:], t, recompute=True)
+                cost += tmp
+                self.last_values.__dict__[c.name] += tmp
             t += self.dt
         return cost
         
@@ -61,6 +89,11 @@ class SingleShootingProblem:
         grad = np.zeros(self.N*self.nu)
         t = 0.0
         nx, nu = self.nx, self.nu
+        
+        # reset the variables storing the costs
+        for (w,c) in self.running_costs:
+            self.last_values.__dict__[c.name] = 0.0
+            
         for i in range(U.shape[0]):
             for (w,c) in self.running_costs:
                 ci, ci_x, ci_u = c.compute_w_gradient(X[i,:], U[i,:], t, recompute=True)
@@ -69,6 +102,7 @@ class SingleShootingProblem:
                 
                 cost += w * dt * ci
                 grad += w * dt * dci
+                self.last_values.__dict__[c.name] += w * dt * ci
             t += self.dt
         return (cost, grad)
         
@@ -76,7 +110,9 @@ class SingleShootingProblem:
         ''' Compute the final cost '''
         cost = 0.0
         for (w,c) in self.final_costs:
-            cost += w * c.compute(x_N, recompute=True)
+            tmp = w * c.compute(x_N, recompute=True)
+            cost += tmp
+            self.last_values.__dict__[c.name] = tmp
         return cost
         
     def final_cost_w_gradient(self, x_N, dxN_dU):
@@ -88,6 +124,7 @@ class SingleShootingProblem:
             dci = ci_x.dot(dxN_dU)
             cost += w * ci
             grad += w * dci
+            self.last_values.__dict__[c.name] = w * ci
         return (cost, grad)
         
     def compute_cost(self, y):
@@ -105,7 +142,9 @@ class SingleShootingProblem:
         
         # store X, U and cost
         self.X, self.U = X, U
-        self.last_cost = cost        
+        self.last_values.cost = cost
+        self.last_values.running_cost = run_cost
+        self.last_values.final_cost = fin_cost
         return cost
         
     def compute_cost_w_gradient_fd(self, y):
@@ -119,6 +158,7 @@ class SingleShootingProblem:
             cost_eps = self.compute_cost(y_eps)
             y_eps[i] = y[i]
             grad[i] = (cost_eps - cost) / eps
+        self.last_values.cost = cost
         return (cost, grad)
         
     def compute_cost_w_gradient(self, y):
@@ -138,11 +178,58 @@ class SingleShootingProblem:
         
         # store X, U and cost
         self.X, self.U = X, U
-        self.last_cost = cost        
+        self.last_values.cost = cost  
+        self.last_values.running_cost = run_cost
+        self.last_values.final_cost = fin_cost
         return (cost, grad)
+    
+    '''*************************************************'''
+    '''                 INEQUALITIES                    '''
+    '''*************************************************'''
+    
+    def path_ineq(self, X, U):
+        ''' Compute the path inequalities '''
+        ineq = []
+        t = 0.0
+        for c in self.path_ineqs:
+            self.last_values.__dict__[c.name] = []
+            
+        for i in range(U.shape[0]):
+            for c in self.path_ineqs:
+                tmp = c.compute(X[i,:], U[i,:], t, recompute=True).tolist()
+                ineq.append(tmp)
+                self.last_values.__dict__[c.name].append(tmp)
+            t += self.dt
+        return ineq
+                
+    def final_ineq(self, x_N):
+        ''' Compute the final inequalities '''
+        ineq = []
+        for c in self.final_ineqs:
+            tmp = c.compute(x_N, recompute=True).tolist()
+            ineq.append(tmp)
+            self.last_values.__dict__[c.name] = tmp
+        return ineq
+    
+    def compute_inequalities(self, y):
+        ''' Compute all the the inequality constraints '''
+        # compute state trajectory X from control y
+        U = y.reshape((self.N, self.nu))
+        t0, ndt = 0.0, 1
+        X = self.integrator.integrate(self.ode, self.x0, U, t0, self.dt, ndt, 
+                                      self.N, self.integration_scheme)
+        # compute inequalities
+        run_ineq = self.path_ineq(X, U)
+        fin_ineq = self.final_ineq(X[-1,:])
+        ineq = run_ineq + fin_ineq
+        
+        # store X, U and ineq
+        self.X, self.U = X, U
+        self.last_values.ineq = ineq
+        return ineq
         
         
-    def solve(self, y0=None, method='BFGS', use_finite_diff=False, max_iter=200):
+    def solve(self, y0=None, method='SLSQP', use_finite_diff=False, max_iter=200):
         ''' Solve the optimal control problem '''
         # if no initial guess is given => initialize with zeros
         if(y0 is None):
@@ -150,12 +237,20 @@ class SingleShootingProblem:
         
         self.iter = 0
         print('Start optimizing')
+
+#    constraints : dict or sequence of dict, optional
+#        type : str  Constraint type: ‘eq’ for equality, ‘ineq’ for inequality.
+#        fun : callable The function defining the constraint.
+#        jac : callable, optional The Jacobian of fun (only for SLSQP).
+
         if(use_finite_diff):
-            r = minimize(self.compute_cost_w_gradient_fd, y0, jac=True, method=method, 
-                     callback=self.clbk, tol=1e-4, options={'maxiter': max_iter, 'disp': True})
+            cost_func = self.compute_cost_w_gradient_fd
         else:
-            r = minimize(self.compute_cost_w_gradient, y0, jac=True, method=method, 
-                     callback=self.clbk, tol=1e-4, options={'maxiter': max_iter, 'disp': True})
+            cost_func = self.compute_cost_w_gradient
+        
+        r = minimize(cost_func, y0, jac=True, method=method, 
+                     callback=self.clbk, tol=1e-4, options={'maxiter': max_iter, 'disp': True},
+                     constraints={'type': 'ineq', 'fun': self.compute_inequalities})
         return r
         
     def sanity_check_cost_gradient(self, N_TESTS=10):
@@ -182,9 +277,16 @@ class SingleShootingProblem:
 #                print('Grad   :\n', 1e3*grad)
         
     def clbk(self, xk):
-        print('Iter %3d, cost %5f'%(self.iter, self.last_cost))
+        print('Iter %3d, cost %5f'%(self.iter, self.last_values.cost))
+        for (w,c) in self.running_costs:
+            print("\t Running cost %15s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+        for (w,c) in self.final_costs:
+            print("\t Final cost   %15s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+        for c in self.path_ineqs:
+            print('\t Path ineq    %15s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+#        print('\t\tlast u:', self.U.T)
         self.iter += 1
-        if(self.iter%20==0):
+        if(self.iter%1==0):
             self.display_motion()
         return False
         
@@ -209,6 +311,7 @@ if __name__=='__main__':
     import single_shooting_conf as conf
     from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPFinalCostFrame
     from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticControl
+    from inequality_constraints import OCPPathPlaneCollisionAvoidance
     import pinocchio as pin
     np.set_printoptions(precision=3, linewidth=200, suppress=True)
         
@@ -220,8 +323,9 @@ if __name__=='__main__':
     system=conf.system
     
     if(system=='ur'):
+        r = loadUR()
+    elif(system=='ur-lab'):
         r = loadURlab() 
-#        r = loadUR()
     elif(system=='double-pendulum'):
         r = load('double_pendulum')
     elif(system=='pendulum'):
@@ -234,10 +338,13 @@ if __name__=='__main__':
     u0 = robot.gravity(conf.q0)
     for i in range(N):
         U[i,:] = u0
-    ode = ODERobot('ode', robot)
+    
+    ode = ODERobot('ode', robot, conf.B)
     
     # create simulator 
     simu = RobotSimulator(conf, robot)
+    simu.gui.addBox("world/table", 1, 0.8, 0.04, (0.2, 0.2, 0.2, 1.))
+    simu.gui.applyConfiguration("world/table", (0.5, 0.4, conf.table_height-0.02, 0, 0, 0, 1)) # 0.85
     
     # create OCP
     problem = SingleShootingProblem('ssp', ode, conf.x0, dt, N, conf.integration_scheme, simu)
@@ -256,21 +363,28 @@ if __name__=='__main__':
             time.sleep(dt-time_spent)
       
     # create cost function terms
-#    final_cost = OCPFinalCostFramePos(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
-#    final_cost = OCPFinalCostFrame(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
+    final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
+#    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
 #    problem.add_final_cost(final_cost)
-#    final_cost_state = OCPFinalCostState(robot, conf.q_des, np.zeros(nq), conf.weight_vel)
+    
+#    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), conf.weight_vel)
 #    problem.add_final_cost(final_cost_state)
-#    effort_cost = OCPRunningCostQuadraticControl(robot, dt)
-    effort_cost = OCPRunningCostQuadraticJointVel(robot)
-    problem.add_running_cost(effort_cost, conf.weight_u)    
-
+    
+    effort_cost = OCPRunningCostQuadraticControl("joint torques", robot, dt)
+    problem.add_running_cost(effort_cost, conf.weight_u)
+    
+    dq_cost = OCPRunningCostQuadraticJointVel("joint vel", robot)
+    problem.add_running_cost(dq_cost, conf.weight_dq)    
+    
+    # create constraints
+    table_avoidance = OCPPathPlaneCollisionAvoidance("table collision", robot, conf.frame_name, conf.table_normal, conf.table_height)
+    problem.add_path_ineq(table_avoidance)
+    
 #    problem.sanity_check_cost_gradient(5)
 #    import os
 #    os.exit()
     
     # solve OCP
-#    problem.solve(method='Nelder-Mead')
     problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)
     print('U norm:', norm(problem.U))
     print('X_N\n', problem.X[-1,:].T)
@@ -278,3 +392,4 @@ if __name__=='__main__':
     # create simulator 
     print("Showing final motion in viewer")
     problem.display_motion(slow_down_factor=3)
+    print("To display the motion again type:\nproblem.display_motion()")

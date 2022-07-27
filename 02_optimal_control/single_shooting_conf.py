@@ -16,33 +16,46 @@ T = 2.0                         # OCP horizon
 dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
 use_finite_diff = False
-system = 'ur'
-frame_name = 'ee_link'    # name of the frame to control (end-effector)
 
+#system = 'ur'
+system = 'ur-lab'
 #system='double-pendulum'
-#frame_name = 'joint2'
-
 #system='pendulum'
-#frame_name = 'joint1'
 
-weight_vel = 1e-1   # cost function weight for final velocity
-weight_u = 1e0     # cost function weight for control
+table_normal = np.array([0., 0., 1.])
+table_height = -0.55
+
+weight_vel = 1e-1   # cost function weight for final end-effector velocity
+weight_dq = 1e0     # cost function weight for joint velocities
+weight_u = 1e0     # cost function weight for joint torques
 
 if(system=='ur'):
     nq = 6
+    frame_name = 'ee_link'    # name of the frame to control (end-effector)
     q0    = np.array([ 0. , -1.0,      0.7,   0. ,  0. ,  0. ])  # initial configuration
     q_des = np.array([ 0. , -np.pi/2,  0.0 ,  0. ,  0. ,  0. ])  # final configuration
     p_des = np.array([0.6, 0.2, 0.4])   # desired end-effector final position
     R_des = np.identity(3)              # desired end-effector final orientation
+    B = 0*np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
+elif(system=='ur-lab'):
+    nq = 6
+    frame_name = 'tool0'
+    q0    = np.array([ 0. , -1.0,      0.7,   0. ,  0. ,  0. ])  # initial configuration
+    p_des = np.array([0.6, 0.2, -0.4])   # desired end-effector final position
+    B = np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='pendulum'):
     nq = 1
+    frame_name = 'joint1'
     q0 = np.array([np.pi/2])
     p_des = np.array([0.6, 0.2, 0.4])   # desired end-effector final position
+    B = np.zeros(nq) # joint viscous friction coefficient
 elif(system=='double-pendulum'):
     nq = 2
+    frame_name = 'joint2'
     q0 = np.array([np.pi+0.3, 0.0])
     p_des = np.array([0.0290872, 0, 0.135]) # upper position
     q_des = np.array([0.0, 0.0])
+    B = np.zeros(nq) # joint viscous friction coefficient
 
 x0 = np.concatenate((q0, np.zeros(nq)))  # initial state
 dp_des      = np.zeros(3)                   # desired end-effector final linear velocity
