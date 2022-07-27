@@ -160,18 +160,26 @@ class RobotSimulator:
             except:
                 pass
             gepetto.corbaserver.Client()
-            self.robot.initViewer(loadModel=True)
+            self.robot.initViewer(loadModel=False)
             self.gui = self.robot.viewer.gui
             if(conf.show_floor):
                 self.robot.viewer.gui.createSceneWithFloor('world')
                 self.gui.setLightingMode('world/floor', 'OFF')
+    
+            self.robot.loadViewerModel()
             self.robot.displayCollisions(False)
             self.robot.displayVisuals(True)
             self.robot.display(self.q)            
-            try:  
-                self.gui.setCameraTransform("python-pinocchio", conf.CAMERA_TRANSFORM)
-            except:
-                self.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)            
+            
+#            LOCOSIM_PATH = "/home/adelprete/devel/src/locosim"
+#            success = self.gui.addMesh("world/pinocchio/tavolo", LOCOSIM_PATH+"/ros_impedance_controller/worlds/models/tavolo/mesh/tavolo.stl")
+#            if(success):
+#                print("Table mesh added with success!")
+                
+#            try:  
+#                self.gui.setCameraTransform("python-pinocchio", conf.CAMERA_TRANSFORM)
+#            except:
+#                self.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)            
 
     # Re-initialize the simulator
     def init(self, q0=None, v0=None, reset_contact_positions=False):

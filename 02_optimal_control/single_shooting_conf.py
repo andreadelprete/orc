@@ -15,9 +15,8 @@ LINE_WIDTH = 60
 T = 2.0                         # OCP horizon
 dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
-use_finite_diff = True
+use_finite_diff = False
 system = 'ur'
-#frame_name = " mamma" 
 frame_name = 'ee_link'    # name of the frame to control (end-effector)
 
 #system='double-pendulum'
@@ -27,7 +26,7 @@ frame_name = 'ee_link'    # name of the frame to control (end-effector)
 #frame_name = 'joint1'
 
 weight_vel = 1e-1   # cost function weight for final velocity
-weight_u = 1e-6     # cost function weight for control
+weight_u = 1e0     # cost function weight for control
 
 if(system=='ur'):
     nq = 6

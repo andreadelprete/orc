@@ -14,6 +14,14 @@ import pinocchio as pin
 from pinocchio.robot_wrapper import RobotWrapper
 from example_robot_data.robots_loader import getModelPath, readParamsFromSrdf
 
+def loadURlab():
+    LOCOSIM_PATH = "/home/adelprete/devel/src/locosim"
+#    URDF = LOCOSIM_PATH+"/robot_urdf/ur5.urdf"
+    URDF = LOCOSIM_PATH+"/ur_description/urdf/ur5.urdf"
+    modelPath = '/opt/openrobots/share/'
+    robot = RobotWrapper.BuildFromURDF(URDF, [modelPath])
+    
+    return robot
 
 def loadUR(robotNum=5, limited=False, gripper=False, URDF_FILENAME='', path=''):
     assert (not (gripper and (robot == 10 or limited)))
@@ -32,7 +40,7 @@ def loadUR(robotNum=5, limited=False, gripper=False, URDF_FILENAME='', path=''):
         return robot
     except Exception as e:
         # if that did not work => use the one of example_robot_data
-        from example_robot_data.robots_loader import loadUR, load
+        from example_robot_data.robots_loader import load
         return load('ur5')
         
 def loadUR_urdf(robot=5, limited=False, gripper=False):

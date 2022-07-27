@@ -62,9 +62,36 @@ class OCPRunningCostQuadraticControl:
         grad_x = np.zeros(x.shape[0])
         grad_u = u
         return (cost, grad_x, grad_u)
+    
+    
+class OCPRunningCostQuadraticJointVel:
+    ''' Quadratic cost function for penalizing the joint velocities 
+    '''
+    def __init__(self, robot):
+        self.robot = robot
+        self.nq = robot.model.nq
+        
+    def compute(self, x, u, t, recompute=True):
+        ''' Compute the cost for a single time instant'''
+        v = x[self.nq:]
+        cost = 0.5*v.dot(v)
+        return cost
+        
+    def compute_w_gradient(self, x, u, t, recompute=True):
+        ''' Compute the cost for a single time instant and its gradient w.r.t. x and u '''
+        v = x[self.nq:]
+
+        # compute runnning cost
+        cost = 0.5*v.dot(v)
+        
+        #Compute gradient of the runnning cost respect to x and u    
+        grad_x =  np.concatenate((np.zeros(self.nq), v))
+        grad_u = np.zeros(u.shape[0])
+        return (cost, grad_x, grad_u)
+
 
 class OCPRunningCostQuadraticPosition:
-    ''' Quadratic cost function for penalizing control inputs and minimum time to reach the desired position 
+    ''' Quadratic cost function for penalizing time to reach the desired frame position 
     '''
     def __init__(self, robot, dt , frame_name, p_des):
         self.robot = robot
