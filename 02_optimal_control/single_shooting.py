@@ -197,8 +197,8 @@ class SingleShootingProblem:
         for i in range(U.shape[0]):
             for c in self.path_ineqs:
                 tmp = c.compute(X[i,:], U[i,:], t, recompute=True).tolist()
-                ineq.append(tmp)
-                self.last_values.__dict__[c.name].append(tmp)
+                ineq.extend(tmp)
+                self.last_values.__dict__[c.name].extend(tmp)
             t += self.dt
         return ineq
                 
@@ -207,7 +207,7 @@ class SingleShootingProblem:
         ineq = []
         for c in self.final_ineqs:
             tmp = c.compute(x_N, recompute=True).tolist()
-            ineq.append(tmp)
+            ineq.extend(tmp)
             self.last_values.__dict__[c.name] = tmp
         return ineq
     
@@ -221,7 +221,7 @@ class SingleShootingProblem:
         # compute inequalities
         run_ineq = self.path_ineq(X, U)
         fin_ineq = self.final_ineq(X[-1,:])
-        ineq = run_ineq + fin_ineq
+        ineq = np.array(run_ineq + fin_ineq) # concatenation
         
         # store X, U and ineq
         self.X, self.U = X, U
@@ -249,7 +249,7 @@ class SingleShootingProblem:
             cost_func = self.compute_cost_w_gradient
         
         r = minimize(cost_func, y0, jac=True, method=method, 
-                     callback=self.clbk, tol=1e-4, options={'maxiter': max_iter, 'disp': True},
+                     callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},
                      constraints={'type': 'ineq', 'fun': self.compute_inequalities})
         return r
         
@@ -279,14 +279,14 @@ class SingleShootingProblem:
     def clbk(self, xk):
         print('Iter %3d, cost %5f'%(self.iter, self.last_values.cost))
         for (w,c) in self.running_costs:
-            print("\t Running cost %15s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+            print("\t Running cost %25s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
         for (w,c) in self.final_costs:
-            print("\t Final cost   %15s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+            print("\t Final cost   %25s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
         for c in self.path_ineqs:
-            print('\t Path ineq    %15s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            print('\t Path ineq    %25s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
-        if(self.iter%1==0):
+        if(self.iter%5==0):
             self.display_motion()
         return False
         
@@ -312,6 +312,7 @@ if __name__=='__main__':
     from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPFinalCostFrame
     from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticControl
     from inequality_constraints import OCPPathPlaneCollisionAvoidance
+    from inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
     import pinocchio as pin
     np.set_printoptions(precision=3, linewidth=200, suppress=True)
         
@@ -343,8 +344,17 @@ if __name__=='__main__':
     
     # create simulator 
     simu = RobotSimulator(conf, robot)
-    simu.gui.addBox("world/table", 1, 0.8, 0.04, (0.2, 0.2, 0.2, 1.))
-    simu.gui.applyConfiguration("world/table", (0.5, 0.4, conf.table_height-0.02, 0, 0, 0, 1)) # 0.85
+    
+    # display table and stuff
+    simu.gui.addBox("world/table", 1.5, 1.5, 0.04, (0.5, 0.5, 0.5, 1.))
+    simu.gui.setLightingMode("world/table", "ON")
+    simu.gui.applyConfiguration("world/table", (0.0, 0.0, conf.table_height-0.04, 0, 0, 0, 1)) # 0.85
+    
+    simu.gui.addLight("world/table_light", "python-pinocchio", 0.1, (1.,1,1,1))
+    simu.gui.applyConfiguration("world/table_light", (0.0, 0.0, conf.table_height+0.8, 0, 0, 0, 1))
+    
+    for frame in conf.collision_frames:
+        simu.add_frame_axes(frame, radius=conf.safety_margin, length=0.03)        
     
     # create OCP
     problem = SingleShootingProblem('ssp', ode, conf.x0, dt, N, conf.integration_scheme, simu)
@@ -365,7 +375,7 @@ if __name__=='__main__':
     # create cost function terms
     final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
 #    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
-#    problem.add_final_cost(final_cost)
+    problem.add_final_cost(final_cost)
     
 #    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), conf.weight_vel)
 #    problem.add_final_cost(final_cost_state)
@@ -377,8 +387,24 @@ if __name__=='__main__':
     problem.add_running_cost(dq_cost, conf.weight_dq)    
     
     # create constraints
-    table_avoidance = OCPPathPlaneCollisionAvoidance("table collision", robot, conf.frame_name, conf.table_normal, conf.table_height)
-    problem.add_path_ineq(table_avoidance)
+    q_min = robot.model.lowerPositionLimit
+    q_max = robot.model.upperPositionLimit
+    dq_max = robot.model.velocityLimit
+    dq_min = -dq_max
+    joint_bounds = OCPPathJointBounds("joint bounds", robot, q_min, q_max, dq_min, dq_max)
+    problem.add_path_ineq(joint_bounds)
+    
+    joint_bounds_final = OCPFinalJointBounds("joint bounds", robot, q_min, q_max, dq_min, dq_max)
+    problem.add_final_ineq(joint_bounds_final)
+    
+    
+    for frame in conf.collision_frames:
+        table_avoidance = OCPPathPlaneCollisionAvoidance("table coll "+frame, robot, frame, 
+                                                         conf.table_normal, conf.table_height+conf.safety_margin)
+        problem.add_path_ineq(table_avoidance)
+        
+    simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
+    simu.gui.applyConfiguration('world/target', conf.p_des.tolist()+[0.,0.,0.,1.])
     
 #    problem.sanity_check_cost_gradient(5)
 #    import os

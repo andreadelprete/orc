@@ -23,11 +23,12 @@ system = 'ur-lab'
 #system='pendulum'
 
 table_normal = np.array([0., 0., 1.])
-table_height = -0.55
+table_height = -0.7
+safety_margin = 0.05
 
 weight_vel = 1e-1   # cost function weight for final end-effector velocity
-weight_dq = 1e0     # cost function weight for joint velocities
-weight_u = 1e0     # cost function weight for joint torques
+weight_dq = 1e-3     # cost function weight for joint velocities
+weight_u = 1e-6     # cost function weight for joint torques
 
 if(system=='ur'):
     nq = 6
@@ -40,8 +41,9 @@ if(system=='ur'):
 elif(system=='ur-lab'):
     nq = 6
     frame_name = 'tool0'
+    collision_frames = [frame_name, 'wrist_1_joint', 'wrist_2_joint']
     q0    = np.array([ 0. , -1.0,      0.7,   0. ,  0. ,  0. ])  # initial configuration
-    p_des = np.array([0.6, 0.2, -0.4])   # desired end-effector final position
+    p_des = np.array([0.0, 0.0, -0.5])   # desired end-effector final position
     B = np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='pendulum'):
     nq = 1

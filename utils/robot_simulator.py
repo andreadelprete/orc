@@ -141,6 +141,8 @@ class RobotSimulator:
         self.candidate_contact_points = [] # candidate contact points
         self.contact_surfaces = []
         
+        self.frame_axes = [] # list of frames whose axes must be displayed in viewer
+        
         self.DISPLAY_T = conf.DISPLAY_T     # refresh period for viewer
         self.display_counter = self.DISPLAY_T
         self.init(conf.q0, None, True)
@@ -179,7 +181,11 @@ class RobotSimulator:
 #            try:  
 #                self.gui.setCameraTransform("python-pinocchio", conf.CAMERA_TRANSFORM)
 #            except:
-#                self.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)            
+#                self.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)       
+            
+    def add_frame_axes(self, frame_name, color=(1.,0,0,0.5), radius=0.02, length=0.05):
+        self.frame_axes += [frame_name]
+        self.gui.addXYZaxis("world/axes-"+frame_name, color, radius, length)
 
     # Re-initialize the simulator
     def init(self, q0=None, v0=None, reset_contact_positions=False):
@@ -359,4 +365,9 @@ class RobotSimulator:
     def display(self, q):
         if(self.conf.use_viewer):
             self.robot.display(q)
+            
+            for frame in self.frame_axes:
+                frame_id = self.robot.model.getFrameId(frame)
+                H = self.robot.framePlacement(q, frame_id)
+                self.gui.applyConfiguration("world/axes-"+frame, se3.SE3ToXYZQUATtuple(H))
         
