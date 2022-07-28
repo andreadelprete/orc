@@ -29,11 +29,12 @@ table_pos = np.array([0.5, 0.4, 0.85]) #-0.7
 table_size = np.array([1.5, 1.5, 0.04])
 safety_margin = 0.07
 
-weight_final_pos = 10  # cost function weight for final end-effector position
+weight_final_pos = 0  # cost function weight for final end-effector position
 weight_final_vel = 0   # cost function weight for final end-effector velocity
+weight_final_q  = 10   # cost function weight for final joint positions
 weight_final_dq = 10   # cost function weight for final joint velocities
-weight_dq = 1e-2       # cost function weight for joint velocities
-weight_u = 1e-6        # cost function weight for joint torques
+weight_dq = 1e-1       # cost function weight for joint velocities
+weight_u = 1e-4        # cost function weight for joint torques
 
 if(system=='ur'):
     nq = 6
@@ -45,7 +46,7 @@ if(system=='ur'):
     B = 0*np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='ur-lab'):
     nq = 6
-    fixed_world_translation = np.array([0.5, 0.35, 1.8])
+    fixed_world_translation = np.array([0.5, 0.35, 1.75])
     frame_name = 'tool0'
     # list of frames that should not collide with table
     table_collision_frames = ['tool0', 'wrist_1_joint', 'wrist_2_joint']
@@ -55,7 +56,15 @@ elif(system=='ur-lab'):
 #                             ('wrist_2_joint', 'shoulder_pan_joint', 0.15)]
     self_collision_frames = []
     q0    = np.array([-0.32932, -0.77775, -2.5674, -1.6349, -1.57867, -1.00179])  # initial configuration
-    q_des = np.copy(q0)
+
+    q_des = np.copy(q0)   
+    # on belt 1
+#    q_des = np.array([0.134582, -2.607235, -0.130109, -1.954317, -1.548532, -0.661044])
+    # on table
+    q_des = np.array([-0.176686, -1.049217, -1.886168, -1.754567, -1.522096, -1.082379])
+    # on belt 2
+#    q_des = np.array([-3.313833, -2.238478, -1.068578, -1.395336, -1.554650, -0.658182])
+    
     p_des = np.array([0.5, 0.4, 1.05])   # desired end-effector final position
     B = np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='pendulum'):

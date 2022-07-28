@@ -357,7 +357,7 @@ class SingleShootingProblem:
             print('\t Final ineq   %40s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
-        if(self.iter%100==0):
+        if(self.iter%10==0):
             self.display_motion()
         return False
         
@@ -425,8 +425,11 @@ if __name__=='__main__':
     simu.gui.addBox("world/table", conf.table_size[0], conf.table_size[1], conf.table_size[2], (0.5, 0.5, 0.5, 1.))
     robot.applyConfiguration("world/table", (x_table[0], x_table[1], x_table[2], 0, 0, 0, 1))
     
+    simu.gui.addBox("world/backwall", 1.0, 0.01, 2.0, (0.3, 0.3, 0.3, 1.))
+    robot.applyConfiguration("world/backwall", (0.5, 0.05, 1.0, 0, 0, 0, 1))
+    
     simu.gui.addLight("world/table_light", "python-pinocchio", 0.1, (1.,1,1,1))
-    robot.applyConfiguration("world/table_light", (x_table[0], x_table[1], x_table[2]+1, 0, 0, 0, 1))
+    robot.applyConfiguration("world/table_light", (x_table[0], x_table[1], x_table[2]+1.5, 0, 0, 0, 1))
     
     simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
     x_des = conf.p_des #- conf.fixed_world_translation
@@ -455,12 +458,14 @@ if __name__=='__main__':
             time.sleep(dt-time_spent)
       
     # create cost function terms
-    final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, 
-                                      conf.weight_final_vel)
-#    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
-    problem.add_final_cost(final_cost, conf.weight_final_pos)
+    if(conf.weight_final_pos>0):
+        final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, 
+                                          conf.weight_final_vel)
+    #    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
+        problem.add_final_cost(final_cost, conf.weight_final_pos)
     
-    final_cost_state = OCPFinalCostState("final dq", robot, conf.q_des, np.zeros(nq), 0.0, conf.weight_final_dq)
+    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), 
+                                         conf.weight_final_q, conf.weight_final_dq)
     problem.add_final_cost(final_cost_state)
     
     effort_cost = OCPRunningCostQuadraticControl("joint torques", robot, dt)
