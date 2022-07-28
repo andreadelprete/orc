@@ -6,7 +6,6 @@ Created on Thu Apr 18 09:47:07 2019
 """
 
 import numpy as np
-import os
 from math import sqrt
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
@@ -24,12 +23,7 @@ system = 'ur-lab'
 #system='double-pendulum'
 #system='pendulum'
 
-table_normal = np.array([0., 0., 1.])
-table_pos = np.array([0.5, 0.4, 0.85]) #-0.7
-table_size = np.array([1.5, 1.5, 0.04])
-safety_margin = 0.07
-
-weight_final_pos = 0  # cost function weight for final end-effector position
+weight_final_pos = 0   # cost function weight for final end-effector position
 weight_final_vel = 0   # cost function weight for final end-effector velocity
 weight_final_q  = 10   # cost function weight for final joint positions
 weight_final_dq = 10   # cost function weight for final joint velocities
@@ -48,8 +42,10 @@ elif(system=='ur-lab'):
     nq = 6
     fixed_world_translation = np.array([0.5, 0.35, 1.75])
     frame_name = 'tool0'
-    # list of frames that should not collide with table
-    table_collision_frames = ['tool0', 'wrist_1_joint', 'wrist_2_joint']
+    # list of frames that should not collide with table, and their minimum distance
+    table_collision_frames = [('tool0', 0.07),
+                              ('wrist_1_joint', 0.07),
+                              ('wrist_2_joint', 0.07)]
     # list of frame pairs that should not collide together
 #    self_collision_frames = [(frame_name, 'shoulder_pan_joint', 0.15),
 #                             ('wrist_1_joint', 'shoulder_pan_joint', 0.15),
