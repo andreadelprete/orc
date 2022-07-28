@@ -369,5 +369,6 @@ class RobotSimulator:
             for frame in self.frame_axes:
                 frame_id = self.robot.model.getFrameId(frame)
                 H = self.robot.framePlacement(q, frame_id)
-                self.gui.applyConfiguration("world/axes-"+frame, se3.SE3ToXYZQUATtuple(H))
+                self.robot.applyConfiguration("world/axes-"+frame, se3.SE3ToXYZQUATtuple(H))
+#                self.gui.applyConfiguration("world/axes-"+frame, se3.SE3ToXYZQUATtuple(H))
         

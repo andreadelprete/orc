@@ -17,19 +17,23 @@ dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
 use_finite_diff = False
 
+DATA_FILE_NAME = 'ur5_X_U_optimal'
+
 #system = 'ur'
 system = 'ur-lab'
 #system='double-pendulum'
 #system='pendulum'
 
 table_normal = np.array([0., 0., 1.])
-table_height = -0.7
-safety_margin = 0.05
+table_pos = np.array([0.5, 0.4, 0.85]) #-0.7
+table_size = np.array([1.5, 1.5, 0.04])
+safety_margin = 0.07
 
-weight_final_pos = 10 # cost weight for final end-effector position
-weight_vel = 1e-1   # cost function weight for final end-effector velocity
-weight_dq = 1e-3     # cost function weight for joint velocities
-weight_u = 1e-6     # cost function weight for joint torques
+weight_final_pos = 10  # cost function weight for final end-effector position
+weight_final_vel = 0   # cost function weight for final end-effector velocity
+weight_final_dq = 10   # cost function weight for final joint velocities
+weight_dq = 1e-2       # cost function weight for joint velocities
+weight_u = 1e-6        # cost function weight for joint torques
 
 if(system=='ur'):
     nq = 6
@@ -41,10 +45,18 @@ if(system=='ur'):
     B = 0*np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='ur-lab'):
     nq = 6
+    fixed_world_translation = np.array([0.5, 0.35, 1.8])
     frame_name = 'tool0'
-    collision_frames = [frame_name, 'wrist_1_joint', 'wrist_2_joint']
-    q0    = np.array([ 0. , -1.0,      0.7,   0. ,  0. ,  0. ])  # initial configuration
-    p_des = np.array([0.0, 0.0, -0.5])   # desired end-effector final position
+    # list of frames that should not collide with table
+    table_collision_frames = ['tool0', 'wrist_1_joint', 'wrist_2_joint']
+    # list of frame pairs that should not collide together
+#    self_collision_frames = [(frame_name, 'shoulder_pan_joint', 0.15),
+#                             ('wrist_1_joint', 'shoulder_pan_joint', 0.15),
+#                             ('wrist_2_joint', 'shoulder_pan_joint', 0.15)]
+    self_collision_frames = []
+    q0    = np.array([-0.32932, -0.77775, -2.5674, -1.6349, -1.57867, -1.00179])  # initial configuration
+    q_des = np.copy(q0)
+    p_des = np.array([0.5, 0.4, 1.05])   # desired end-effector final position
     B = np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='pendulum'):
     nq = 1

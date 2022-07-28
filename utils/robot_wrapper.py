@@ -1,5 +1,3 @@
-import time
-
 from pinocchio.robot_wrapper import RobotWrapper as PinocchioRobotWrapper
 from pinocchio.deprecation import deprecated
 import pinocchio as pin
@@ -16,41 +14,38 @@ class RobotWrapper(PinocchioRobotWrapper):
         robot.initFromURDF(filename, package_dirs, root_joint, verbose, meshLoader)
         return robot
     
+    def __init__(self, model = pin.Model(), collision_model = None, visual_model = None, verbose=False, fixed_world_translation=None):
+        super().__init__(model, collision_model, visual_model, verbose)
+        if(fixed_world_translation is None):
+            self.w2b = np.zeros(3) # world to base fixed translation
+        else:
+            self.setFixedWorldTranslation(fixed_world_translation)
+    
     @property
     def na(self):
         if(self.model.joints[0].nq==7):
             return self.model.nv-6
         return self.model.nv
-
-    def mass(self, q, update=True):
-        if(update):
-            return pin.crba(self.model, self.data, q)
-        return self.data.M
-
-    def nle(self, q, v, update=True):
-        if(update):
-            return pin.nonLinearEffects(self.model, self.data, q, v)
-        return self.data.nle
+    
+    def setFixedWorldTranslation(self, translation):
+        ''' Set a fixed translation from the world frame to the universe frame of the robot URDF '''
+        assert(translation.shape[0]==3)
+        self.w2b = translation
         
-    def com(self, q=None, v=None, a=None, update=True):
-        if(update==False or q is None):
-            return PinocchioRobotWrapper.com(self, q);
-        if a is None:
-            if v is None:
-                return PinocchioRobotWrapper.com(self, q)
-            return PinocchioRobotWrapper.com(self, q, v)
-        return PinocchioRobotWrapper.com(self, q, v,a)
-        
-    def Jcom(self, q, update=True):
-        if(update):
-            return pin.jacobianCenterOfMass(self.model, self.data, q)
-        return self.data.Jcom
-        
-    def momentumJacobian(self, q, v, update=True):
-        if(update):
-            pin.ccrba(self.model, self.data, q, v);
-        return self.data.Ag;
-
+    def placement(self, q, index, update_kinematics=True):
+        H = PinocchioRobotWrapper.placement(self, q, index, update_kinematics)
+        H.translation += self.w2b
+        return H
+    
+    def framePlacement(self, q, index, update_kinematics=True):
+        H = PinocchioRobotWrapper.framePlacement(self, q, index, update_kinematics)
+        H.translation += self.w2b
+        return H
+    
+    def applyConfiguration(self, node_name, configuration):
+        c = np.array(configuration)
+        c[:3] -= self.w2b
+        self.viz.viewer.gui.applyConfiguration(node_name, c.tolist())
 
     def computeAllTerms(self, q, v):
         ''' pin.computeAllTerms is equivalent to calling:
@@ -90,6 +85,8 @@ class RobotWrapper(PinocchioRobotWrapper):
         if(update): 
             pin.computeFrameJacobian(self.model, self.data, q, index)
         return pin.getFrameJacobian(self.model, self.data, index, ref_frame)
+    
+    
         
     def frameVelocity(self, q, v, index, update_kinematics=True, ref_frame=pin.ReferenceFrame.LOCAL_WORLD_ALIGNED):
         if update_kinematics:
@@ -141,6 +138,35 @@ class RobotWrapper(PinocchioRobotWrapper):
         Hr = pin.SE3(H.rotation, np.zeros(3))
         a = Hr.act(a_local)
         return a
+    
+    def mass(self, q, update=True):
+        if(update):
+            return pin.crba(self.model, self.data, q)
+        return self.data.M
+
+    def nle(self, q, v, update=True):
+        if(update):
+            return pin.nonLinearEffects(self.model, self.data, q, v)
+        return self.data.nle
+        
+    def com(self, q=None, v=None, a=None, update=True):
+        if(update==False or q is None):
+            return PinocchioRobotWrapper.com(self, q);
+        if a is None:
+            if v is None:
+                return PinocchioRobotWrapper.com(self, q)
+            return PinocchioRobotWrapper.com(self, q, v)
+        return PinocchioRobotWrapper.com(self, q, v,a)
+        
+    def Jcom(self, q, update=True):
+        if(update):
+            return pin.jacobianCenterOfMass(self.model, self.data, q)
+        return self.data.Jcom
+        
+    def momentumJacobian(self, q, v, update=True):
+        if(update):
+            pin.ccrba(self.model, self.data, q, v);
+        return self.data.Ag;
       
     def deactivateCollisionPairs(self, collision_pair_indexes):
         for i in collision_pair_indexes:

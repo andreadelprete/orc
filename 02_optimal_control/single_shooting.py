@@ -177,7 +177,7 @@ class SingleShootingProblem:
         grad = grad_run + grad_fin
         
         # store X, U and cost
-        self.X, self.U = X, U
+        self.X, self.U, self.dXdU = X, U, dXdU
         self.last_values.cost = cost  
         self.last_values.running_cost = run_cost
         self.last_values.final_cost = fin_cost
@@ -211,7 +211,7 @@ class SingleShootingProblem:
             self.last_values.__dict__[c.name] = tmp
         return ineq
     
-    def compute_inequalities(self, y):
+    def compute_ineq(self, y):
         ''' Compute all the the inequality constraints '''
         # compute state trajectory X from control y
         U = y.reshape((self.N, self.nu))
@@ -230,9 +230,79 @@ class SingleShootingProblem:
         self.X, self.U = X, U
         self.last_values.ineq = ineq
         return ineq
+    
+    
+    def path_ineq_w_jac(self, X, U, dXdU):
+        ''' Compute the path inequalities '''
+        ineq = []
+        nx, nu = self.nx, self.nu
+        jac = np.zeros((self.N*1000, self.N*nu)) # assume there are <1000 ineq
+        index = 0
+        t = 0.0
+        for c in self.path_ineqs:
+            self.last_values.__dict__[c.name] = []
+            
+        for i in range(U.shape[0]):
+            for c in self.path_ineqs:
+                ci, ci_x, ci_u = c.compute_w_gradient(X[i,:], U[i,:], t, recompute=True)
+                dci = ci_x.dot(dXdU[i*nx:(i+1)*nx,:]) 
+                dci[:, i*nu:(i+1)*nu] += ci_u
+                
+                ineq.extend(ci.tolist())
+                jac[index:index+dci.shape[0],:] = dci
+                index += dci.shape[0]
+                
+                self.last_values.__dict__[c.name].extend(ci.tolist())
+            t += self.dt
+            
+        jac = jac[:index,:]
+        return (ineq, jac)
+    
+            
+    def final_ineq_w_jac(self, x_N, dxN_dU):
+        ''' Compute the final inequalities '''
+        ineq = []
+        jac = np.zeros((1000, self.N*self.nu)) # assume there are <1000 ineq
+        index = 0
+        for c in self.final_ineqs:
+            ci, ci_x = c.compute_w_gradient(x_N, recompute=True)
+            dci = ci_x.dot(dxN_dU) 
+            
+            ineq.extend(ci.tolist())
+            jac[index:index+ci.shape[0],:] = dci
+            index += dci.shape[0]
+            
+            self.last_values.__dict__[c.name] = ci.tolist()
+            
+        jac = jac[:index,:]
+        return (ineq, jac)
+    
+    
+    def compute_ineq_jac(self, y):
+        ''' Compute all the the inequality constraints '''
+        # compute state trajectory X from control y
+        U = y.reshape((self.N, self.nu))
+        if(norm(self.U-U)!=0.0):
+            t0 = 0.0
+            X, dXdU = self.integrator.integrate_w_sensitivities_u(self.ode, self.x0, U, t0, 
+                                                        self.dt, self.N, 
+                                                        self.integration_scheme)
+        else:
+            X, dXdU = self.X, self.dXdU
+            
+        # compute inequalities
+        (run_ineq, jac_run) = self.path_ineq_w_jac(X, U, dXdU)
+        (fin_ineq, jac_fin) = self.final_ineq_w_jac(X[-1,:], dXdU[-self.nx:,:])
+        ineq = np.array(run_ineq + fin_ineq) # concatenation
+        jac = np.vstack((jac_run, jac_fin))
+        
+        # store X, U and ineq
+        self.X, self.U = X, U
+        self.last_values.ineq = ineq
+        return jac
         
         
-    def solve(self, y0=None, method='SLSQP', use_finite_diff=False, max_iter=200):
+    def solve(self, y0=None, method='SLSQP', use_finite_diff=False, max_iter=500):
         ''' Solve the optimal control problem '''
         # if no initial guess is given => initialize with zeros
         if(y0 is None):
@@ -240,12 +310,6 @@ class SingleShootingProblem:
         
         self.iter = 0
         print('Start optimizing')
-
-#    constraints : dict or sequence of dict, optional
-#        type : str  Constraint type: ‘eq’ for equality, ‘ineq’ for inequality.
-#        fun : callable The function defining the constraint.
-#        jac : callable, optional The Jacobian of fun (only for SLSQP).
-
         if(use_finite_diff):
             cost_func = self.compute_cost_w_gradient_fd
         else:
@@ -253,7 +317,8 @@ class SingleShootingProblem:
         
         r = minimize(cost_func, y0, jac=True, method=method, 
                      callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},
-                     constraints={'type': 'ineq', 'fun': self.compute_inequalities})
+                     constraints={'type': 'ineq', 'fun': self.compute_ineq,
+                                  'jac': self.compute_ineq_jac})
         return r
         
     def sanity_check_cost_gradient(self, N_TESTS=10):
@@ -279,22 +344,24 @@ class SingleShootingProblem:
 #                print('Grad FD:\n', 1e3*grad_fd)
 #                print('Grad   :\n', 1e3*grad)
         
+        
     def clbk(self, xk):
         print('Iter %3d, cost %5f'%(self.iter, self.last_values.cost))
         for (w,c) in self.running_costs:
-            print("\t Running cost %25s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+            print("\t Running cost %40s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
         for (w,c) in self.final_costs:
-            print("\t Final cost   %25s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+            print("\t Final cost   %40s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
         for c in self.path_ineqs:
-            print('\t Path ineq    %25s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            print('\t Path ineq    %40s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
         for c in self.final_ineqs:
-            print('\t Final ineq   %25s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            print('\t Final ineq   %40s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
-        if(self.iter%10==0):
+        if(self.iter%100==0):
             self.display_motion()
         return False
         
+    
     def display_motion(self, slow_down_factor=1):
         for i in range(0, self.N):
             time_start = time.time()
@@ -318,6 +385,7 @@ if __name__=='__main__':
     from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticControl
     from inequality_constraints import OCPFinalPlaneCollisionAvoidance, OCPPathPlaneCollisionAvoidance
     from inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
+    from inequality_constraints import OCPFinalSelfCollisionAvoidance, OCPPathSelfCollisionAvoidance
     import pinocchio as pin
     np.set_printoptions(precision=3, linewidth=200, suppress=True)
         
@@ -336,11 +404,13 @@ if __name__=='__main__':
         r = load('double_pendulum')
     elif(system=='pendulum'):
         r = loadPendulum()
-    robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
+    robot = RobotWrapper(r.model, r.collision_model, r.visual_model, fixed_world_translation=conf.fixed_world_translation)
     nq, nv = robot.nq, robot.nv    
     n = nq+nv                       # state size
     m = robot.na                    # control size
-    U = np.zeros((N,m))           # initial guess for control inputs
+    
+    # compute initial guess for control inputs
+    U = np.zeros((N,m))           
     u0 = robot.gravity(conf.q0)
     for i in range(N):
         U[i,:] = u0
@@ -351,15 +421,22 @@ if __name__=='__main__':
     simu = RobotSimulator(conf, robot)
     
     # display table and stuff
-    simu.gui.addBox("world/table", 1.5, 1.5, 0.04, (0.5, 0.5, 0.5, 1.))
-    simu.gui.setLightingMode("world/table", "ON")
-    simu.gui.applyConfiguration("world/table", (0.0, 0.0, conf.table_height-0.04, 0, 0, 0, 1)) # 0.85
+    x_table = conf.table_pos #- conf.fixed_world_translation
+    simu.gui.addBox("world/table", conf.table_size[0], conf.table_size[1], conf.table_size[2], (0.5, 0.5, 0.5, 1.))
+    robot.applyConfiguration("world/table", (x_table[0], x_table[1], x_table[2], 0, 0, 0, 1))
     
     simu.gui.addLight("world/table_light", "python-pinocchio", 0.1, (1.,1,1,1))
-    simu.gui.applyConfiguration("world/table_light", (0.0, 0.0, conf.table_height+0.8, 0, 0, 0, 1))
+    robot.applyConfiguration("world/table_light", (x_table[0], x_table[1], x_table[2]+1, 0, 0, 0, 1))
     
-    for frame in conf.collision_frames:
-        simu.add_frame_axes(frame, radius=conf.safety_margin, length=0.03)        
+    simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
+    x_des = conf.p_des #- conf.fixed_world_translation
+    robot.applyConfiguration('world/target', x_des.tolist()+[0.,0.,0.,1.])
+    
+    for frame in conf.table_collision_frames:
+        simu.add_frame_axes(frame, radius=conf.safety_margin, length=0.0)
+    for (frame1, frame2, d) in conf.self_collision_frames:
+        simu.add_frame_axes(frame1, radius=d, length=0.0)
+        simu.add_frame_axes(frame2, radius=d, length=0.0)
     
     # create OCP
     problem = SingleShootingProblem('ssp', ode, conf.x0, dt, N, conf.integration_scheme, simu)
@@ -378,12 +455,13 @@ if __name__=='__main__':
             time.sleep(dt-time_spent)
       
     # create cost function terms
-    final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
+    final_cost = OCPFinalCostFramePos("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, 
+                                      conf.weight_final_vel)
 #    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
     problem.add_final_cost(final_cost, conf.weight_final_pos)
     
-#    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), conf.weight_vel)
-#    problem.add_final_cost(final_cost_state)
+    final_cost_state = OCPFinalCostState("final dq", robot, conf.q_des, np.zeros(nq), 0.0, conf.weight_final_dq)
+    problem.add_final_cost(final_cost_state)
     
     effort_cost = OCPRunningCostQuadraticControl("joint torques", robot, dt)
     problem.add_running_cost(effort_cost, conf.weight_u)
@@ -402,29 +480,75 @@ if __name__=='__main__':
     joint_bounds_final = OCPFinalJointBounds("joint bounds", robot, q_min, q_max, dq_min, dq_max)
     problem.add_final_ineq(joint_bounds_final)
     
-    
-    for frame in conf.collision_frames:
-        table_avoidance = OCPPathPlaneCollisionAvoidance("table coll "+frame, robot, frame, 
-                                                         conf.table_normal, conf.table_height+conf.safety_margin)
+    # inequalities for avoiding collisions with the table
+    for frame in conf.table_collision_frames:
+        table_avoidance = OCPPathPlaneCollisionAvoidance("table col "+frame, robot, frame, 
+                                                         conf.table_normal, conf.table_pos[2]+conf.safety_margin)
         problem.add_path_ineq(table_avoidance)
         
-        table_avoidance = OCPFinalPlaneCollisionAvoidance("table coll fin "+frame, robot, frame, 
-                                                         conf.table_normal, conf.table_height+conf.safety_margin)
+        table_avoidance = OCPFinalPlaneCollisionAvoidance("table col fin "+frame, robot, frame, 
+                                                         conf.table_normal, conf.table_pos[2]+conf.safety_margin)
         problem.add_final_ineq(table_avoidance)
+    
+    # inequalities for avoiding self-collisions
+    for (frame1, frame2, min_dist) in conf.self_collision_frames:
+        self_coll_avoid = OCPPathSelfCollisionAvoidance("self-col "+frame1+'-'+frame2, robot, 
+                                                        frame1, frame2, min_dist)
+        problem.add_path_ineq(self_coll_avoid)
         
-    simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
-    simu.gui.applyConfiguration('world/target', conf.p_des.tolist()+[0.,0.,0.,1.])
+        self_coll_avoid = OCPFinalSelfCollisionAvoidance("self-col "+frame1+'-'+frame2, robot, 
+                                                        frame1, frame2, min_dist)
+        problem.add_final_ineq(self_coll_avoid)
     
 #    problem.sanity_check_cost_gradient(5)
 #    import os
 #    os.exit()
     
     # solve OCP
+#    import cProfile
+#    cProfile.run("problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)")
     problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)
-    print('U norm:', norm(problem.U))
-    print('X_N\n', problem.X[-1,:].T)
+    
+    X, U = problem.X, problem.U
+    print('U norm:', norm(U))
+    print('X_N\n', X[-1,:].T)
     
     # create simulator 
     print("Showing final motion in viewer")
     problem.display_motion(slow_down_factor=3)
     print("To display the motion again type:\nproblem.display_motion()")
+    
+    # SAVE THE RESULTS
+    np.savez_compressed(conf.DATA_FILE_NAME, q=X[:,:nq], v=X[:,nv:], u=U)
+    
+    # PLOT STUFF
+    time_array = np.arange(0.0, (N+1)*conf.dt, conf.dt)[:N+1]
+    
+    if(PLOT_STUFF):    
+        (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)
+        ax = ax.reshape(robot.nv)
+        for i in range(robot.nv):
+            ax[i].plot(time_array, X[:,i], label='q')
+            ax[i].set_xlabel('Time [s]')
+            ax[i].set_ylabel(r'$q_'+str(i)+'$ [rad]')
+            leg = ax[i].legend()
+            leg.get_frame().set_alpha(0.5)
+            
+        (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)
+        ax = ax.reshape(robot.nv)
+        for i in range(robot.nv):
+            ax[i].plot(time_array, X[:,nq+i], label='v')
+            ax[i].set_xlabel('Time [s]')
+            ax[i].set_ylabel(r'v_'+str(i)+' [rad/s]')
+            leg = ax[i].legend()
+            leg.get_frame().set_alpha(0.5)
+            
+       
+        (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)
+        ax = ax.reshape(robot.nv)
+        for i in range(robot.nv):
+            ax[i].plot(time_array[:-1], U[:,i], label=r'$\tau$ '+str(i))
+            ax[i].set_xlabel('Time [s]')
+            ax[i].set_ylabel('Torque [Nm]')
+            leg = ax[i].legend()
+            leg.get_frame().set_alpha(0.5)
