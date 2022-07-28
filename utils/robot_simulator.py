@@ -371,3 +371,11 @@ class RobotSimulator:
 #                self.gui.applyConfiguration("world/axes-"+frame, se3.SE3ToXYZQUATtuple(H))
                 
             self.robot.display(q)
+            
+    def display_motion(self, Q, dt, slow_down_factor=1):
+        for i in range(Q.shape[0]):
+            time_start = time.time()
+            self.display(Q[i,:])
+            time_spent = time.time() - time_start
+            if(time_spent < slow_down_factor*dt):
+                time.sleep(slow_down_factor*dt-time_spent)
