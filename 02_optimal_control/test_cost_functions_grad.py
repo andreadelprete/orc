@@ -55,14 +55,12 @@ def check_final_cost_gradient(cost, N_TESTS=10):
             print('Grad FD:\n', 1e3*grad_fd)
             print('Grad   :\n', 1e3*grad)
 
+
 if __name__=='__main__':
-    import arc.utils.plot_utils as plut
-    import matplotlib.pyplot as plt
     from arc.utils.robot_loaders import loadUR, loadPendulum
     from example_robot_data.robots_loader import loadDoublePendulum
     from arc.utils.robot_wrapper import RobotWrapper
     from arc.utils.robot_simulator import RobotSimulator
-    import time, sys
     import single_shooting_conf as conf
     from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPRunningCostQuadraticControl, OCPFinalCostFrame
     import pinocchio as pin
@@ -90,15 +88,12 @@ if __name__=='__main__':
     
     # create simulator 
     simu = RobotSimulator(conf, robot)
-        
-    # simulate motion with initial guess    
     nq = robot.model.nq      
+    
     # create cost function terms
 #    final_cost = OCPFinalCostFramePos(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.weight_vel)
     final_cost = OCPFinalCostFrame(robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
 #    final_cost_state = OCPFinalCostState(robot, conf.q_des, np.zeros(nq), conf.weight_vel)
-#    problem.add_final_cost(final_cost_state)
-    effort_cost = OCPRunningCostQuadraticControl(robot, dt)
     
     check_final_cost_gradient(final_cost)
     

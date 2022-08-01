@@ -11,11 +11,11 @@ import orc.utils.plot_utils as plut
 
 dt_robot = 0.001
 
-INPUT_FILE_NAMES = ['home_2_table', 'table_2_belt']
+INPUT_FILE_NAMES = ['home_2_table_min_acc'] #, 'table_2_belt']
 #INPUT_FILE_NAME = 'table_2_belt'
 #INPUT_FILE_NAME = 'belt_2_home'
 
-OUTPUT_FINE_NAME = 'home_2_table_2_belt'
+OUTPUT_FINE_NAME = 'home_2_table'
 
 q_in = []
 N_out = 0
@@ -38,7 +38,10 @@ for k in range(len(INPUT_FILE_NAMES)):
     q_out[index,:] = q_in[k][-1,:]
     index += 1
 
-# PLOT STUFF
+
+'''**************'''
+'''  PLOT STUFF  '''
+'''**************'''
 time_out = np.arange(0.0, N_out*dt_robot, dt_robot)[:N_out]
 T0 = 0.0
 

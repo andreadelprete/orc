@@ -152,8 +152,8 @@ problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)
 
 X, U = problem.X, problem.U
 print('U norm:', norm(U))
-print('q_N-q_des\n', X[-1,:nq]-conf.q_des)
-print('dq_N\n', X[-1,nq:])
+print('q_N-q_des [deg]\n', (180/np.pi)*(X[-1,:nq]-conf.q_des))
+print('dq_N [deg/s]\n', (180/np.pi)*X[-1,nq:])
 
 # display final optimized motion
 print("Showing final motion in viewer")
@@ -194,3 +194,14 @@ if(PLOT_STUFF):
         ax[i].set_ylabel('Torque [Nm]')
         leg = ax[i].legend()
         leg.get_frame().set_alpha(0.5)
+
+    (f, ax) = plut.create_empty_figure(1)
+    ax.plot(problem.history.cost)
+    ax.set_xlabel('Iteration')
+    ax.set_ylabel('Cost')
+    
+    (f, ax) = plut.create_empty_figure(1)
+    ax.plot(problem.history.grad)
+    ax.set_xlabel('Iteration')
+    ax.set_ylabel('Gradient norm')
+    

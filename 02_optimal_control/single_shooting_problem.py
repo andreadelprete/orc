@@ -37,6 +37,8 @@ class SingleShootingProblem:
         self.last_values.cost = 0.0
         self.last_values.running_cost = 0.0
         self.last_values.final_cost = 0.0
+        
+        self.history = Empty()
     
         self.running_costs = []
         self.final_costs = []
@@ -316,6 +318,9 @@ class SingleShootingProblem:
         
     def solve(self, y0=None, method='SLSQP', use_finite_diff=False, max_iter=500):
         ''' Solve the optimal control problem '''
+        self.history.cost = []
+        self.history.grad = []
+        
         # if no initial guess is given => initialize with zeros
         if(y0 is None):
             y0 = np.zeros(self.N*self.nu)
@@ -359,6 +364,9 @@ class SingleShootingProblem:
         
         
     def clbk(self, xk):
+        self.history.cost.append(self.last_values.cost)
+        self.history.grad.append(self.last_values.grad)
+        
         print('Iter %3d, cost %7.3f, grad %7.3f'%(self.iter, self.last_values.cost, self.last_values.grad))
         for (w,c) in self.running_costs:
             print("\t Running cost %40s: %7.3f %7.3f"%(c.name, self.last_values.__dict__[c.name], self.last_values.__dict__[c.name+'_grad']))
