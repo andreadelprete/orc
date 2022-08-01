@@ -51,15 +51,14 @@ elif(system=='ur-lab'):
 #                             ('wrist_1_joint', 'shoulder_pan_joint', 0.15),
 #                             ('wrist_2_joint', 'shoulder_pan_joint', 0.15)]
     self_collision_frames = []
-    q0    = np.array([-0.32932, -0.77775, -2.5674, -1.6349, -1.57867, -1.00179])  # initial configuration
-
-    q_des = np.copy(q0)   
-    # on belt 1
-#    q_des = np.array([0.134582, -2.607235, -0.130109, -1.954317, -1.548532, -0.661044])
-    # on table
-    q_des = np.array([-0.176686, -1.049217, -1.886168, -1.754567, -1.522096, -1.082379])
-    # on belt 2
-#    q_des = np.array([-3.313833, -2.238478, -1.068578, -1.395336, -1.554650, -0.658182])
+    
+    q_home   = np.array([-0.32932, -0.77775, -2.5674, -1.6349, -1.57867, -1.00179])  # initial configuration
+    q_belt_1 = np.array([0.134582, -2.607235, -0.130109, -1.954317, -1.548532, -0.661044])
+    q_table  = np.array([-0.176686, -1.049217, -1.886168, -1.754567, -1.522096, -1.082379])
+    q_belt_2 = np.array([-3.313833, -2.238478, -1.068578, -1.395336, -1.554650, -0.658182])
+    
+    q_0 = q_home
+    q_des = q_table
     
     p_des = np.array([0.5, 0.4, 1.05])   # desired end-effector final position
     B = np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient

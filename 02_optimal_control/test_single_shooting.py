@@ -66,10 +66,10 @@ else:
 
 # add red spheres to display the volumes used for collision avoidance
 for (frame, dist) in conf.table_collision_frames:
-    simu.add_frame_axes(frame, radius=dist, length=0.0)
+    simu.add_frame_axes(frame, radius=dist, length=0.0, color=(1.,0,0,0.2))
 for (frame1, frame2, d) in conf.self_collision_frames:
-    simu.add_frame_axes(frame1, radius=d, length=0.0)
-    simu.add_frame_axes(frame2, radius=d, length=0.0)
+    simu.add_frame_axes(frame1, radius=d, length=0.0, color=(1.,0,0,0.2))
+    simu.add_frame_axes(frame2, radius=d, length=0.0, color=(1.,0,0,0.2))
 
 # create OCP
 ode = ODERobot('ode', robot, conf.B)
