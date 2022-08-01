@@ -16,6 +16,7 @@ class RobotWrapper(PinocchioRobotWrapper):
     
     def __init__(self, model = pin.Model(), collision_model = None, visual_model = None, verbose=False, fixed_world_translation=None):
         super().__init__(model, collision_model, visual_model, verbose)
+        self.B = np.zeros((model.nv, model.nv))
         if(fixed_world_translation is None):
             self.w2b = np.zeros(3) # world to base fixed translation
         else:
@@ -26,6 +27,12 @@ class RobotWrapper(PinocchioRobotWrapper):
         if(self.model.joints[0].nq==7):
             return self.model.nv-6
         return self.model.nv
+    
+    def setJointViscousFriction(self, friction_coefficients):
+        assert(friction_coefficients.shape[0]==self.model.nv)
+#        self.model.friction = B # do not work
+#        self.model.damping = B  # do not work
+        self.B = np.diagflat(friction_coefficients)
     
     def setFixedWorldTranslation(self, translation):
         ''' Set a fixed translation from the world frame to the universe frame of the robot URDF '''
@@ -146,8 +153,15 @@ class RobotWrapper(PinocchioRobotWrapper):
 
     def nle(self, q, v, update=True):
         if(update):
-            return pin.nonLinearEffects(self.model, self.data, q, v)
-        return self.data.nle
+            pin.nonLinearEffects(self.model, self.data, q, v)
+        return self.data.nle - self.B @ v
+    
+    def aba(self, q, v, u):
+        return pin.aba(self.model, self.data, q, v, u) - self.B @ v
+    
+    def abaDerivatives(self, q, v, u):
+        pin.computeABADerivatives(self.model, self.data, q, v, u)
+        return self.data.ddq_dq, self.data.ddq_dv - self.B, self.data.Minv
         
     def com(self, q=None, v=None, a=None, update=True):
         if(update==False or q is None):

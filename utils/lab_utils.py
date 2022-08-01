@@ -8,7 +8,7 @@ Created on Thu Jul 28 11:45:47 2022
 import numpy as np
 
 table_normal = np.array([0., 0., 1.])
-table_pos = np.array([0.5, 0.4, 0.85]) #-0.7
+table_pos = np.array([0.5, 0.4, 0.83]) #-0.7
 table_size = np.array([1.5, 1.5, 0.04])
 table_color = (0.5, 0.5, 0.5, 1.)
 

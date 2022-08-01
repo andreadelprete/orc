@@ -20,7 +20,7 @@ import single_shooting_conf as conf
 from ode import ODERobot
 from numerical_integration import Integrator
 from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPFinalCostFrame
-from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticControl
+from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticJointAcc, OCPRunningCostQuadraticControl
 from inequality_constraints import OCPFinalPlaneCollisionAvoidance, OCPPathPlaneCollisionAvoidance
 from inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
 from inequality_constraints import OCPFinalSelfCollisionAvoidance, OCPPathSelfCollisionAvoidance
@@ -42,15 +42,20 @@ elif(system=='double-pendulum'):
 elif(system=='pendulum'):
     r = loadPendulum()
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model, fixed_world_translation=conf.fixed_world_translation)
+robot.setJointViscousFriction(conf.B)
 nq, nv = robot.nq, robot.nv    
 n = nq+nv                       # state size
 m = robot.na                    # control size
 
 # compute initial guess for control inputs
 U = np.zeros((N,m))           
-u0 = robot.gravity(conf.q0)
-for i in range(N):
-    U[i,:] = u0
+if(conf.INITIAL_GUESS_FILE is None):
+    u0 = robot.gravity(conf.q0)
+    for i in range(N):
+        U[i,:] = u0
+else:
+    data = np.load(conf.INITIAL_GUESS_FILE+'.npz') # , q=X[:,:nq], v=X[:,nv:], u=U
+    U = data['u']
 
 # create simulator 
 simu = RobotSimulator(conf, robot)
@@ -72,7 +77,7 @@ for (frame1, frame2, d) in conf.self_collision_frames:
     simu.add_frame_axes(frame2, radius=d, length=0.0, color=(1.,0,0,0.2))
 
 # create OCP
-ode = ODERobot('ode', robot, conf.B)
+ode = ODERobot('ode', robot)
 problem = SingleShootingProblem('ssp', ode, conf.x0, dt, N, conf.integration_scheme, simu)
 
 # simulate motion with initial guess    
@@ -101,6 +106,10 @@ if(conf.weight_dq>0):
     dq_cost = OCPRunningCostQuadraticJointVel("joint vel", robot)
     problem.add_running_cost(dq_cost, conf.weight_dq)    
 
+if(conf.weight_ddq>0):
+    ddq_cost = OCPRunningCostQuadraticJointAcc("joint acc", robot)
+    problem.add_running_cost(ddq_cost, conf.weight_ddq)    
+
 ''' Create constraints '''
 q_min = robot.model.lowerPositionLimit
 q_max = robot.model.upperPositionLimit
@@ -115,11 +124,11 @@ problem.add_final_ineq(joint_bounds_final)
 # inequalities for avoiding collisions with the table
 for (frame, dist) in conf.table_collision_frames:
     table_avoidance = OCPPathPlaneCollisionAvoidance("table col "+frame, robot, frame, 
-                                                     lab.table_normal, lab.table_pos[2]+dist)
+                                                     lab.table_normal, lab.table_pos[2]+0.5*lab.table_size[2]+dist)
     problem.add_path_ineq(table_avoidance)
     
     table_avoidance = OCPFinalPlaneCollisionAvoidance("table col fin "+frame, robot, frame, 
-                                                     lab.table_normal, lab.table_pos[2]+dist)
+                                                     lab.table_normal, lab.table_pos[2]+0.5*lab.table_size[2]+dist)
     problem.add_final_ineq(table_avoidance)
 
 # inequalities for avoiding self-collisions
@@ -143,7 +152,8 @@ problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)
 
 X, U = problem.X, problem.U
 print('U norm:', norm(U))
-print('X_N\n', X[-1,:].T)
+print('q_N-q_des\n', X[-1,:nq]-conf.q_des)
+print('dq_N\n', X[-1,nq:])
 
 # display final optimized motion
 print("Showing final motion in viewer")

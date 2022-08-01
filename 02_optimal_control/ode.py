@@ -74,7 +74,7 @@ class ODERobot:
     ''' An ordinary differential equation representing a robotic system
     '''
     
-    def __init__(self, name, robot, B=None):
+    def __init__(self, name, robot):
         ''' robot: instance of RobotWrapper
         '''
         self.name = name
@@ -86,11 +86,7 @@ class ODERobot:
         self.Fx = np.zeros((self.nx, self.nx))
         self.Fx[:nv, nv:] = np.identity(nv)
         self.Fu = np.zeros((self.nx, self.nu))
-        self.dx = np.zeros(2*nv)
-        self.B = np.zeros((nv,nv))
-        if(B is not None):
-            self.B = np.diagflat(B)
-            
+        self.dx = np.zeros(2*nv)            
         
         
     ''' System dynamics '''
@@ -107,18 +103,19 @@ class ODERobot:
             pin.computeAllTerms(model, data, q, v)
             ddq = (u-data.nle) / data.M[0]
         else:
-            ddq = pin.aba(model, data, q, v, u) - self.B @ v
+            ddq = self.robot.aba(q, v, u) #pin.aba(model, data, q, v, u) - self.B @ v
 
         self.dx[:nv] = v
         self.dx[nv:] = ddq
         
         if(jacobian):
-            pin.computeABADerivatives(model, data, q, v, u)
+            ddq_dq, ddq_dv, ddq_du = self.robot.abaDerivatives(q, v, u)
+#            pin.computeABADerivatives(model, data, q, v, u)
             self.Fx[:nv, :nv] = 0.0
             self.Fx[:nv, nv:] = np.identity(nv)
-            self.Fx[nv:, :nv] = data.ddq_dq
-            self.Fx[nv:, nv:] = data.ddq_dv - self.B
-            self.Fu[nv:, :] = data.Minv
+            self.Fx[nv:, :nv] = ddq_dq
+            self.Fx[nv:, nv:] = ddq_dv
+            self.Fu[nv:, :] = ddq_du
             
             return (np.copy(self.dx), np.copy(self.Fx), np.copy(self.Fu))
         

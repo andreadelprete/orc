@@ -92,6 +92,37 @@ class OCPRunningCostQuadraticJointVel:
         grad_x =  np.concatenate((np.zeros(self.nq), v))
         grad_u = np.zeros(u.shape[0])
         return (cost, grad_x, grad_u)
+    
+    
+class OCPRunningCostQuadraticJointAcc:
+    ''' Quadratic cost function for penalizing the joint accelerations 
+    '''
+    def __init__(self, name, robot):
+        self.name = name
+        self.robot = robot
+        self.nq = robot.model.nq
+        
+    def compute(self, x, u, t, recompute=True):
+        ''' Compute the cost for a single time instant'''
+        q = x[:self.nq]
+        v = x[self.nq:]
+        dv = pin.aba(self.robot.model, self.robot.data, q, v, u)
+        cost = 0.5*dv.dot(dv)
+        return cost
+        
+    def compute_w_gradient(self, x, u, t, recompute=True):
+        ''' Compute the cost for a single time instant and its gradient w.r.t. x and u '''
+        q = x[:self.nq]
+        v = x[self.nq:]
+        dv = pin.aba(self.robot.model, self.robot.data, q, v, u)
+        cost = 0.5*dv.dot(dv)
+        
+        #Compute gradient of the runnning cost respect to x and u    
+        ddq_dq, ddq_dv, ddq_du = self.robot.abaDerivatives(q, v, u)
+        grad_x =  np.concatenate((dv.dot(ddq_dq), 
+                                  dv.dot(ddq_dv))) 
+        grad_u = dv.dot(ddq_du)
+        return (cost, grad_x, grad_u)
 
 
 class OCPRunningCostQuadraticPosition:
@@ -138,6 +169,7 @@ class OCPRunningCostQuadraticPosition:
         grad_x =  np.concatenate((e.dot(J), np.zeros(q.shape[0])))
         grad_u = np.zeros(u.shape[0])
         return (cost, grad_x, grad_u)
+
 
 class OCPFinalCostFrame:
     ''' Cost function for reaching a desired configuration-velocity (in 6d) with a frame of the robot

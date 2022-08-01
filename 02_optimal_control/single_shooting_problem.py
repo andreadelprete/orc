@@ -46,18 +46,22 @@ class SingleShootingProblem:
     def add_running_cost(self, c, weight=1):
         self.running_costs += [(weight,c)]
         self.last_values.__dict__[c.name] = 0.0
+        self.last_values.__dict__[c.name+'_grad'] = 0.0
     
     def add_final_cost(self, c, weight=1):
         self.final_costs += [(weight,c)]
         self.last_values.__dict__[c.name] = 0.0
+        self.last_values.__dict__[c.name+'_grad'] = 0.0
         
     def add_path_ineq(self, c):
         self.path_ineqs += [c]
         self.last_values.__dict__[c.name] = 0.0
+        self.last_values.__dict__[c.name+'_grad'] = 0.0
     
     def add_final_ineq(self, c):
         self.final_ineqs += [c]
         self.last_values.__dict__[c.name] = 0.0
+        self.last_values.__dict__[c.name+'_grad'] = 0.0
         
     '''*************************************************'''
     '''                 COST FUNCTIONS                  '''
@@ -90,6 +94,7 @@ class SingleShootingProblem:
         # reset the variables storing the costs
         for (w,c) in self.running_costs:
             self.last_values.__dict__[c.name] = 0.0
+            self.last_values.__dict__[c.name+'_grad'] = 0.0
             
         for i in range(U.shape[0]):
             for (w,c) in self.running_costs:
@@ -100,6 +105,7 @@ class SingleShootingProblem:
                 cost += w * self.dt * ci
                 grad += w * self.dt * dci
                 self.last_values.__dict__[c.name] += w * self.dt * ci
+                self.last_values.__dict__[c.name+'_grad'] += norm(w * self.dt * dci)
             t += self.dt
         return (cost, grad)
         
@@ -124,6 +130,7 @@ class SingleShootingProblem:
             cost += w * ci
             grad += w * dci
             self.last_values.__dict__[c.name] = w * ci
+            self.last_values.__dict__[c.name+'_grad'] = norm(w * dci)
         return (cost, grad)
         
     
@@ -183,6 +190,7 @@ class SingleShootingProblem:
         self.last_values.cost = cost  
         self.last_values.running_cost = run_cost
         self.last_values.final_cost = fin_cost
+        self.last_values.grad = norm(grad)
         return (cost, grad)
     
     '''*************************************************'''
@@ -351,15 +359,15 @@ class SingleShootingProblem:
         
         
     def clbk(self, xk):
-        print('Iter %3d, cost %5f'%(self.iter, self.last_values.cost))
+        print('Iter %3d, cost %7.3f, grad %7.3f'%(self.iter, self.last_values.cost, self.last_values.grad))
         for (w,c) in self.running_costs:
-            print("\t Running cost %40s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+            print("\t Running cost %40s: %7.3f %7.3f"%(c.name, self.last_values.__dict__[c.name], self.last_values.__dict__[c.name+'_grad']))
         for (w,c) in self.final_costs:
-            print("\t Final cost   %40s: %9.3f"%(c.name, self.last_values.__dict__[c.name]))
+            print("\t Final cost   %40s: %7.3f %7.3f"%(c.name, self.last_values.__dict__[c.name], self.last_values.__dict__[c.name+'_grad']))
         for c in self.path_ineqs:
-            print('\t Path ineq    %40s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            print('\t Path ineq    %40s: %7.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
         for c in self.final_ineqs:
-            print('\t Final ineq   %40s: %9.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            print('\t Final ineq   %40s: %7.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
         if(self.iter%10==0):

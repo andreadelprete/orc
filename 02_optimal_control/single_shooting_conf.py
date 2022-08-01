@@ -11,24 +11,31 @@ from math import sqrt
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
-T = 2.0                         # OCP horizon
+T = 3.0                         # OCP horizon
 dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
 use_finite_diff = False
 
-DATA_FILE_NAME = 'ur5_X_U_optimal'
+#DATA_FILE_NAME = 'home_2_table'
+DATA_FILE_NAME = 'table_2_belt'
+#DATA_FILE_NAME = 'belt_2_home'
+
+INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
+#INITIAL_GUESS_FILE = 'home_2_table' 
+INITIAL_GUESS_FILE = 'table_2_belt'
 
 #system = 'ur'
 system = 'ur-lab'
 #system='double-pendulum'
 #system='pendulum'
 
-weight_final_pos = 0   # cost function weight for final end-effector position
-weight_final_vel = 0   # cost function weight for final end-effector velocity
-weight_final_q  = 10   # cost function weight for final joint positions
-weight_final_dq = 10   # cost function weight for final joint velocities
-weight_dq = 1e-1       # cost function weight for joint velocities
-weight_u = 1e-4        # cost function weight for joint torques
+weight_final_pos = 0    # cost function weight for final end-effector position
+weight_final_vel = 0    # cost function weight for final end-effector velocity
+weight_final_q  = 100   # cost function weight for final joint positions
+weight_final_dq = 100   # cost function weight for final joint velocities
+weight_dq  = 1e-1       # cost function weight for joint velocities
+weight_ddq = 1e-2       # cost function weight for joint accelerations
+weight_u   = 0e-2       # cost function weight for joint torques
 
 if(system=='ur'):
     nq = 6
@@ -43,7 +50,8 @@ elif(system=='ur-lab'):
     fixed_world_translation = np.array([0.5, 0.35, 1.75])
     frame_name = 'tool0'
     # list of frames that should not collide with table, and their minimum distance
-    table_collision_frames = [('tool0', 0.07),
+    table_collision_frames = [('gripper', 0.04),
+                              ('tool0', 0.07),
                               ('wrist_1_joint', 0.07),
                               ('wrist_2_joint', 0.07)]
     # list of frame pairs that should not collide together
@@ -57,8 +65,8 @@ elif(system=='ur-lab'):
     q_table  = np.array([-0.176686, -1.049217, -1.886168, -1.754567, -1.522096, -1.082379])
     q_belt_2 = np.array([-3.313833, -2.238478, -1.068578, -1.395336, -1.554650, -0.658182])
     
-    q_0 = q_home
-    q_des = q_table
+    q0 = q_table
+    q_des = q_belt_2
     
     p_des = np.array([0.5, 0.4, 1.05])   # desired end-effector final position
     B = np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
