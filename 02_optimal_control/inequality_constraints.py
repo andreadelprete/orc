@@ -74,9 +74,8 @@ class OCPFinalSelfCollisionAvoidance:
         q = x[:self.nq]
         H1 = self.robot.framePlacement(q, self.frame1_id, recompute)
         H2 = self.robot.framePlacement(q, self.frame2_id, recompute)
-        p1 = H1.translation # take the 3d position of the end-effector
-        p2 = H2.translation # take the 3d position of the end-effector
-        ineq = norm(p1-p2) - self.min_dist
+        d = H1.translation - H2.translation # take the 3d position of the end-effector
+        ineq = d.dot(d) - self.min_dist**2
         return np.array([ineq])
     
     def compute_w_gradient(self, x, recompute=True):
@@ -84,9 +83,8 @@ class OCPFinalSelfCollisionAvoidance:
         q = x[:self.nq]
         H1 = self.robot.framePlacement(q, self.frame1_id, recompute)
         H2 = self.robot.framePlacement(q, self.frame2_id, recompute)
-        p1 = H1.translation # take the 3d position of the end-effector
-        p2 = H2.translation # take the 3d position of the end-effector
-        ineq = norm(p1-p2) - self.min_dist
+        d = H1.translation - H2.translation # take the 3d position of the end-effector
+        ineq = d.dot(d) - self.min_dist**2
         
         # compute Jacobian J
         self.robot.computeJointJacobians(q)
@@ -95,7 +93,7 @@ class OCPFinalSelfCollisionAvoidance:
         J2 = self.robot.frameJacobian(q, self.frame2_id)[:3,:]
             
         grad_x = np.zeros((1,x.shape[0]))
-        grad_x[0, :self.nq] = 2*(p1-p2).dot(J1-J2)
+        grad_x[0, :self.nq] = 2*d.dot(J1-J2)
 
         return (np.array([ineq]), grad_x)
     
