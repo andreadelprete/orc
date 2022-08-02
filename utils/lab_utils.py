@@ -35,3 +35,6 @@ def display_disi_lab(simu):
     
     simu.gui.addLight("world/table_light", "python-pinocchio", 0.1, (1.,1,1,1))
     simu.robot.applyConfiguration("world/table_light", (table_pos[0], table_pos[1], table_pos[2]+1.5, 0, 0, 0, 1))
+    
+#    simu.gui.addURDF('world/finger', '/home/adelprete/devel/src/locosim/gripper_description/urdf/finger.urdf')
+#    simu.gui.addURDF('world/finger', '/mnt/hgfs/My Drive/[LM] Advanced Robot Control/code/lab_doc/grippers/gripper_description/urdf/finger.urdf')
