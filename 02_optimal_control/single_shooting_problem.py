@@ -44,6 +44,7 @@ class SingleShootingProblem:
         self.final_costs = []
         self.path_ineqs = []
         self.final_ineqs = []
+        self.final_eqs = []
         
     def add_running_cost(self, c, weight=1):
         self.running_costs += [(weight,c)]
@@ -62,6 +63,11 @@ class SingleShootingProblem:
     
     def add_final_ineq(self, c):
         self.final_ineqs += [c]
+        self.last_values.__dict__[c.name] = 0.0
+        self.last_values.__dict__[c.name+'_grad'] = 0.0
+        
+    def add_final_eq(self, c):
+        self.final_eqs += [c]
         self.last_values.__dict__[c.name] = 0.0
         self.last_values.__dict__[c.name+'_grad'] = 0.0
         
@@ -314,9 +320,87 @@ class SingleShootingProblem:
         self.X, self.U = X, U
         self.last_values.ineq = ineq
         return jac
+    
+    
+    '''*************************************************'''
+    '''                   EQUALITIES                    '''
+    '''*************************************************'''
+    
+    def final_eq(self, x_N):
+        ''' Compute the final equalities '''
+        eq = []
+        for c in self.final_eqs:
+            tmp = c.compute(x_N, recompute=True).tolist()
+            eq.extend(tmp)
+            self.last_values.__dict__[c.name] = tmp
+        return eq
+    
+    
+    def compute_eq(self, y):
+        ''' Compute all the the equality constraints '''
+        # compute state trajectory X from control y
+        U = y.reshape((self.N, self.nu))
+        if(norm(self.U-U)!=0.0):
+            t0, ndt = 0.0, 1
+            X = self.integrator.integrate(self.ode, self.x0, U, t0, self.dt, ndt, 
+                                          self.N, self.integration_scheme)
+        else:
+            X = self.X
+        # compute inequalities
+#        run_ineq = self.path_ineq(X, U)
+        fin_eq = self.final_eq(X[-1,:])
+        eq = fin_eq #np.array(run_ineq + fin_ineq) # concatenation
+        
+        # store X, U and ineq
+        self.X, self.U = X, U
+        self.last_values.eq = eq
+        return eq
+    
+            
+    def final_eq_w_jac(self, x_N, dxN_dU):
+        ''' Compute the final equalities '''
+        eq = []
+        jac = np.zeros((1000, self.N*self.nu)) # assume there are <1000 ineq
+        index = 0
+        for c in self.final_eqs:
+            ci, ci_x = c.compute_w_gradient(x_N, recompute=True)
+            dci = ci_x.dot(dxN_dU) 
+            
+            eq.extend(ci.tolist())
+            jac[index:index+ci.shape[0],:] = dci
+            index += dci.shape[0]
+            
+            self.last_values.__dict__[c.name] = ci.tolist()
+            
+        jac = jac[:index,:]
+        return (eq, jac)
+    
+    
+    def compute_eq_jac(self, y):
+        ''' Compute all the the equality constraints '''
+        # compute state trajectory X from control y
+        U = y.reshape((self.N, self.nu))
+        if(norm(self.U-U)!=0.0):
+            t0 = 0.0
+            X, dXdU = self.integrator.integrate_w_sensitivities_u(self.ode, self.x0, U, t0, 
+                                                        self.dt, self.N, 
+                                                        self.integration_scheme)
+        else:
+            X, dXdU = self.X, self.dXdU
+            
+        # compute inequalities
+#        (run_ineq, jac_run) = self.path_eq_w_jac(X, U, dXdU)
+        (fin_eq, jac_fin) = self.final_eq_w_jac(X[-1,:], dXdU[-self.nx:,:])
+#        ineq = np.array(run_ineq + fin_ineq) # concatenation
+#        jac = np.vstack((jac_run, jac_fin))
+        
+        # store X, U and ineq
+        self.X, self.U = X, U
+        self.last_values.ineq = fin_eq
+        return jac_fin
         
         
-    def solve(self, y0=None, method='SLSQP', use_finite_diff=False, max_iter=500):
+    def solve(self, y0=None, method='SLSQP', use_finite_diff=False, max_iter=300):
         ''' Solve the optimal control problem '''
         self.history.cost = []
         self.history.grad = []
@@ -334,8 +418,14 @@ class SingleShootingProblem:
         
         r = minimize(cost_func, y0, jac=True, method=method, 
                      callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},
-                     constraints={'type': 'ineq', 'fun': self.compute_ineq,
-                                  'jac': self.compute_ineq_jac})
+                     constraints=[
+                                 {'type': 'ineq', 
+                                  'fun': self.compute_ineq,
+                                  'jac': self.compute_ineq_jac},
+                                  {'type': 'eq', 
+                                  'fun': self.compute_eq,
+                                  'jac': self.compute_eq_jac}
+                                  ])
         return r
         
     
@@ -376,6 +466,8 @@ class SingleShootingProblem:
             print('\t Path ineq    %40s: %7.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
         for c in self.final_ineqs:
             print('\t Final ineq   %40s: %7.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+        for c in self.final_eqs:
+            print('\t Final eq     %40s: %7.3f'%(c.name, norm(self.last_values.__dict__[c.name])))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
         if(self.iter%10==0):

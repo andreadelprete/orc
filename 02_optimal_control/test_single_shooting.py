@@ -24,6 +24,7 @@ from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadra
 from inequality_constraints import OCPFinalPlaneCollisionAvoidance, OCPPathPlaneCollisionAvoidance
 from inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
 from inequality_constraints import OCPFinalSelfCollisionAvoidance, OCPPathSelfCollisionAvoidance
+from equality_constraints import OCPFinalConstraintState
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
     
@@ -93,10 +94,10 @@ if(conf.weight_final_pos>0):
 #    final_cost = OCPFinalCostFrame("final e-e pos", robot, conf.frame_name, conf.p_des, conf.dp_des, conf.R_des, conf.w_des, conf.weight_vel)
     problem.add_final_cost(final_cost, conf.weight_final_pos)
 
-if(conf.weight_final_q>0 or conf.weight_final_dq>0):
-    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), 
-                                         conf.weight_final_q, conf.weight_final_dq)
-    problem.add_final_cost(final_cost_state)
+#if(conf.weight_final_q>0 or conf.weight_final_dq>0):
+#    final_cost_state = OCPFinalCostState("final state", robot, conf.q_des, np.zeros(nq), 
+#                                         conf.weight_final_q, conf.weight_final_dq)
+#    problem.add_final_cost(final_cost_state)
 
 if(conf.weight_u>0):
     effort_cost = OCPRunningCostQuadraticControl("joint torques", robot, dt)
@@ -111,6 +112,10 @@ if(conf.weight_ddq>0):
     problem.add_running_cost(ddq_cost, conf.weight_ddq)    
 
 ''' Create constraints '''
+final_constr_state = OCPFinalConstraintState("final state", robot, conf.q_des, np.zeros(nq))
+problem.add_final_eq(final_constr_state)
+
+
 q_min = robot.model.lowerPositionLimit
 q_max = robot.model.upperPositionLimit
 dq_max = robot.model.velocityLimit
@@ -123,21 +128,21 @@ problem.add_final_ineq(joint_bounds_final)
 
 # inequalities for avoiding collisions with the table
 for (frame, dist) in conf.table_collision_frames:
-    table_avoidance = OCPPathPlaneCollisionAvoidance("table col "+frame, robot, frame, 
+    table_avoidance = OCPPathPlaneCollisionAvoidance("col table-"+frame, robot, frame, 
                                                      lab.table_normal, lab.table_pos[2]+0.5*lab.table_size[2]+dist)
     problem.add_path_ineq(table_avoidance)
     
-    table_avoidance = OCPFinalPlaneCollisionAvoidance("table col fin "+frame, robot, frame, 
+    table_avoidance = OCPFinalPlaneCollisionAvoidance("col fin table-"+frame, robot, frame, 
                                                      lab.table_normal, lab.table_pos[2]+0.5*lab.table_size[2]+dist)
     problem.add_final_ineq(table_avoidance)
 
 # inequalities for avoiding self-collisions
 for (frame1, frame2, min_dist) in conf.self_collision_frames:
-    self_coll_avoid = OCPPathSelfCollisionAvoidance("self-col "+frame1+'-'+frame2, robot, 
+    self_coll_avoid = OCPPathSelfCollisionAvoidance("col "+frame1+'-'+frame2, robot, 
                                                     frame1, frame2, min_dist)
     problem.add_path_ineq(self_coll_avoid)
     
-    self_coll_avoid = OCPFinalSelfCollisionAvoidance("self-col "+frame1+'-'+frame2, robot, 
+    self_coll_avoid = OCPFinalSelfCollisionAvoidance("col fin "+frame1+'-'+frame2, robot, 
                                                     frame1, frame2, min_dist)
     problem.add_final_ineq(self_coll_avoid)
 
@@ -148,7 +153,9 @@ for (frame1, frame2, min_dist) in conf.self_collision_frames:
 ''' Solve OCP '''
 #import cProfile
 #cProfile.run("problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)")
-problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)
+problem.solve(y0=U.reshape(N*m), 
+              use_finite_diff=conf.use_finite_diff, 
+              max_iter = conf.max_iter)
 
 X, U = problem.X, problem.U
 print('U norm:', norm(U))
