@@ -8,6 +8,8 @@ Created on Wed Mar 18 18:12:04 2020
 import numpy as np
 from numpy.linalg import norm
 from scipy.optimize import minimize
+#from colorama import Fore, Back, Style
+from termcolor import colored, cprint
 
 from numerical_integration import Integrator
 
@@ -45,6 +47,8 @@ class SingleShootingProblem:
         self.path_ineqs = []
         self.final_ineqs = []
         self.final_eqs = []
+        
+        self.ineq_print_threshold = 0.05
         
     def add_running_cost(self, c, weight=1):
         self.running_costs += [(weight,c)]
@@ -459,15 +463,31 @@ class SingleShootingProblem:
         
         print('Iter %3d, cost %7.3f, grad %7.3f'%(self.iter, self.last_values.cost, self.last_values.grad))
         for (w,c) in self.running_costs:
-            print("\t Running cost %40s: %7.3f %7.3f"%(c.name, self.last_values.__dict__[c.name], self.last_values.__dict__[c.name+'_grad']))
+            print(colored("\t Running cost %60s: %7.3f %7.3f"%(c.name, 
+                                                               self.last_values.__dict__[c.name], 
+                                                               self.last_values.__dict__[c.name+'_grad']),
+                          "grey"))
         for (w,c) in self.final_costs:
-            print("\t Final cost   %40s: %7.3f %7.3f"%(c.name, self.last_values.__dict__[c.name], self.last_values.__dict__[c.name+'_grad']))
+            print(colored("\t Final cost   %60s: %7.3f %7.3f"%(c.name, 
+                                                               self.last_values.__dict__[c.name], 
+                                                               self.last_values.__dict__[c.name+'_grad']),
+                            "grey"))
         for c in self.path_ineqs:
-            print('\t Path ineq    %40s: %7.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            v = np.min(self.last_values.__dict__[c.name])
+            if(v<=0.0): color = 'red'
+            else:       color = 'blue'
+            if(v<=self.ineq_print_threshold):
+                print(colored('\t Path ineq    %60s: %7.3f'%(c.name, v), color))
         for c in self.final_ineqs:
-            print('\t Final ineq   %40s: %7.3f'%(c.name, np.min(self.last_values.__dict__[c.name])))
+            v = np.min(self.last_values.__dict__[c.name])
+            if(v<=0.0): color = 'red'
+            else:       color = 'blue'
+            if(v<=self.ineq_print_threshold):
+                print(colored('\t Final ineq   %60s: %7.3f'%(c.name, v), color))
         for c in self.final_eqs:
-            print('\t Final eq     %40s: %7.3f'%(c.name, norm(self.last_values.__dict__[c.name])))
+            print(colored('\t Final eq     %60s: %7.3f'%(c.name, 
+                                                         norm(self.last_values.__dict__[c.name])),
+                            "grey"))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
         if(self.iter%10==0):

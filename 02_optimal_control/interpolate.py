@@ -11,25 +11,30 @@ import orc.utils.plot_utils as plut
 
 dt_robot = 0.001
 
-INPUT_FILE_NAMES = ['home_2_table_min_acc'] #, 'table_2_belt']
-#INPUT_FILE_NAME = 'table_2_belt'
-#INPUT_FILE_NAME = 'belt_2_home'
+#INPUTS = [{'filename': 'home_2_table', 'pause': 1.0}, 
+#          {'filename': 'table_2_belt', 'pause': 1.0},
+#          {'filename': 'belt_2_home',  'pause': 0.0}]
+#OUTPUT_FINE_NAME = 'home_2_table_2_belt_2_home'
 
-OUTPUT_FINE_NAME = 'home_2_table'
+#INPUTS = [{'filename': 'table_2_belt', 'pause': 0.5}]
+#OUTPUT_FINE_NAME = 'table_2_belt'
+
+INPUTS = [{'filename': 'belt_2_home', 'pause': 0.5}]
+OUTPUT_FINE_NAME = 'belt_2_home'
 
 q_in = []
 N_out = 0
 ratio = int(conf.dt/dt_robot)
-for file_name in INPUT_FILE_NAMES:
-    data = np.load(file_name+'.npz') # , q=X[:,:nq], v=X[:,nv:], u=U
+for dict_in in INPUTS:
+    data = np.load(conf.data_folder+dict_in['filename']+'.npz') # , q=X[:,:nq], v=X[:,nv:], u=U
     q_in.append(data['q'])
     N_in = q_in[-1].shape[0]
-    N_out += 1 + (N_in-1)*ratio
+    N_out += 1 + (N_in-1)*ratio + int(dict_in['pause']/dt_robot)
     
 nq = q_in[-1].shape[1]
-q_out = np.empty((N_out, nq))
+q_out = np.zeros((N_out, nq))
 index = 0
-for k in range(len(INPUT_FILE_NAMES)):
+for (k, dict_in) in enumerate(INPUTS):
     N_in = q_in[k].shape[0]
     for i in range(N_in-1):
         for j in range(ratio):
@@ -37,6 +42,13 @@ for k in range(len(INPUT_FILE_NAMES)):
             index += 1
     q_out[index,:] = q_in[k][-1,:]
     index += 1
+    
+    for i in range(int(dict_in['pause']/dt_robot)):
+        q_out[index,:] = q_in[k][-1,:]
+        index += 1
+        
+print("index", index)
+print("N_out", N_out)
 
 
 '''**************'''
@@ -47,7 +59,7 @@ T0 = 0.0
 
 (f, ax) = plut.create_empty_figure(int(nq/2),2)
 ax = ax.reshape(nq)
-for k in range(len(INPUT_FILE_NAMES)):
+for k in range(len(INPUTS)):
     T1 = T0 + q_in[k].shape[0]*conf.dt
     time_in  = np.arange(T0, T1, conf.dt)[:q_in[k].shape[0]]
     T0 = T1
@@ -59,4 +71,4 @@ for k in range(len(INPUT_FILE_NAMES)):
     leg = ax[-1].legend()
     leg.get_frame().set_alpha(0.5)
 
-np.savez_compressed(OUTPUT_FINE_NAME+'_robot', q=q_out)
+np.savez_compressed(conf.data_folder+OUTPUT_FINE_NAME+'_robot', q=q_out)

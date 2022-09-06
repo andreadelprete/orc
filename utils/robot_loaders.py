@@ -20,7 +20,7 @@ def loadURlab():
     URDF = LOCOSIM_PATH+"/ur_description/urdf/ur5.urdf"
     modelPath = '/opt/openrobots/share/'
     robot = RobotWrapper.BuildFromURDF(URDF, [modelPath])
-    robot.model.addBodyFrame("gripper", 6, pin.SE3(np.eye(3), np.array([0.0, 0.0, 0.14])), 28)
+    robot.model.addBodyFrame("gripper", 6, pin.SE3(np.eye(3), np.array([0.0, 0.0, 0.18])), 28)
     
     return robot
 

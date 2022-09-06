@@ -7,6 +7,8 @@ Created on Thu Jul 28 11:45:47 2022
 """
 import numpy as np
 
+fixed_world_translation = np.array([0.5, 0.35, 1.75])
+
 TABLE_STL_FILE = '/home/adelprete/devel/src/locosim/ros_impedance_controller/worlds/models/tavolo/mesh/tavolo.stl'
 table_stl_pos = np.array([0.0, 0.0, -0.02])
 

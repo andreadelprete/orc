@@ -42,7 +42,8 @@ elif(system=='double-pendulum'):
     r = load('double_pendulum')
 elif(system=='pendulum'):
     r = loadPendulum()
-robot = RobotWrapper(r.model, r.collision_model, r.visual_model, fixed_world_translation=conf.fixed_world_translation)
+robot = RobotWrapper(r.model, r.collision_model, r.visual_model, 
+                     fixed_world_translation=lab.fixed_world_translation)
 robot.setJointViscousFriction(conf.B)
 nq, nv = robot.nq, robot.nv    
 n = nq+nv                       # state size

@@ -15,16 +15,18 @@ T = 3.0                         # OCP horizon
 dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
 use_finite_diff = False
-max_iter = 100
+max_iter = 1
+
+data_folder = 'data/'
 
 #DATA_FILE_NAME = 'home_2_table_min_acc'
 #DATA_FILE_NAME = 'table_2_belt'
-DATA_FILE_NAME = 'belt_2_home'
+DATA_FILE_NAME = data_folder+'belt_2_home_new'
 
-INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
+#INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
 #INITIAL_GUESS_FILE = 'home_2_table_min_acc' 
 #INITIAL_GUESS_FILE = 'table_2_belt'
-#INITIAL_GUESS_FILE = 'belt_2_home'
+INITIAL_GUESS_FILE = data_folder+'belt_2_home'
 
 #system = 'ur'
 system = 'ur-lab'
@@ -49,10 +51,9 @@ if(system=='ur'):
     B = 0*np.array([10., 10., 10., 5., 1., 1.]) # joint viscous friction coefficient
 elif(system=='ur-lab'):
     nq = 6
-    fixed_world_translation = np.array([0.5, 0.35, 1.75])
     frame_name = 'tool0'
     # list of frames that should not collide with table, and their minimum distance
-    table_collision_frames = [('gripper',       0.04),
+    table_collision_frames = [('gripper',       0.045),
                               ('tool0',         0.07),
                               ('wrist_1_joint', 0.07),
                               ('wrist_2_joint', 0.07),
