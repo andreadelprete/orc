@@ -154,5 +154,5 @@ if __name__=='__main__':
     elif(SYSTEM_ID==2):
         solver = DDPSolverSinDyn("SinDyn", ddp_params, H_xx, h_x, h_s, lmbda, dt, DEBUG)
     
-    (X,U,KK) = solver.solve(x0, U_bar, mu);
-    solver.print_statistics(x0, U, KK, X);
+    (X,U,K) = solver.solve(x0, U_bar, mu);
+    solver.print_statistics(x0, U, K, X);

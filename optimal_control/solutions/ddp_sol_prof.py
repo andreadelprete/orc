@@ -78,23 +78,23 @@ def backward_pass(solver, X_bar, U_bar, mu):
                 
             Qbar_uu       = solver.Q_uu[i,:,:] + mu*np.identity(m)
             Qbar_uu_pinv  = np.linalg.pinv(Qbar_uu)
-            solver.kk[i,:]       = - Qbar_uu_pinv @ solver.Q_u[i,:]
-            solver.KK[i,:,:]     = Qbar_uu_pinv @ solver.Q_xu[i,:,:].T
+            solver.w[i,:]       = - Qbar_uu_pinv @ solver.Q_u[i,:]
+            solver.K[i,:,:]     = Qbar_uu_pinv @ solver.Q_xu[i,:,:].T
             if(solver.DEBUG):
                 print("Qbar_uu, Qbar_uu_pinv",a2s(Qbar_uu), a2s(Qbar_uu_pinv));
-                print("kk, KK", a2s(solver.kk[i,ru]), a2s(solver.KK[i,ru,rx]));
+                print("w, K", a2s(solver.w[i,ru]), a2s(solver.K[i,ru,rx]));
                 
             # update Value function
             V_x[i,:]    = (solver.Q_x[i,:] - 
-                solver.KK[i,:,:].T @ solver.Q_u[i,:] -
-                solver.KK[i,:,:].T @ solver.Q_uu[i,:,:] @ solver.kk[i,:] +
-                solver.Q_xu[i,:,:] @ solver.kk[i,:])
+                solver.K[i,:,:].T @ solver.Q_u[i,:] -
+                solver.K[i,:,:].T @ solver.Q_uu[i,:,:] @ solver.w[i,:] +
+                solver.Q_xu[i,:,:] @ solver.w[i,:])
             V_xx[i,:]   = (solver.Q_xx[i,:,:] + 
-                solver.KK[i,:,:].T @ solver.Q_uu[i,:,:] @ solver.KK[i,:,:] - 
-                solver.Q_xu[i,:,:] @ solver.KK[i,:,:] - 
-                solver.KK[i,:,:].T @ solver.Q_xu[i,:,:].T)
+                solver.K[i,:,:].T @ solver.Q_uu[i,:,:] @ solver.K[i,:,:] - 
+                solver.Q_xu[i,:,:] @ solver.K[i,:,:] - 
+                solver.K[i,:,:].T @ solver.Q_xu[i,:,:].T)
                 
             # V_x[i,:]    = solver.Q_x[i,:]  - solver.Q_xu[i,:,:] @ Qbar_uu_pinv @ solver.Q_u[i,:]
             # V_xx[i,:]   = solver.Q_xx[i,:] - solver.Q_xu[i,:,:] @ Qbar_uu_pinv @ solver.Q_xu[i,:,:].T
                     
-        return (solver.kk, solver.KK)
+        return (solver.w, solver.K)

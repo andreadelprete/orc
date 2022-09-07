@@ -107,7 +107,7 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
             if(time_spent < self.dt):
                 time.sleep(self.dt-time_spent)
                 
-    def start_simu(self, X, U, KK, dt_sim):
+    def start_simu(self, X, U, K, dt_sim):
         t = 0.0
         simu = self.simu
         simu.init(X[0,:self.robot.nq])
@@ -122,7 +122,7 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
             j = int(np.floor(i/ratio))
             # compute joint torques
             x = np.hstack([simu.q, simu.v])
-            tau = U[j,:] + KK[j,:,:] @ (X[j,:] - x)        
+            tau = U[j,:] + K[j,:,:] @ (X[j,:] - x)        
             # send joint torques to simulator
             simu.simulate(tau, dt_sim)
             
@@ -197,8 +197,8 @@ if __name__=='__main__':
     
     solver = DDPSolverManipulator("ur5", robot, ddp_params, H_xx, h_x, h_s, lmbda, dt, DEBUG, simu)
     
-    (X,U,KK) = solver.solve(x0, U_bar, mu);
-    solver.print_statistics(x0, U, KK, X);
+    (X,U,K) = solver.solve(x0, U_bar, mu);
+    solver.print_statistics(x0, U, K, X);
     
     print("Show reference motion")
     for i in range(0, N):
@@ -211,4 +211,4 @@ if __name__=='__main__':
     time.sleep(1)
     
     print("Show real simulation")
-    solver.start_simu(X, U, KK, conf.dt_sim)
+    solver.start_simu(X, U, K, conf.dt_sim)

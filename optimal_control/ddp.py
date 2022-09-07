@@ -24,7 +24,7 @@ class DDPSolver:
         self.DEBUG = DEBUG
         
     ''' Simulate system forward with computed control law '''
-    def simulate_system(self, x0, U_bar, KK, X_bar):
+    def simulate_system(self, x0, U_bar, K, X_bar):
         n = x0.shape[0]
         m = U_bar.shape[1]
         N = U_bar.shape[0]
@@ -32,7 +32,7 @@ class DDPSolver:
         U = np.zeros((N, m))
         X[0,:] = x0
         for i in range(N):
-            U[i,:] = U_bar[i,:] - KK[i,:,:] @ (X[i,:]-X_bar[i,:])
+            U[i,:] = U_bar[i,:] - K[i,:,:] @ (X[i,:]-X_bar[i,:])
             X[i+1,:] = self.f(X[i,:], U[i,:])
         return (X,U)
         
@@ -46,20 +46,20 @@ class DDPSolver:
         self.d2 = 0.0
         
         for i in range(self.N):
-            self.d1 += self.kk[i,:].T @ self.Q_u[i,:]
-            self.d2 += 0.5 * self.kk[i,:].T @ self.Q_uu[i,:,:] @ self.kk[i,:]
+            self.d1 += self.w[i,:].T @ self.Q_u[i,:]
+            self.d2 += 0.5 * self.w[i,:].T @ self.Q_uu[i,:,:] @ self.w[i,:]
             
                         
     ''' Differential Dynamic Programming
         The pseudoinverses in the algorithm are regularized by the damping factor mu.
     '''
     def solve(self, x0, U_bar, mu):                    
-        # each control law is composed by a feedforward kk and a feedback KK
+        # each control law is composed by a feedforward w and a feedback K
         self.N = N = U_bar.shape[0]     # horizon length
         m = U_bar.shape[1]              # size of u
         n = x0.shape[0]                 # size of x
-        self.kk  = np.zeros((N,m))      # feedforward control inputs
-        self.KK  = np.zeros((N,m,n))    # feedback gains
+        self.w  = np.zeros((N,m))      # feedforward control inputs
+        self.K  = np.zeros((N,m,n))    # feedback gains
                 
         X_bar = np.zeros((N,n))    # nominal state trajectory
         
@@ -82,7 +82,7 @@ class DDPSolver:
             print("\n*** Iter %d" % j)
             
             # compute nominal state trajectory X_bar
-            (X_bar, U_bar) = self.simulate_system(x0, U_bar, self.KK, X_bar)
+            (X_bar, U_bar) = self.simulate_system(x0, U_bar, self.K, X_bar)
             
             self.backward_pass(X_bar, U_bar, mu)
             
@@ -94,7 +94,7 @@ class DDPSolver:
             self.update_expected_cost_improvement()
             
             for jj in range(self.max_line_search_iter):
-                (X,U) = self.simulate_system(x0, U_bar + alpha*self.kk, self.KK, X_bar)
+                (X,U) = self.simulate_system(x0, U_bar + alpha*self.w, self.K, X_bar)
                 new_cost = self.cost(X, U);
                 exp_impr = alpha*self.d1 + 0.5*(alpha**2)*self.d2
 #                print("Expected improvement", exp_impr, "Real improvement", new_cost-cst)
@@ -105,7 +105,7 @@ class DDPSolver:
                     line_search_succeeded = True
                     
                 if(line_search_succeeded):
-                    U_bar += alpha*self.kk
+                    U_bar += alpha*self.w
                     cst = new_cost
                     break
                 else:
@@ -138,17 +138,17 @@ class DDPSolver:
                 break
                     
         # compute nominal state trajectory X_bar
-        (X_bar, U_bar) = self.simulate_system(x0, U_bar, self.KK, X_bar)
-        return (X_bar, U_bar, self.KK)
+        (X_bar, U_bar) = self.simulate_system(x0, U_bar, self.K, X_bar)
+        return (X_bar, U_bar, self.K)
         
         
     def callback(self, X, U):
         ''' callback function called at every iteration '''
         pass
     
-    def print_statistics(self, x0, U_bar, KK, X_bar):
+    def print_statistics(self, x0, U_bar, K, X_bar):
         # simulate system forward with computed control law
-        (X, U) = self.simulate_system( x0, U_bar, KK, X_bar)
+        (X, U) = self.simulate_system( x0, U_bar, K, X_bar)
         print("\n**************************************** RESULTS ****************************************")
         
         # compute cost of each task
