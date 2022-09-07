@@ -32,7 +32,7 @@ class DDPSolver:
         U = np.zeros((N, m))
         X[0,:] = x0
         for i in range(N):
-            U[i,:] = U_bar[i,:] - K[i,:,:] @ (X[i,:]-X_bar[i,:])
+            U[i,:] = U_bar[i,:] + K[i,:,:] @ (X[i,:]-X_bar[i,:])
             X[i+1,:] = self.f(X[i,:], U[i,:])
         return (X,U)
         

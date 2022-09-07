@@ -122,7 +122,7 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
             j = int(np.floor(i/ratio))
             # compute joint torques
             x = np.hstack([simu.q, simu.v])
-            tau = U[j,:] + K[j,:,:] @ (X[j,:] - x)        
+            tau = U[j,:] + K[j,:,:] @ (x - X[j,:])        
             # send joint torques to simulator
             simu.simulate(tau, dt_sim)
             
