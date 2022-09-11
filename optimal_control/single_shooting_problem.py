@@ -490,6 +490,6 @@ class SingleShootingProblem:
                             "grey"))
 #        print('\t\tlast u:', self.U.T)
         self.iter += 1
-        if(self.iter%10==0):
+        if(self.iter%1==0):
             self.simu.display_motion(self.X[:,:self.nq], self.dt)
         return False

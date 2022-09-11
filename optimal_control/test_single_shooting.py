@@ -153,7 +153,7 @@ for (frame1, frame2, min_dist) in conf.self_collision_frames:
 
 ''' Solve OCP '''
 #import cProfile
-#cProfile.run("problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff)")
+#cProfile.run("problem.solve(y0=U.reshape(N*m), use_finite_diff=conf.use_finite_diff, max_iter=conf.max_iter)")
 problem.solve(y0=U.reshape(N*m), 
               use_finite_diff=conf.use_finite_diff, 
               max_iter = conf.max_iter)

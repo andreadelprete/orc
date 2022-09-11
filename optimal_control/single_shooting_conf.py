@@ -16,6 +16,7 @@ dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
 use_finite_diff = False
 max_iter = 1
+max_iter = 300
 
 data_folder = 'data/'
 

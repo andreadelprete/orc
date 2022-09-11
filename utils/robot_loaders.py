@@ -15,7 +15,7 @@ from pinocchio.robot_wrapper import RobotWrapper
 from example_robot_data.robots_loader import getModelPath, readParamsFromSrdf
 
 def loadURlab():
-    LOCOSIM_PATH = "/home/adelprete/devel/src/locosim"
+    LOCOSIM_PATH = "/home/student/ros_ws/src/locosim"
 #    URDF = LOCOSIM_PATH+"/robot_urdf/ur5.urdf"
     URDF = LOCOSIM_PATH+"/ur_description/urdf/ur5.urdf"
     modelPath = '/opt/openrobots/share/'
