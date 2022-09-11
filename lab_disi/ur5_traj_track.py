@@ -70,20 +70,7 @@ class LabAdmittanceController(BaseControllerFixed):
             self.use_torque_control = 1
         else:
             self.use_torque_control = 0
-
-
-
-        if (lab_conf.obstacle_avoidance):
-            self.world_name = 'tavolo_obstacles.world'
-            if (not self.use_torque_control):
-                print(colored("ERRORS: you can use obstacle avoidance only on torque control mode", 'red'))
-                sys.exit()
-        else:
-            self.world_name = None
-
-        if lab_conf.admittance_control and ((not self.real_robot) and (not self.use_torque_control)):
-            print(colored("ERRORS: you can use admittance control only on torque control mode or in real robot (need contact force estimation or measurement)", 'red'))
-            sys.exit()
+        self.world_name = None
 
         if self.use_torque_control and self.real_robot:
             print(colored(
@@ -97,22 +84,10 @@ class LabAdmittanceController(BaseControllerFixed):
         os.system("killall rviz gzserver gzclient")
         print(colored('------------------------------------------------ROBOT IS REAL!', 'blue'))
 
-        # PREPARE TO LAUNCH ur_hardware_interface through launch file
-        # cli_args = ['ur_robot_driver', 'ur5e_bringup.launch', "headless_mode:=true", "robot_ip:=192.168.0.100",
-        #                  "kinematics_config:=/home/laboratorio/my_robot_calibration_1.yaml"]
-        # roslaunch_args = cli_args[1:]
-        # self.roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], roslaunch_args)]
-        # self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        # roslaunch.configure_logging(self.uuid)
-        # self.parent = roslaunch.parent.ROSLaunchParent(self.uuid, self.roslaunch_file)
-
         if (not rosgraph.is_master_online()) or (
                 "/" + self.robot_name + "/ur_hardware_interface" not in rosnode.get_node_names()):
             print(colored('ERROR: You should first launch the ur driver!', 'red'))
             sys.exit()
-            # print(colored('Launching the ur driver!', 'green'))
-            # self.parent.start()
-            # ros.sleep(5.0)
 
         # run rviz
         package = 'rviz'
@@ -229,11 +204,10 @@ class LabAdmittanceController(BaseControllerFixed):
         self.payload_weight_avg = 0.0
         self.polynomial_flag = False
 
-        if lab_conf.USER_TRAJECTORY:
-            self.Q_ref = []
-            for name in lab_conf.traj_file_name:
-                data = np.load(name + '.npz')
-                self.Q_ref.append(data['q'])
+        self.Q_ref = []
+        for name in lab_conf.traj_file_name:
+            data = np.load(name + '.npz')
+            self.Q_ref.append(data['q'])
 
 
     def logData(self):
@@ -353,10 +327,7 @@ class LabAdmittanceController(BaseControllerFixed):
         if not self.real_robot:
             return
 
-        import os
-        import sys
         import socket
-
         HOST = "192.168.0.100"  # The UR IP address
         PORT = 30002  # UR secondary client
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -424,112 +395,93 @@ def talker(p):
     #loop frequency
     rate = ros.Rate(1/conf.robot_params[p.robot_name]['dt'])
 
-    if (conf.robot_params[p.robot_name]['control_mode'] == "trajectory"):
-        # to test the trajectory
-        if (p.real_robot):
-            p.switch_controller("scaled_pos_joint_traj_controller")
-        else:
-            p.switch_controller("pos_joint_traj_controller")
-        p.send_joint_trajectory()
-    else:
-        if not p.use_torque_control:            
-            p.switch_controller("joint_group_pos_controller")
-        # reset to actual
+    if not p.use_torque_control:            
+        p.switch_controller("joint_group_pos_controller")
+    # reset to actual
+    p.updateKinematicsDynamics()
+    p.time_poly = None
+
+    ext_traj_counter = 0    # counter for which trajectory is currently tracked
+    ext_traj_t = 0          # counter for the time inside a trajectory
+    traj_completed = False
+
+    #control loop
+    while True:
+        # homing procedure
+        if p.homing_flag:
+            dt = conf.robot_params[p.robot_name]['dt']
+            v_des = lab_conf.v_des_homing
+            v_ref = 0.0
+            print(colored("STARTING HOMING PROCEDURE",'red'))
+            q_home = conf.robot_params[p.robot_name]['q_0']
+            p.q_des = np.copy(p.q)
+            print("Initial joint error = ", np.linalg.norm(p.q_des - q_home))
+            print("q = ", p.q.T)
+            print("Homing v des", v_des)
+            while True:
+                e = q_home - p.q_des
+                e_norm = np.linalg.norm(e)
+                if(e_norm!=0.0):
+                    v_ref += 0.005*(v_des-v_ref)
+                    p.q_des += dt*v_ref*e/e_norm
+                    p.send_reduced_des_jstate(p.q_des)
+                rate.sleep()
+                if (e_norm<0.001):
+                    p.homing_flag = False
+                    print(colored("HOMING PROCEDURE ACCOMPLISHED", 'red'))
+                    p.move_gripper(30)
+                    print(colored("GRIPPER CLOSED", 'red'))
+                    break
+
+        #update the kinematics
         p.updateKinematicsDynamics()
-        p.time_poly = None
 
-        ext_traj_counter = 0    # counter for which trajectory is currently tracked
-        ext_traj_t = 0          # counter for the time inside a trajectory
-        traj_completed = False
+        if (int(ext_traj_t) < p.Q_ref[ext_traj_counter].shape[0]): # and p.time>6.0:
+            p.q_des = p.Q_ref[ext_traj_counter][int(ext_traj_t),:]
+            ext_traj_t += 1.0/lab_conf.traj_slow_down_factor
+        else:
+            if(ext_traj_counter < len(p.Q_ref)-1):
+                print(colored("TRAJECTORY %d COMPLETED"%ext_traj_counter, 'blue'))
+                if(ext_traj_counter==0):
+                    p.move_gripper(65)
+                if (ext_traj_counter == 1):
+                    p.move_gripper(30)
+                ext_traj_counter += 1
+                ext_traj_t = 0
+            elif(not traj_completed):
+                print(colored("LAST TRAJECTORY COMPLETED", 'red'))
+                p.move_gripper(60)
+                traj_completed = True
+                    
+        # controller with gravity coriolis comp
+        p.tau_ffwd = p.h + np.zeros(p.robot.na)
+        q_to_send = p.q_des
 
-        #control loop
-        while True:
-            # homing procedure
-            if p.homing_flag:
-                dt = conf.robot_params[p.robot_name]['dt']
-                v_des = lab_conf.v_des_homing
-                v_ref = 0.0
-                print(colored("STARTING HOMING PROCEDURE",'red'))
-                q_home = conf.robot_params[p.robot_name]['q_0']
-                p.q_des = np.copy(p.q)
-                print("Initial joint error = ", np.linalg.norm(p.q_des - q_home))
-                print("q = ", p.q.T)
-                print("Homing v des", v_des)
-                while True:
-                    e = q_home - p.q_des
-                    e_norm = np.linalg.norm(e)
-                    if(e_norm!=0.0):
-                        v_ref += 0.005*(v_des-v_ref)
-                        p.q_des += dt*v_ref*e/e_norm
-                        p.send_reduced_des_jstate(p.q_des)
-                    rate.sleep()
-                    if (e_norm<0.001):
-                        p.homing_flag = False
-                        print(colored("HOMING PROCEDURE ACCOMPLISHED", 'red'))
-                        p.move_gripper(30)
-                        print(colored("GRIPPER CLOSED", 'red'))
-                        break
+        # send commands to gazebo
+        if (p.use_torque_control):
+            p.send_des_jstate(q_to_send, p.qd_des, p.tau_ffwd)
+        else:
+            p.send_reduced_des_jstate(q_to_send)
 
-            #update the kinematics
-            p.updateKinematicsDynamics()
+        p.ros_pub.add_arrow(p.x_ee + p.base_offset, p.contactForceW / (6 * p.robot.robot_mass), "green")
 
-            if lab_conf.USER_TRAJECTORY:
-                if (int(ext_traj_t) < p.Q_ref[ext_traj_counter].shape[0]): # and p.time>6.0:
-                    p.q_des = p.Q_ref[ext_traj_counter][int(ext_traj_t),:]
-                    ext_traj_t += 1.0/lab_conf.traj_slow_down_factor
-                else:
-                    if(ext_traj_counter < len(p.Q_ref)-1):
-                        print(colored("TRAJECTORY %d COMPLETED"%ext_traj_counter, 'blue'))
-                        if(ext_traj_counter==0):
-                            p.move_gripper(65)
-                        if (ext_traj_counter == 1):
-                            p.move_gripper(30)
-                        ext_traj_counter += 1
-                        ext_traj_t = 0
-                    elif(not traj_completed):
-                        print(colored("LAST TRAJECTORY COMPLETED", 'red'))
-                        p.move_gripper(60)
-                        traj_completed = True
-                        ext_traj_t = 0
-                        ext_traj_counter = 0
-                        
-          # controller with gravity coriolis comp
-            p.tau_ffwd = p.h + np.zeros(p.robot.na)
-            q_to_send = p.q_des
+        # log variables
+        if (p.time > 1.0):
+            p.logData()
 
-            # send commands to gazebo
-            if (p.use_torque_control):
-                if (lab_conf.obstacle_avoidance):
-                    p.tau_ffwd = p.obs_avoidance.computeTorques(p,  lab_conf.des_ee_goal)
-                p.send_des_jstate(q_to_send, p.qd_des, p.tau_ffwd)
-            else:
-                p.send_reduced_des_jstate(q_to_send)
+        # plot end-effector
+        p.ros_pub.add_marker(p.x_ee + p.base_offset)
+        p.ros_pub.publishVisual()
 
-            if(not lab_conf.obstacle_avoidance):
-                p.ros_pub.add_arrow(p.x_ee + p.base_offset, p.contactForceW / (6 * p.robot.robot_mass), "green")
+        #wait for synconization of the control loop
+        rate.sleep()
 
-            # log variables
-            if (p.time > 1.0):
-                p.logData()
-
-            # disturbance force
-            if (p.time > 3.0 and p.EXTERNAL_FORCE):
-                p.applyForce()
-                p.EXTERNAL_FORCE = False
-
-            # plot end-effector
-            p.ros_pub.add_marker(p.x_ee + p.base_offset)
-            p.ros_pub.publishVisual()
-
-            #wait for synconization of the control loop
-            rate.sleep()
-
-            p.time = p.time + conf.robot_params[p.robot_name]['dt']
-           # stops the while loop if  you prematurely hit CTRL+C
-            if ros.is_shutdown():
-                p.plotStuff()
-                print ("Shutting Down")
-                break
+        p.time = p.time + conf.robot_params[p.robot_name]['dt']
+       # stops the while loop if  you prematurely hit CTRL+C
+        if ros.is_shutdown():
+            p.plotStuff()
+            print ("Shutting Down")
+            break
 
     print("Shutting Down")
     ros.signal_shutdown("killed")
