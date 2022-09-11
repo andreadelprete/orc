@@ -15,9 +15,9 @@ T = 3.0                         # OCP horizon
 dt = 0.02                     # OCP time step
 integration_scheme = 'RK-1'
 use_finite_diff = False
-max_iter = 300
+max_iter = 3
 
-data_folder = 'data/'
+data_folder = '../data/'
 
 #DATA_FILE_NAME = 'home_2_table_min_acc'
 #DATA_FILE_NAME = 'table_2_belt'
@@ -26,7 +26,7 @@ DATA_FILE_NAME = data_folder+'belt_2_home_new'
 #INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
 #INITIAL_GUESS_FILE = 'home_2_table_min_acc' 
 #INITIAL_GUESS_FILE = 'table_2_belt'
-INITIAL_GUESS_FILE = data_folder+'belt_2_home'
+INITIAL_GUESS_FILE = data_folder+'belt_2_home_new'
 
 #system = 'ur'
 system = 'ur-lab'

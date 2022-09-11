@@ -17,14 +17,14 @@ import orc.utils.lab_utils as lab
 
 from single_shooting_problem import SingleShootingProblem
 import single_shooting_conf as conf
-from ode import ODERobot
-from numerical_integration import Integrator
-from cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPFinalCostFrame
-from cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticJointAcc, OCPRunningCostQuadraticControl
-from inequality_constraints import OCPFinalPlaneCollisionAvoidance, OCPPathPlaneCollisionAvoidance
-from inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
-from inequality_constraints import OCPFinalSelfCollisionAvoidance, OCPPathSelfCollisionAvoidance
-from equality_constraints import OCPFinalConstraintState
+from orc.optimal_control.ode import ODERobot
+from orc.optimal_control.numerical_integration import Integrator
+from orc.optimal_control.cost_functions import OCPFinalCostState, OCPFinalCostFramePos, OCPFinalCostFrame
+from orc.optimal_control.cost_functions import OCPRunningCostQuadraticJointVel, OCPRunningCostQuadraticJointAcc, OCPRunningCostQuadraticControl
+from orc.optimal_control.inequality_constraints import OCPFinalPlaneCollisionAvoidance, OCPPathPlaneCollisionAvoidance
+from orc.optimal_control.inequality_constraints import OCPFinalJointBounds, OCPPathJointBounds
+from orc.optimal_control.inequality_constraints import OCPFinalSelfCollisionAvoidance, OCPPathSelfCollisionAvoidance
+from orc.optimal_control.equality_constraints import OCPFinalConstraintState
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
     
