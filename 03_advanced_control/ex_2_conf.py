@@ -61,6 +61,6 @@ RF_REF_SPHERE_COLOR  = (0, 1, 0.5, 0.5)
 LF_SPHERE_COLOR  = (0, 0, 1, 0.5)
 LF_REF_SPHERE_COLOR  = (0.5, 0, 1, 0.5)
 
-path = '/home/student/devel/tsid-devel/models/romeo'
-urdf = path + '/urdf/romeo.urdf'
-srdf = path + '/srdf/romeo_collision.srdf'
+path = '/opt/openrobots/share/example-robot-data/robots/romeo_description' #'/home/student/devel/tsid-devel/models/romeo'
+urdf = path + '/urdf/romeo_small.urdf'
+srdf = path + '/srdf/romeo_small.srdf'

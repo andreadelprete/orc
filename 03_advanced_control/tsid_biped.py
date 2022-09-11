@@ -1,5 +1,6 @@
 import pinocchio as se3
-from pinocchio import libpinocchio_pywrap as pin 
+#from pinocchio import libpinocchio_pywrap as pin 
+pin = se3
 import tsid
 import numpy as np
 import numpy.matlib as matlib
@@ -44,13 +45,13 @@ class TsidBiped:
         
         contactRF =tsid.Contact6d("contact_rfoot", robot, conf.rf_frame_name, contact_Point, 
                                   conf.contactNormal, conf.mu, conf.fMin, conf.fMax)
-        contactRF.setKp(conf.kp_contact * matlib.ones(6).T)
-        contactRF.setKd(2.0 * np.sqrt(conf.kp_contact) * matlib.ones(6).T)
+        contactRF.setKp(conf.kp_contact * np.ones(6).T)
+        contactRF.setKd(2.0 * np.sqrt(conf.kp_contact) * np.ones(6).T)
         self.RF = robot.model().getJointId(conf.rf_frame_name)
         H_rf_ref = robot.position(data, self.RF)
         
         # modify initial robot configuration so that foot is on the ground (z=0)
-        q[2] -= H_rf_ref.translation[2,0] - conf.lz
+        q[2] -= H_rf_ref.translation[2] - conf.lz
         formulation.computeProblemData(0.0, q, v)
         data = formulation.data()
         H_rf_ref = robot.position(data, self.RF)
@@ -59,21 +60,21 @@ class TsidBiped:
         
         contactLF =tsid.Contact6d("contact_lfoot", robot, conf.lf_frame_name, contact_Point, 
                                   conf.contactNormal, conf.mu, conf.fMin, conf.fMax)
-        contactLF.setKp(conf.kp_contact * matlib.ones(6).T)
-        contactLF.setKd(2.0 * np.sqrt(conf.kp_contact) * matlib.ones(6).T)
+        contactLF.setKp(conf.kp_contact * np.ones(6).T)
+        contactLF.setKd(2.0 * np.sqrt(conf.kp_contact) * np.ones(6).T)
         self.LF = robot.model().getJointId(conf.lf_frame_name)
         H_lf_ref = robot.position(data, self.LF)
         contactLF.setReference(H_lf_ref)
         formulation.addRigidContact(contactLF, conf.w_forceRef)
         
         comTask = tsid.TaskComEquality("task-com", robot)
-        comTask.setKp(conf.kp_com * matlib.ones(3).T)
-        comTask.setKd(2.0 * np.sqrt(conf.kp_com) * matlib.ones(3).T)
+        comTask.setKp(conf.kp_com * np.ones(3).T)
+        comTask.setKd(2.0 * np.sqrt(conf.kp_com) * np.ones(3).T)
         formulation.addMotionTask(comTask, conf.w_com, 1, 0.0)
         
         postureTask = tsid.TaskJointPosture("task-posture", robot)
-        postureTask.setKp(conf.kp_posture * matlib.ones(robot.nv-6).T)
-        postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * matlib.ones(robot.nv-6).T)
+        postureTask.setKp(conf.kp_posture * np.ones(robot.nv-6).T)
+        postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv-6).T)
         formulation.addMotionTask(postureTask, conf.w_posture, 1, 0.0)
         
         self.leftFootTask = tsid.TaskSE3Equality("task-left-foot", self.robot, self.conf.lf_frame_name)
@@ -150,7 +151,7 @@ class TsidBiped:
             self.robot_display.display(q)
             
             self.gui = self.robot_display.viewer.gui
-            self.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)
+            self.gui.setCameraTransform('python-pinocchio', conf.CAMERA_TRANSFORM)
             self.gui.addFloor('world/floor')
             self.gui.setLightingMode('world/floor', 'OFF');
         

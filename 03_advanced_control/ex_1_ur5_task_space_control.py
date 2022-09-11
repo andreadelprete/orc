@@ -2,11 +2,9 @@ import numpy as np
 from numpy import nan
 from numpy.linalg import norm as norm
 import matplotlib.pyplot as plt
-import arc.utils.plot_utils as plut
+import orc.utils.plot_utils as plut
 import time
 from tsid_manipulator import TsidManipulator
-import eigenpy 
-eigenpy.switchToNumpyArray()
 
 #import ex_0_ur5_conf as conf
 import ex_1_ur5_reaching_conf as conf
@@ -38,7 +36,7 @@ ee_acc_des = np.empty((3, N))*nan # acc_des = acc_ref - Kp*pos_err - Kd*vel_err
 sampleEE = tsid.trajEE.computeNext()
 samplePosture = tsid.trajPosture.computeNext()
 
-offset               = sampleEE.pos()
+offset               = sampleEE.value()
 offset[:3]          += conf.offset
 two_pi_f_amp         = np.multiply(conf.two_pi_f, conf.amp)
 two_pi_f_squared_amp = np.multiply(conf.two_pi_f, two_pi_f_amp)
@@ -59,9 +57,9 @@ for i in range(0, N):
     pEE[:3] = offset[:3] +  np.multiply(conf.amp, np.sin(conf.two_pi_f*t + conf.phi))
     vEE[:3] = np.multiply(two_pi_f_amp, np.cos(conf.two_pi_f*t + conf.phi))
     aEE[:3] = np.multiply(two_pi_f_squared_amp, -np.sin(conf.two_pi_f*t + conf.phi))
-    sampleEE.pos(pEE)
-    sampleEE.vel(vEE)
-    sampleEE.acc(aEE)
+    sampleEE.value(pEE)
+    sampleEE.derivative(vEE)
+    sampleEE.second_derivative(aEE)
     tsid.eeTask.setReference(sampleEE)
 
     HQPData = tsid.formulation.computeProblemData(t, q[:,i], v[:,i])
@@ -78,9 +76,9 @@ for i in range(0, N):
     ee_pos[:,i] = tsid.robot.framePosition(tsid.formulation.data(), tsid.EE).translation
     ee_vel[:,i] = tsid.robot.frameVelocityWorldOriented(tsid.formulation.data(), tsid.EE).linear
     ee_acc[:,i] = tsid.eeTask.getAcceleration(dv)[:3]
-    ee_pos_ref[:,i] = sampleEE.pos()[:3]
-    ee_vel_ref[:,i] = sampleEE.vel()[:3]
-    ee_acc_ref[:,i] = sampleEE.acc()[:3]
+    ee_pos_ref[:,i] = sampleEE.value()[:3]
+    ee_vel_ref[:,i] = sampleEE.derivative()[:3]
+    ee_acc_ref[:,i] = sampleEE.second_derivative()[:3]
     ee_acc_des[:,i] = tsid.eeTask.getDesiredAcceleration[:3]
 
     if i%conf.PRINT_N == 0:

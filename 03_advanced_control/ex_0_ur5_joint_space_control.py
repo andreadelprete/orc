@@ -2,18 +2,14 @@ import numpy as np
 from numpy import nan
 from numpy.linalg import norm as norm
 import matplotlib.pyplot as plt
-import arc.utils.plot_utils as plut
+import orc.utils.plot_utils as plut
 import time
 import pinocchio as se3
 import tsid
 import gepetto.corbaserver
 import subprocess
 import os
-
 import ex_0_ur5_conf as conf
-
-import eigenpy 
-eigenpy.switchToNumpyArray()
 
 print("".center(conf.LINE_WIDTH,'#'))
 print(" Joint Space Inverse Dynamics - Manipulator ".center(conf.LINE_WIDTH, '#'))
@@ -63,7 +59,7 @@ if(USE_VIEWER):
     robot_display.displayCollisions(False)
     robot_display.displayVisuals(True)
     robot_display.display(q0)
-    robot_display.viewer.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)
+    robot_display.viewer.gui.setCameraTransform('python-pinocchio', conf.CAMERA_TRANSFORM)
 
 N = conf.N_SIMULATION
 tau    = np.empty((robot.na, N))*nan
@@ -93,9 +89,9 @@ for i in range(0, N):
     q_ref[:,i]  = q0 +  np.multiply(amp, np.sin(two_pi_f*t + phi))
     v_ref[:,i]  = np.multiply(two_pi_f_amp, np.cos(two_pi_f*t + phi))
     dv_ref[:,i] = np.multiply(two_pi_f_squared_amp, -np.sin(two_pi_f*t + phi))
-    samplePosture.pos(q_ref[:,i])
-    samplePosture.vel(v_ref[:,i])
-    samplePosture.acc(dv_ref[:,i])
+    samplePosture.value(q_ref[:,i])
+    samplePosture.derivative(v_ref[:,i])
+    samplePosture.second_derivative(dv_ref[:,i])
     postureTask.setReference(samplePosture)
 
     HQPData = formulation.computeProblemData(t, q[:,i], v[:,i])

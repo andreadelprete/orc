@@ -94,7 +94,7 @@ class TsidManipulator:
             self.robot_display.displayVisuals(True)
             self.robot_display.display(q)
             self.gui = self.robot_display.viewer.gui
-            self.gui.setCameraTransform(0, conf.CAMERA_TRANSFORM)
+            self.gui.setCameraTransform('python-pinocchio', conf.CAMERA_TRANSFORM)
         
     def integrate_dv(self, q, v, dv, dt):
         v_mean = v + 0.5*dt*dv
