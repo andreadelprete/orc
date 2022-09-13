@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import pinocchio as pin
 from pinocchio.robot_wrapper import RobotWrapper
-from example_robot_data.robots_loader import getModelPath, readParamsFromSrdf
+from example_robot_data.robots_loader import getModelPath
 
 
 def loadUR(robot=5, limited=False, gripper=False):
@@ -15,10 +15,6 @@ def loadUR(robot=5, limited=False, gripper=False):
     URDF_SUBPATH = "/ur_description/urdf/" + URDF_FILENAME
     modelPath = getModelPath(URDF_SUBPATH)
     model = RobotWrapper.BuildFromURDF(modelPath + URDF_SUBPATH, ['/opt/openrobots/share/'])
-    if robot == 5 or robot == 3 and gripper:
-        SRDF_FILENAME = "ur%i%s.srdf" % (robot, '_gripper' if gripper else '')
-        SRDF_SUBPATH = "/ur_description/srdf/" + SRDF_FILENAME
-        readParamsFromSrdf(model, modelPath + SRDF_SUBPATH, False, False, None)
     return model
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
@@ -49,7 +45,7 @@ if(use_viewer):
         pass
     robot.initViewer(loadModel=True)
     robot.display(q0)            
-    robot.viewer.gui.setCameraTransform(0, CAMERA_TRANSFORM)
+    robot.viewer.gui.setCameraTransform('python-pinocchio', CAMERA_TRANSFORM)
 
 N = int(T_SIMULATION/dt)      # number of time steps
 q      = np.empty((robot.nq, N+1))*nan  # joint angles
