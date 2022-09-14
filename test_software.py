@@ -3,19 +3,7 @@ from numpy import nan
 import matplotlib.pyplot as plt
 import time
 import pinocchio as pin
-from pinocchio.robot_wrapper import RobotWrapper
-from example_robot_data.robots_loader import getModelPath
-
-
-def loadUR(robot=5, limited=False, gripper=False):
-    ''' Load the model of the robot UR
-    '''
-    assert (not (gripper and (robot == 10 or limited)))
-    URDF_FILENAME = "ur%i%s_%s.urdf" % (robot, "_joint_limited" if limited else '', 'gripper' if gripper else 'robot')
-    URDF_SUBPATH = "/ur_description/urdf/" + URDF_FILENAME
-    modelPath = getModelPath(URDF_SUBPATH)
-    model = RobotWrapper.BuildFromURDF(modelPath + URDF_SUBPATH, ['/opt/openrobots/share/'])
-    return model
+from example_robot_data.robots_loader import load
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 80
@@ -29,11 +17,13 @@ PRINT_T = 1                   # print every PRINT_N time steps
 CAMERA_TRANSFORM = [2.582354784011841, 1.620774507522583, 1.0674564838409424, 0.2770655155181885, 0.5401807427406311, 0.6969326734542847, 0.3817386031150818]
 
 print("".center(LINE_WIDTH,'#'))
-print(" Test Software Advance Optimization-Based Robot Control ".center(LINE_WIDTH, '#'))
+print(" Test Software Optimization-Based Robot Control ".center(LINE_WIDTH, '#'))
 print("".center(LINE_WIDTH,'#'), '\n')
 
-robot = loadUR()
+# load the robot model
+robot = load('ur5')
 
+# launch the viewer
 if(use_viewer):
     import subprocess, os
     try:
@@ -47,10 +37,10 @@ if(use_viewer):
     robot.display(q0)            
     robot.viewer.gui.setCameraTransform('python-pinocchio', CAMERA_TRANSFORM)
 
-N = int(T_SIMULATION/dt)      # number of time steps
-q      = np.empty((robot.nq, N+1))*nan  # joint angles
+N  = int(T_SIMULATION/dt)      # number of time steps
+q  = np.empty((robot.nq, N+1))*nan  # joint angles
 dq = np.zeros(robot.nv)
-t = 0.0
+t  = 0.0
 q[:,0] = q0
 PRINT_N = int(PRINT_T/dt)
 
