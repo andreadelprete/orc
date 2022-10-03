@@ -17,19 +17,14 @@ class TsidManipulator:
     
     def __init__(self, conf, viewer=True):
         self.conf = conf
-        vector = se3.StdVec_StdString()
-        vector.extend(item for item in conf.path)
-        self.robot = tsid.RobotWrapper(conf.urdf, vector, False)
+        self.robot = tsid.RobotWrapper(conf.urdf, [conf.path], False)
         robot = self.robot
         self.model = model = robot.model()
         try:
-#            q = se3.getNeutralConfiguration(model, conf.srdf, False)
             se3.loadReferenceConfigurations(model, conf.srdf, False)
             q = model.referenceConfigurations['default']
-#        q = model.referenceConfigurations["half_sitting"]
         except:
             q = conf.q0
-#            q = np.zeros(robot.nv)
         v = np.zeros(robot.nv)
         
         assert model.existFrame(conf.ee_frame_name)
@@ -38,8 +33,8 @@ class TsidManipulator:
         formulation.computeProblemData(0.0, q, v)
                 
         postureTask = tsid.TaskJointPosture("task-posture", robot)
-        postureTask.setKp(conf.kp_posture * np.ones(robot.nv).T)
-        postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv).T)
+        postureTask.setKp(conf.kp_posture * np.ones(robot.nv))
+        postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv))
         formulation.addMotionTask(postureTask, conf.w_posture, 1, 0.0)
         
         self.eeTask = tsid.TaskSE3Equality("task-ee", self.robot, self.conf.ee_frame_name)

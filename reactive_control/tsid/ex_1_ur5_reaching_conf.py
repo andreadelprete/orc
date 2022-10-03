@@ -16,10 +16,10 @@ dt = 0.002                      # controller time step
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
 
 # REFERENCE SINUSOIDAL TRAJECTORY
-amp                  = np.array([0.1, 0.0, 0.1]).T           # amplitude
-phi                  = np.array([0.0, 0.0, np.pi/2]).T         # phase
-two_pi_f             = 2*np.pi*np.array([0.3, 0.3, 0.3]).T   # frequency (time 2 PI)
-offset               = np.array([0.2, 0.0, 0.0]).T
+amp                  = np.array([0.1, 0.0, 0.1])           # amplitude
+phi                  = np.array([0.0, 0.0, np.pi/2])         # phase
+two_pi_f             = 2*np.pi*np.array([0.3, 0.3, 0.3])   # frequency (time 2 PI)
+offset               = np.array([0.1, 0.0, 0.0])
 
 w_ee = 1.0                      # weight of end-effector task
 w_posture = 1e-3                # weight of joint posture task
@@ -33,7 +33,7 @@ tau_max_scaling = 0.4           # scaling factor of torque bounds
 v_max_scaling = 0.4             # scaling factor of velocity bounds
 
 ee_frame_name = "ee_fixed_joint"        # end-effector frame name
-ee_task_mask = np.array([1., 1, 1, 0, 0, 0]).T
+ee_task_mask = np.array([1., 1, 1, 0, 0, 0])
 
 PRINT_N = 500                   # print every PRINT_N time steps
 DISPLAY_N = 20                  # update robot configuration in viwewer every DISPLAY_N time steps

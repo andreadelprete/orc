@@ -17,10 +17,7 @@ import ex_2_conf as conf
 import vizutils
 from tsid_biped import TsidBiped
 
-import tsid_biped
-
 AXES = ['X', 'Y', 'Z']
-
 
 class Scale3d:
     def __init__(self, master, name, from_, to, tickinterval, length, orient, command):

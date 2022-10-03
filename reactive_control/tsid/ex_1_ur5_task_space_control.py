@@ -6,7 +6,6 @@ import orc.utils.plot_utils as plut
 import time
 from tsid_manipulator import TsidManipulator
 
-#import ex_0_ur5_conf as conf
 import ex_1_ur5_reaching_conf as conf
 
 print(("".center(conf.LINE_WIDTH,'#')))
@@ -50,6 +49,7 @@ tsid.gui.addSphere('world/ee_ref', conf.REF_SPHERE_RADIUS, conf.EE_REF_SPHERE_CO
 
 t = 0.0
 q[:,0], v[:,0] = tsid.q, tsid.v
+time_avg = 0
 
 for i in range(0, N):
     time_start = time.time()
@@ -94,6 +94,10 @@ for i in range(0, N):
         tsid.gui.applyConfiguration('world/ee_ref', ee_pos_ref[:,i].tolist()+[0,0,0,1.])
 
     time_spent = time.time() - time_start
+    time_avg = (i * time_avg + time_spent) / (i + 1)
+    if i % 100 == 0:
+        print("Average loop time: %.1f (expected is %.1f)" % (1e3 * time_avg, 1e3 * conf.dt))
+
     if(time_spent < conf.dt): time.sleep(conf.dt-time_spent)
 
 # PLOT STUFF
