@@ -38,8 +38,8 @@ samplePosture = tsid.trajPosture.computeNext()
 
 offset               = sampleEE.value()
 offset[:3]          += conf.offset
-two_pi_f_amp         = np.multiply(conf.two_pi_f, conf.amp)
-two_pi_f_squared_amp = np.multiply(conf.two_pi_f, two_pi_f_amp)
+two_pi_f_amp         = conf.two_pi_f * conf.amp
+two_pi_f_squared_amp = conf.two_pi_f * two_pi_f_amp
 
 pEE = offset.copy()
 vEE = np.zeros(6)
@@ -54,9 +54,9 @@ q[:,0], v[:,0] = tsid.q, tsid.v
 for i in range(0, N):
     time_start = time.time()
     
-    pEE[:3] = offset[:3] +  np.multiply(conf.amp, np.sin(conf.two_pi_f*t + conf.phi))
-    vEE[:3] = np.multiply(two_pi_f_amp, np.cos(conf.two_pi_f*t + conf.phi))
-    aEE[:3] = np.multiply(two_pi_f_squared_amp, -np.sin(conf.two_pi_f*t + conf.phi))
+    pEE[:3] = offset[:3] +  conf.amp * np.sin(conf.two_pi_f*t + conf.phi)
+    vEE[:3] = two_pi_f_amp * np.cos(conf.two_pi_f*t + conf.phi)
+    aEE[:3] = two_pi_f_squared_amp * -np.sin(conf.two_pi_f*t + conf.phi)
     sampleEE.value(pEE)
     sampleEE.derivative(vEE)
     sampleEE.second_derivative(aEE)

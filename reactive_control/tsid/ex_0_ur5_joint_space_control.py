@@ -21,19 +21,17 @@ PLOT_JOINT_ACC = 1
 PLOT_TORQUES = 1
 USE_VIEWER = 1
 
-vector = se3.StdVec_StdString()
-vector.extend(item for item in conf.path)
-robot = tsid.RobotWrapper(conf.urdf, vector, False)
+robot = tsid.RobotWrapper(conf.urdf, [conf.path], False)
 model = robot.model()
 
 formulation = tsid.InverseDynamicsFormulationAccForce("tsid", robot, False)
 q0 = conf.q0
-v0 = np.array(np.zeros(robot.nv)).T
+v0 = np.zeros(robot.nv)
 formulation.computeProblemData(0.0, q0, v0)
         
 postureTask = tsid.TaskJointPosture("task-posture", robot)
-postureTask.setKp(conf.kp_posture * np.ones(robot.nv).T)
-postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv).T)
+postureTask.setKp(conf.kp_posture * np.ones(robot.nv))
+postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv))
 formulation.addMotionTask(postureTask, conf.w_posture, 1, 0.0)
 
 trajPosture = tsid.TrajectoryEuclidianConstant("traj_joint", q0)
@@ -72,11 +70,11 @@ dv_ref = np.empty((robot.nv, N))*nan
 dv_des = np.empty((robot.nv, N))*nan
 samplePosture = trajPosture.computeNext()
 
-amp                  = np.array([0.2, 0.3, 0.4, 0.0, 0.0, 0.0]).T           # amplitude
-phi                  = np.array([0.0, 0.5*np.pi, 0.0, 0.0, 0.0, 0.0]).T     # phase
-two_pi_f             = 2*np.pi*np.array([1.0, 0.5, 0.3, 0.0, 0.0, 0.0]).T   # frequency (time 2 PI)
-two_pi_f_amp         = np.multiply(two_pi_f, amp)
-two_pi_f_squared_amp = np.multiply(two_pi_f, two_pi_f_amp)
+amp                  = np.array([0.2, 0.3, 0.4, 0.0, 0.0, 0.0])           # amplitude
+phi                  = np.array([0.0, 0.5*np.pi, 0.0, 0.0, 0.0, 0.0])     # phase
+two_pi_f             = 2*np.pi*np.array([1.0, 0.5, 0.3, 0.0, 0.0, 0.0])   # frequency (time 2 PI)
+two_pi_f_amp         = two_pi_f * amp
+two_pi_f_squared_amp = two_pi_f * two_pi_f_amp
 
 t = 0.0
 dt = conf.dt
@@ -86,9 +84,9 @@ for i in range(0, N):
     time_start = time.time()
     
     # set reference trajectory
-    q_ref[:,i]  = q0 +  np.multiply(amp, np.sin(two_pi_f*t + phi))
-    v_ref[:,i]  = np.multiply(two_pi_f_amp, np.cos(two_pi_f*t + phi))
-    dv_ref[:,i] = np.multiply(two_pi_f_squared_amp, -np.sin(two_pi_f*t + phi))
+    q_ref[:,i]  = q0 +  amp * np.sin(two_pi_f*t + phi)
+    v_ref[:,i]  = two_pi_f_amp * np.cos(two_pi_f*t + phi)
+    dv_ref[:,i] = two_pi_f_squared_amp * -np.sin(two_pi_f*t + phi)
     samplePosture.value(q_ref[:,i])
     samplePosture.derivative(v_ref[:,i])
     samplePosture.second_derivative(dv_ref[:,i])
