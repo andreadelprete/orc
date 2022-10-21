@@ -135,12 +135,11 @@ if __name__=='__main__':
     LINE_WIDTH = 60
     q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
     dt = 0.1                     # time step
-    T = 0.5
-    N = int(T/dt);                 # horizon size
-    DEBUG = False;
+    T = 0.5                      # time horizon
+    N = int(T/dt);               # horizon steps
     PLOT_STUFF = 1
-#    linestyles = ['-', '--', ':', '-.']
     linestyles = [' *', ' o', ' v', 's']
+
     system = 'ur'
 #    system = 'linear'
 #    system = 'sin'

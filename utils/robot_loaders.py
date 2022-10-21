@@ -28,8 +28,8 @@ def loadUR(robotNum=5, limited=False, gripper=False, URDF_FILENAME='', path=''):
     assert (not (gripper and (robot == 10 or limited)))
     try:
         # first try to load model located in folder specified by env variable UR5_MODEL_DIR
-        ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
-        path      = os.environ.get('UR5_MODEL_DIR', ERROR_MSG)
+#        ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
+        path      = os.environ.get('UR5_MODEL_DIR') #, ERROR_MSG)
         urdf      = path + "/ur_description/urdf/ur5_robot.urdf";
         robot = RobotWrapper.BuildFromURDF(urdf, [path, ])
         try:

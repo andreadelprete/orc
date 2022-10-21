@@ -29,9 +29,9 @@ DATA_FILE_NAME = data_folder+'belt_2_home_new'
 INITIAL_GUESS_FILE = data_folder+'belt_2_home_new'
 
 #system = 'ur'
-system = 'ur-lab'
+#system = 'ur-lab'
 #system='double-pendulum'
-#system='pendulum'
+system='pendulum'
 
 weight_final_pos = 0    # cost function weight for final end-effector position
 weight_final_vel = 0    # cost function weight for final end-effector velocity

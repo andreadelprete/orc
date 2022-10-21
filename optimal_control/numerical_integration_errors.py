@@ -12,8 +12,8 @@ import numpy as np
 if __name__=='__main__':
     import matplotlib.pyplot as plt
     import orc.utils.plot_utils as plut
-    from orc.utils.robot_loaders import loadUR, loadPendulum
-    from example_robot_data.robots_loader import loadDoublePendulum
+    from orc.utils.robot_loaders import loadUR
+    from example_robot_data.robots_loader import load
     from orc.utils.robot_wrapper import RobotWrapper
     from numerical_integration import Integrator
     from ode import ODELinear, ODESin, ODERobot, ODEStiffDiehl, ODEPendulum
@@ -29,13 +29,11 @@ if __name__=='__main__':
     dt = 0.1                   # time step
     N = int(conf.T/dt);         # horizon size
     ndt_ground_truth = 1000     # number of inner time steps used for computing the ground truth
-    DEBUG = False;
     PLOT_STUFF = 1
     linestyles = ['-*', '--*', ':*', '-.*']
     # choose which system you want to integrate
     system = 'ur'
 #    system='double-pendulum'
-#    system='pendulum'
 #    system='pendulum-ode'
 #    system = 'linear'
 #    system = 'sin'
@@ -43,36 +41,25 @@ if __name__=='__main__':
     
     integrators = []
     integrators += [{'scheme': 'RK-1'      , 'nf': 1}]
-#    integrators += [{'scheme': 'RK-2'      , 'nf': 2}] # nf = number of function evaluation per step
-#    integrators += [{'scheme': 'RK-2-Heun', 'nf': 2}]
-#    integrators += [{'scheme': 'RK-3'      , 'nf': 3}]
+    integrators += [{'scheme': 'RK-2'      , 'nf': 2}] # nf = number of function evaluation per step
+    integrators += [{'scheme': 'RK-3'      , 'nf': 3}]
     integrators += [{'scheme': 'RK-4'      , 'nf': 4}]
-#    integrators += [{'scheme': 'ImpEul'    , 'nf': 1}]
-#    integrators += [{'scheme': 'SemiImpEul', 'nf': 1}]
     
     
     
     ndt_list = np.array([int(i) for i in 2**np.arange(1.5,8,0.5)])
     print('Testing system', system)
         
-    if(system=='ur' or system=='double-pendulum' or system=='pendulum'):
+    if(system=='ur' or system=='double-pendulum'):
         if(system=='ur'):
             r = loadUR()
         elif(system=='double-pendulum'):
-            r = loadDoublePendulum()
-        elif(system=='pendulum'):
-            r = loadPendulum()
+            r = load('double_pendulum')
         robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
-        nq, nv = robot.nq, robot.nv    
-        n = nq+nv                       # state size
-        m = robot.na                    # control size
-        U = np.zeros((N,m))        # initial guess for control inputs
         if(system=='ur'):
             x0 = np.concatenate((conf.q0, np.zeros(robot.nv)))  # initial state
-        elif(system=='pendulum'):
-            x0 = np.array([np.pi/2, 0.0])
         else:
-            x0 = np.zeros(n)
+            x0 = np.zeros(robot.nq+robot.nv)
         ode = ODERobot('ode', robot)
     elif(system=='pendulum-ode'):
         x0 = np.array([np.pi/2, 0.0])
@@ -81,8 +68,7 @@ if __name__=='__main__':
         A = np.array([[-100.0]])
         B = np.zeros((1,0))
         b = np.array([0.0])
-        x0 = np.array([100.0])
-        U = np.zeros((N,0))        # initial guess for control inputs
+        x0 = np.array([100.0])        
         ode = ODELinear('linear', A, B, b)
     elif(system=='linear2'):
         A = np.array([[-10.0, 1.0],
@@ -90,7 +76,6 @@ if __name__=='__main__':
         B = np.zeros((2,0))
         b = np.array([0.0, 0.0])
         x0 = np.array([10.0, 7.0])
-        U = np.zeros((N,0))        # initial guess for control inputs
         ode = ODELinear('linear2', A, B, b)
     elif(system=='sin'):
         x0 = np.array([0.0])
@@ -98,6 +83,7 @@ if __name__=='__main__':
     elif(system=='stiff-diehl'):
         x0 = np.array([0.0])
         ode = ODEStiffDiehl()
+    U = np.zeros((N,ode.nu))        # initial guess for control inputs
     
     err_glob = {}
     integrator = Integrator('integrator')
