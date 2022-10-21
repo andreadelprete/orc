@@ -34,41 +34,24 @@ class Integrator:
         x[0,:] = x_init
         t[0] = t_init
         
-        if(scheme=='RK-1'):
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
-                x[i+1,:], dx[i,:] = sol.rk1(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h
-        elif(scheme=='RK-2'):   # explicit midpoint method
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
+        for i in range(x.shape[0]-1):
+            ii = int(np.floor(i/ndt))
+            t[i+1] = t[i] + h
+
+            if(scheme=='RK-1'):            
+                x[i+1,:], dx[i,:] = sol.rk1(x[i,:], h, U[ii,:], t[i], ode)    
+            elif(scheme=='RK-2'):   # explicit midpoint method
                 x[i+1,:], dx[i,:] = sol.rk2(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h
-        elif(scheme=='RK-2-Heun'):
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
+            elif(scheme=='RK-2-Heun'):
                 x[i+1,:], dx[i,:] = sol.rk2heun(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h
-        elif(scheme=='RK-3'): # Kutta's third-order method
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
+            elif(scheme=='RK-3'): # Kutta's third-order method
                 x[i+1,:], dx[i,:] = sol.rk3(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h                
-        elif(scheme=='RK-4'):
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
+            elif(scheme=='RK-4'):
                 x[i+1,:], dx[i,:] = sol.rk4(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h                
-        elif(scheme=='ImpEul'):
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
+            elif(scheme=='ImpEul'):
                 x[i+1,:], dx[i,:] = sol.implicit_euler(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h
-        if(scheme=='SemiImpEul'):
-            for i in range(x.shape[0]-1):
-                ii = int(np.floor(i/ndt))
+            elif(scheme=='SemiImpEul'):
                 x[i+1,:], dx[i,:] = sol.semi_implicit_euler(x[i,:], h, U[ii,:], t[i], ode)
-                t[i+1] = t[i] + h
             
         self.dx = dx
         self.t = t
@@ -97,24 +80,19 @@ class Integrator:
         x[0,:] = x_init
         t[0] = t_init
         
-        if(scheme=='RK-1'):
-            for i in range(N):
+        for i in range(N):
+            if(scheme=='RK-1'):    
                 x[i+1,:], dx[i,:], phi_x, phi_u = sol.rk1(x[i,:], h, U[i,:], t[i], ode, True)
-                t[i+1] = t[i] + h
-                ix, ix1, ix2 = i*nx, (i+1)*nx, (i+2)*nx
-                iu, iu1 = i*nu, (i+1)*nu
-                dXdU[ix1:ix2,:] = phi_x.dot(dXdU[ix:ix1,:]) 
-                dXdU[ix1:ix2,iu:iu1] += phi_u
-        elif(scheme=='RK-4'):
-            for i in range(x.shape[0]-1):
+            elif(scheme=='RK-4'):
                 x[i+1,:], dx[i,:], phi_x, phi_u = sol.rk4(x[i,:], h, U[i,:], t[i], ode, True)
-                t[i+1] = t[i] + h
-                ix, ix1, ix2 = i*nx, (i+1)*nx, (i+2)*nx
-                iu, iu1 = i*nu, (i+1)*nu
-                dXdU[ix1:ix2,:] = phi_x.dot(dXdU[ix:ix1,:]) 
-                dXdU[ix1:ix2,iu:iu1] += phi_u
-        else:
-            return None
+            else:
+                return None
+            t[i+1] = t[i] + h
+            ix, ix1, ix2 = i*nx, (i+1)*nx, (i+2)*nx
+            iu, iu1 = i*nu, (i+1)*nu
+            dXdU[ix1:ix2,:] = phi_x.dot(dXdU[ix:ix1,:]) 
+            dXdU[ix1:ix2,iu:iu1] += phi_u
+
         self.dx = dx
         self.t = t
         self.x = x        
