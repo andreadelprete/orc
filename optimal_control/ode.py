@@ -13,15 +13,16 @@ import pinocchio as pin
 class ODE:
     def __init__(self, name):
         self.name = name
+        self.nu = 0
         
     def f(self, x, u, t):
         return np.zeros(x.shape)
         
         
-class ODESin:
+class ODESin(ODE):
     ''' ODE defining a sinusoidal trajectory '''
     def __init__(self, name, A, f, phi):
-        self.name = name
+        ODE.__init__(self, name) 
         self.A = A
         self.two_pi_f = 2*np.pi*f
         self.phi = phi
@@ -30,11 +31,11 @@ class ODESin:
         return self.two_pi_f*self.A*np.cos(self.two_pi_f*t + self.phi)
        
        
-class ODELinear:
+class ODELinear(ODE):
     ''' A linear ODE: dx = A*x + b
     '''
     def __init__(self, name, A, B, b):
-        self.name = name
+        ODE.__init__(self, name) 
         self.A = A
         self.B = B
         self.b = b
@@ -48,7 +49,10 @@ class ODELinear:
         return np.copy(dx)
         
         
-class ODEStiffDiehl:
+class ODEStiffDiehl(ODE):
+    def __init__(self, name=''):
+        ODE.__init__(self, name) 
+        
     def f(self, x, u, t, jacobian=False):
         dx = -50.0*(x - np.cos(t))
         if(not jacobian):
@@ -59,8 +63,9 @@ class ODEStiffDiehl:
             
         
         
-class ODEPendulum:
-    def __init__(self):
+class ODEPendulum(ODE):
+    def __init__(self, name=''):
+        ODE.__init__(self, name) 
         self.g = -9.81
         
     def f(self, x, u, t):
@@ -70,14 +75,14 @@ class ODEPendulum:
         return dx
         
         
-class ODERobot:
+class ODERobot(ODE):
     ''' An ordinary differential equation representing a robotic system
     '''
     
     def __init__(self, name, robot):
         ''' robot: instance of RobotWrapper
         '''
-        self.name = name
+        ODE.__init__(self, name) 
         self.robot = robot
         self.nu = robot.na
         nq, nv = self.robot.nq, self.robot.nv
@@ -144,6 +149,7 @@ class ODERobot:
             fp = self.f(x, up, t)
             Fu[:,i] = (fp-f0)/delta
         return Fu
+
 
 if __name__=='__main__':
     from arc.utils.robot_loaders import loadUR, loadPendulum

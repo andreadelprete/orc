@@ -8,7 +8,7 @@ Test different integration schemes and their derivatives.
 """
 
 import numpy as np
-import orc.optimal_control.solutions.numerical_integration_sol as sol
+import orc.optimal_control.solutions.numerical_integration_sol_prof as sol
 
 class Integrator:
     ''' A class implementing different numerical integrator schemes '''
@@ -147,52 +147,45 @@ class Integrator:
 if __name__=='__main__':
     import matplotlib.pyplot as plt
     import orc.utils.plot_utils as plut
-#    import time
     from ode import ODERobot, ODELinear, ODESin, ODEStiffDiehl
     from orc.utils.robot_loaders import loadUR
     from orc.utils.robot_wrapper import RobotWrapper
-    from orc.utils.robot_simulator import RobotSimulator
-    import numerical_integration_conf as conf
     np.set_printoptions(precision=3, suppress=True);
     
     ''' Test numerical integration with a manipulator
     '''
-    print("".center(conf.LINE_WIDTH,'#'))
-    print(" Numerical integration ".center(conf.LINE_WIDTH, '#'))
-    print("".center(conf.LINE_WIDTH,'#'), '\n')
-
-    N = int(conf.T/conf.dt);                 # horizon size
-    dt = conf.dt;               # time step
+    LINE_WIDTH = 60
+    q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
+    dt = 0.1                     # time step
+    T = 0.5
+    N = int(T/dt);                 # horizon size
     DEBUG = False;
     PLOT_STUFF = 1
-    linestyles = ['-', '--', ':', '-.']
+#    linestyles = ['-', '--', ':', '-.']
+    linestyles = [' *', ' o', ' v', 's']
     system = 'ur'
 #    system = 'linear'
 #    system = 'sin'
 #    system = 'stiff-diehl'
     
+    print("".center(LINE_WIDTH,'#'))
+    print(" Numerical integration ".center(LINE_WIDTH, '#'))
+    print("".center(LINE_WIDTH,'#'), '\n')
+    
     # choose the number of inner steps so that the number of function evaluations
     # is the same for every method
     integrators = []
-    integrators += [{'scheme': 'RK-3',      'ndt': 1000}]    # used as ground truth
+    integrators += [{'scheme': 'RK-4',      'ndt': 1000}]    # used as ground truth
     integrators += [{'scheme': 'RK-1',      'ndt': 12}]
     integrators += [{'scheme': 'RK-2',      'ndt': 6}]
     integrators += [{'scheme': 'RK-3',      'ndt': 4}]
-#    integrators += [{'scheme': 'RK-4',      'ndt': 3}]
+    integrators += [{'scheme': 'RK-4',      'ndt': 3}]
     
-#    integrators += [{'scheme': 'RK-1',      'ndt': 10}]
-#    integrators += [{'scheme': 'RK-2',      'ndt': 10}]
-#    integrators += [{'scheme': 'RK-3',      'ndt': 10}]
-#    integrators += [{'scheme': 'RK-4',      'ndt': 10}]
         
     if(system=='ur'):
         r = loadUR()
         robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
-        nq, nv = robot.nq, robot.nv    
-        n = nq+nv                       # state size
-        m = robot.na                    # control size
-        U = np.zeros((N,m));        # initial guess for control inputs
-        x0 = np.concatenate((conf.q0, np.zeros(robot.nv)))  # initial state
+        x0 = np.concatenate((q0, np.zeros(robot.nv)))  # initial state
         ode = ODERobot('ode', robot)
     elif(system=='linear'):
         A = np.array([[1.0]])
@@ -200,7 +193,6 @@ if __name__=='__main__':
         b = np.array([0.0])
         x0 = np.array([1.0])
         ode = ODELinear('linear', A, B, b)
-        U = np.zeros((N, ode.nu));
     elif(system=='linear2'):
         A = np.array([[-10.0, 1.0],
                       [0.0, -100.0]])
@@ -213,6 +205,7 @@ if __name__=='__main__':
     elif(system=='stiff-diehl'):
         x0 = np.array([0.0])
         ode = ODEStiffDiehl()
+    U = np.zeros((N, ode.nu));
     
     x_coarse = {}
     x_fine = {}
@@ -246,7 +239,7 @@ if __name__=='__main__':
             (f, ax) = plut.create_empty_figure(nplot,2)
             ax = ax.reshape(nplot*2)
         i_ls = 0
-        for name, x in sorted(x_fine.items()):
+        for name, x in x_fine.items():
             for i in range(len(ax)):
                 ls = linestyles[i_ls]
                 ax[i].plot(t_fine[name], x[:,i], ls, label=name, alpha=0.7)
@@ -255,25 +248,6 @@ if __name__=='__main__':
             i_ls = (i_ls+1)%len(linestyles)
         leg = ax[0].legend()
         leg.get_frame().set_alpha(0.5)
-        
-#        if(x0.shape[0]==1):
-#            nplot = 1
-#            (f, ax) = plut.create_empty_figure()
-#            ax = [ax]
-#        else:
-#            nplot = int(min(max_plots, x0.shape[0])/2)
-#            (f, ax) = plut.create_empty_figure(nplot,2)
-#            ax = ax.reshape(nplot*2)
-#        i_ls = 0
-#        for name, dxi in sorted(dx.items()):
-#            for i in range(len(ax)):
-#                ls = linestyles[i_ls]
-#                ax[i].plot(t_fine[name], dxi[:,i], ls, label=name, alpha=0.7)
-#                ax[i].set_xlabel('Time [s]')
-#                ax[i].set_ylabel(r'$\dot{x}_'+str(i)+'$')
-#            i_ls = (i_ls+1)%len(linestyles)
-#        leg = ax[0].legend()
-#        leg.get_frame().set_alpha(0.5)
     
     print("Simulation finished")
     plt.show()
