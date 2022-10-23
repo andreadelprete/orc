@@ -2,7 +2,7 @@
 """
 Created on Wed Mar 18 18:12:04 2020
 
-@author: student
+@author: Andrea Del Prete (andrea.delprete@unitn.it)
 """
 
 import numpy as np
@@ -32,11 +32,13 @@ class SingleShootingProblem:
         self.nq = int(x0.shape[0]/2)
         self.nx = x0.shape[0]
         self.nu = self.ode.nu
-        self.X = np.zeros((N, self.x0.shape[0]))
+        self.X = np.zeros((N+1, self.x0.shape[0]))
         self.U = np.zeros((N, self.nu))
         
+        self.last_X_displayed = np.copy(self.X)
         self.last_values = Empty()
         self.last_values.cost = 0.0
+        self.last_values.cost_last_display = 0.0
         self.last_values.running_cost = 0.0
         self.last_values.final_cost = 0.0
         
@@ -48,7 +50,7 @@ class SingleShootingProblem:
         self.final_ineqs = []
         self.final_eqs = []
         
-        self.ineq_print_threshold = 0.05
+        self.ineq_print_threshold = 0.05e10
         
     def add_running_cost(self, c, weight=1):
         self.running_costs += [(weight,c)]
@@ -148,11 +150,15 @@ class SingleShootingProblem:
     
     def compute_cost(self, y):
         ''' Compute cost function '''
+        if(np.any(np.isnan(y))):
+            print(colored("\t[Compute cost] The solution vector (U) contains NaN!", "red"))
         # compute state trajectory X from control y
         U = y.reshape((self.N, self.nu))
         t0, ndt = 0.0, 1
         X = self.integrator.integrate(self.ode, self.x0, U, t0, self.dt, ndt, 
                                       self.N, self.integration_scheme)
+        if(np.any(np.isnan(X))):
+            print(colored("\t[Compute cost] The state vector (X) contains NaN!", "red"))
         
         # compute cost
         run_cost = self.running_cost(X, U)
@@ -169,6 +175,8 @@ class SingleShootingProblem:
     
     def compute_cost_w_gradient_fd(self, y):
         ''' Compute both the cost function and its gradient using finite differences '''
+        if(np.any(np.isnan(y))):
+            print(colored("\t[Compute cost] The solution vector (U) contains NaN!", "red"))
         eps = 1e-8
         y_eps = np.copy(y)
         grad = np.zeros_like(y)
@@ -179,17 +187,30 @@ class SingleShootingProblem:
             y_eps[i] = y[i]
             grad[i] = (cost_eps - cost) / eps
         self.last_values.cost = cost
+        self.last_values.grad = norm(grad)
         return (cost, grad)
         
     
     def compute_cost_w_gradient(self, y):
         ''' Compute cost function and its gradient '''
+        if(np.any(np.isnan(y))):
+            print(colored("\t[Compute cost] The solution vector (U) contains NaN!", "red"))
         # compute state trajectory X from control y
         U = y.reshape((self.N, self.nu))
         t0 = 0.0
         X, dXdU = self.integrator.integrate_w_sensitivities_u(self.ode, self.x0, U, t0, 
                                                         self.dt, self.N, 
                                                         self.integration_scheme)
+        if(np.any(np.isnan(X))):
+            print(colored("\t[Compute cost] The state vector (X) contains NaN!", "red"))
+            print("Max u value:", np.max(np.abs(y)))
+            for i in range(X.shape[0]):
+                print("Time step", i, "||x||=", np.linalg.norm(X[i,:]))
+                if(np.any(np.isnan(X[i,:]))): break
+            import sys
+            sys.exit()
+        if(np.any(np.isnan(dXdU))):
+            print(colored("\t[Compute cost] The sensitivities (dXdU) contain NaN!", "red"))
         
         # compute cost
         (run_cost, grad_run) = self.running_cost_w_gradient(X, U, dXdU)
@@ -417,19 +438,20 @@ class SingleShootingProblem:
         print('Start optimizing')
         if(use_finite_diff):
             cost_func = self.compute_cost_w_gradient_fd
+            r = minimize(cost_func, y0, jac=True, method=method, 
+                     callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True})
         else:
             cost_func = self.compute_cost_w_gradient
-        
-        r = minimize(cost_func, y0, jac=True, method=method, 
-                     callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},
-                     constraints=[
-                                 {'type': 'ineq', 
-                                  'fun': self.compute_ineq,
-                                  'jac': self.compute_ineq_jac},
-                                  {'type': 'eq', 
-                                  'fun': self.compute_eq,
-                                  'jac': self.compute_eq_jac}
-                                  ])
+            r = minimize(cost_func, y0, jac=True, method=method, 
+                         callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},
+                        constraints=[
+                                     {'type': 'ineq', 
+                                      'fun': self.compute_ineq,
+                                      'jac': self.compute_ineq_jac},
+                                      {'type': 'eq', 
+                                      'fun': self.compute_eq,
+                                      'jac': self.compute_eq_jac}
+                                      ])
         return r
         
     
@@ -458,10 +480,15 @@ class SingleShootingProblem:
         
         
     def clbk(self, xk):
+        self.iter += 1
         self.history.cost.append(self.last_values.cost)
         self.history.grad.append(self.last_values.grad)
         
         print('Iter %3d, cost %7.3f, grad %7.3f'%(self.iter, self.last_values.cost, self.last_values.grad))
+        if(np.any(np.isnan(xk))):
+            print(colored("\tThe solution vector (U) contains NaN!", "red"))
+            return True
+    
         for (w,c) in self.running_costs:
             print(colored("\t Running cost %60s: %7.3f %7.3f"%(c.name, 
                                                                self.last_values.__dict__[c.name], 
@@ -488,8 +515,13 @@ class SingleShootingProblem:
             print(colored('\t Final eq     %60s: %7.3f'%(c.name, 
                                                          norm(self.last_values.__dict__[c.name])),
                             "grey"))
-#        print('\t\tlast u:', self.U.T)
-        self.iter += 1
-        if(self.iter%1==0):
+    
+        # Display motion every time the trajectory has changed significantly
+        # and every 50-th iteration
+        if(self.iter%50==0 or np.max(np.abs(self.last_X_displayed-self.X))>0.5):
+           #abs(self.last_values.cost_last_display-self.last_values.cost)>1e-2):
+            print("Display motion...")
+#            self.last_values.cost_last_display = self.last_values.cost
+            self.last_X_displayed = np.copy(self.X)
             self.simu.display_motion(self.X[:,:self.nq], self.dt)
         return False
