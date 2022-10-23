@@ -4,7 +4,7 @@ Created on Tue Apr 14 08:07:36 2020
 
 Test different integration schemes and their derivatives.
 
-@author: student
+@author: Andrea Del Prete (andrea.delprete@unitn.it)
 """
 
 import numpy as np
