@@ -3,7 +3,7 @@
 """
 Created on Thu Feb 13 07:09:47 2020
 
-@author: student
+@author: Andrea Del Prete (andrea.delprete@unitn.it)
 """
 import sys
 import os
@@ -15,17 +15,21 @@ from pinocchio.robot_wrapper import RobotWrapper
 from example_robot_data.robots_loader import getModelPath, readParamsFromSrdf
 
 def loadURlab():
-    LOCOSIM_PATH = "/home/student/ros_ws/src/locosim"
-#    URDF = LOCOSIM_PATH+"/robot_urdf/ur5.urdf"
-    URDF = LOCOSIM_PATH+"/ur_description/urdf/ur5.urdf"
+    try:
+        LOCOSIM_PATH = os.environ.get('LOCOSIM_DIR')
+    except:
+        print("Warning: could not find environment variable LOCOSIM_DIR. Using default path: /home/student/ros_ws/src/locosim")
+        LOCOSIM_PATH = "/home/student/ros_ws/src/locosim"
+    URDF = LOCOSIM_PATH+"/robot_descriptions/ur_description/urdf/ur5.urdf"
     modelPath = '/opt/openrobots/share/'
-    robot = RobotWrapper.BuildFromURDF(URDF, [modelPath])
+    gripperPath = LOCOSIM_PATH+'/robot_descriptions/gripper_description/'
+    robot = RobotWrapper.BuildFromURDF(URDF, [modelPath, gripperPath])
     robot.model.addBodyFrame("gripper", 6, pin.SE3(np.eye(3), np.array([0.0, 0.0, 0.18])), 28)
     
     return robot
 
 def loadUR(robotNum=5, limited=False, gripper=False, URDF_FILENAME='', path=''):
-    assert (not (gripper and (robot == 10 or limited)))
+    assert (not (gripper and (robotNum == 10 or limited)))
     try:
         # first try to load model located in folder specified by env variable UR5_MODEL_DIR
 #        ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
