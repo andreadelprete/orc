@@ -519,7 +519,6 @@ class SingleShootingProblem:
         # Display motion every time the trajectory has changed significantly
         # and every 50-th iteration
         if(self.iter%50==0 or np.max(np.abs(self.last_X_displayed-self.X))>0.5):
-           #abs(self.last_values.cost_last_display-self.last_values.cost)>1e-2):
             print("Display motion...")
 #            self.last_values.cost_last_display = self.last_values.cost
             self.last_X_displayed = np.copy(self.X)
