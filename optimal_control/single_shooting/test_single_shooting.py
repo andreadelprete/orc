@@ -55,29 +55,33 @@ if(conf.INITIAL_GUESS_FILE is None):
     for i in range(N):
         U[i,:] = u0
 else:
-    print("Load initial guess from ", conf.INITIAL_GUESS_FILE)
+    print("Load initial guess from", conf.INITIAL_GUESS_FILE)
     data = np.load(conf.DATA_FOLDER+conf.INITIAL_GUESS_FILE+'.npz') # , q=X[:,:nq], v=X[:,nv:], u=U
     U = data['u']
 
 # create simulator 
+print("Creating robot viewer...")
 simu = RobotSimulator(conf, robot)
-if(conf.system=='ur-lab'):
+print("Viewer created.")
+
+if(conf.use_viewer):
+    if(conf.system=='ur-lab'):
         lab.display_disi_lab(simu)
 
-# show a blue sphere to display the target end-effector position in the viewer (if any)
-if(conf.weight_final_ee_pos>0):
-    simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
-    simu.gui.setVisibility('world/target', 'ON')
-    robot.applyConfiguration('world/target', conf.p_des.tolist()+[0.,0.,0.,1.])
-else:
-    simu.gui.setVisibility('world/target', 'OFF')
-
-# add red spheres to display the volumes used for collision avoidance
-for (frame, dist) in conf.table_collision_frames:
-    simu.add_frame_axes(frame, radius=dist, length=0.0, color=(1.,0,0,0.2))
-for (frame1, frame2, d) in conf.self_collision_frames:
-    simu.add_frame_axes(frame1, radius=d, length=0.0, color=(1.,0,0,0.2))
-    simu.add_frame_axes(frame2, radius=d, length=0.0, color=(1.,0,0,0.2))
+    # show a blue sphere to display the target end-effector position in the viewer (if any)
+    if(conf.weight_final_ee_pos>0):
+        simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
+        simu.gui.setVisibility('world/target', 'ON')
+        robot.applyConfiguration('world/target', conf.p_des.tolist()+[0.,0.,0.,1.])
+    else:
+        simu.gui.setVisibility('world/target', 'OFF')
+    
+    # add red spheres to display the volumes used for collision avoidance
+    for (frame, dist) in conf.table_collision_frames:
+        simu.add_frame_axes(frame, radius=dist, length=0.0, color=(1.,0,0,0.2))
+    for (frame1, frame2, d) in conf.self_collision_frames:
+        simu.add_frame_axes(frame1, radius=d, length=0.0, color=(1.,0,0,0.2))
+        simu.add_frame_axes(frame2, radius=d, length=0.0, color=(1.,0,0,0.2))
 
 # create OCP
 ode = ODERobot('ode', robot)
