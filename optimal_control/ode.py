@@ -32,7 +32,7 @@ class ODESin(ODE):
        
        
 class ODELinear(ODE):
-    ''' A linear ODE: dx = A*x + b
+    ''' A linear ODE: dx = A*x + B*u + b
     '''
     def __init__(self, name, A, B, b):
         ODE.__init__(self, name) 
