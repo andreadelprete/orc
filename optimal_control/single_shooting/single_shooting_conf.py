@@ -27,18 +27,6 @@ INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
 system = 'ur-lab'
 #system='double-pendulum'
 
-# T=2
-# final-q=1, final-dq=1, running-dq=1e-1, running ddq=1e-2 => NaN
-# final-q=1e-1, final-dq=1e-1 => q-err=38
-# final-q=1 => q-err=14
-# final-q=10 => q-err=5, dq-err=7
-# final-q=30 => q-err=3, dq-err=7
-# final-q=100 => q-err=0.5, dq-err=9
-# final-dq=1 => q-err=0.7, dq-err=2
-# final-dq=10 => q-err=0.1, dq-err=0.5
-# final constraint => q-err=0.1, dq-err=0.1
-# final constraint => q-err=0.06, dq-err=0.1
-# table-collision constraints => fix collision with table
 weight_final_ee_pos = 0    # final cost weight for end-effector position
 weight_final_ee_vel = 0    # final cost weight for end-effector velocity
 weight_final_q  = 0  # final cost weight for joint positions
