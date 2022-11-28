@@ -7,7 +7,7 @@ System dynamics and cost functions must be specified in child classes.
 """
 
 import numpy as np
-import orc.optimal_control.solutions.ddp_sol_prof as sol
+import orc.optimal_control.solutions.ddp_sol as sol
 
 class DDPSolver:
     
@@ -47,7 +47,7 @@ class DDPSolver:
         
         for i in range(self.N):
             self.d1 += self.w[i,:].T @ self.Q_u[i,:]
-            self.d2 += 0.5 * self.w[i,:].T @ self.Q_uu[i,:,:] @ self.w[i,:]
+            self.d2 += self.w[i,:].T @ self.Q_uu[i,:,:] @ self.w[i,:]
             
                         
     ''' Differential Dynamic Programming
@@ -98,18 +98,17 @@ class DDPSolver:
                 new_cost = self.cost(X, U);
                 exp_impr = alpha*self.d1 + 0.5*(alpha**2)*self.d2
 #                print("Expected improvement", exp_impr, "Real improvement", new_cost-cst)
+                if(exp_impr>0.0):
+                    exp_impr = -1.0
                 relative_impr = (new_cost-cst)/exp_impr
                 
                 if(relative_impr > self.min_cost_impr):
                     print("Cost improved from %.3f to %.3f. Exp. impr %.3f. Rel. impr. %.1f%%" % (cst, new_cost, exp_impr, 1e2*relative_impr))
                     line_search_succeeded = True
-                    
-                if(line_search_succeeded):
                     U_bar += alpha*self.w
                     cst = new_cost
                     break
-                else:
-                    alpha = self.alpha_factor*alpha
+                alpha = self.alpha_factor*alpha
             
             if(not line_search_succeeded):
                 mu = mu*self.mu_factor
