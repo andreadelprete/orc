@@ -13,8 +13,8 @@ LINE_WIDTH = 60
 
 q0 = np.array([ 0. , 0.,  0.,  0. ,  0. ,  0. ])    # initial configuration
 qT = np.array([ 1. , 4.6,  0.0,  0. ,  0. ,  0. ])  # goal configuration
-dt = 0.02                       # DDP time step
-N = 100                         # horizon size
+dt = 0.01                       # DDP time step
+N = int(2.0/dt)                         # horizon size
 
 dt_sim = 1e-3                    # time step used for the final simulation
 ndt = 1                          # number of integration steps for each control loop
