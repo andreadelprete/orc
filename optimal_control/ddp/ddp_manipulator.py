@@ -106,27 +106,25 @@ class DDPSolverManipulator(DDPSolverLinearDyn):
             time_spent = time.time() - time_start
             if(time_spent < self.dt):
                 time.sleep(self.dt-time_spent)
-                
+            
+        
     def start_simu(self, X, U, K, dt_sim):
-        t = 0.0
-        simu = self.simu
-        simu.init(X[0,:self.robot.nq])
         ratio = int(self.dt/dt_sim)
         N_sim = N * ratio
-        print("Start simulation")
-        time.sleep(1)
+        x = np.copy(X[0,:])
         for i in range(0, N_sim):
             time_start = time.time()
     
             # compute the index corresponding to the DDP time step
             j = int(np.floor(i/ratio))
             # compute joint torques
-            x = np.hstack([simu.q, simu.v])
             tau = U[j,:] + K[j,:,:] @ (x - X[j,:])        
-            # send joint torques to simulator
-            simu.simulate(tau, dt_sim)
+            # compute dx
+            self.f(x, tau)
+            # integrate dynamics with Euler using the specified dt_sim
+            x += dt_sim * self.dx
+            self.simu.display(x[:self.robot.nq])
             
-            t += dt_sim
             time_spent = time.time() - time_start
             if(time_spent < dt_sim):
                 time.sleep(dt_sim-time_spent)
@@ -142,7 +140,7 @@ if __name__=='__main__':
     from orc.utils.robot_wrapper import RobotWrapper
     from orc.utils.robot_simulator import RobotSimulator
     import ddp_manipulator_conf as conf
-    np.set_printoptions(precision=3, suppress=True);
+    np.set_printoptions(precision=2, suppress=True);
     
     ''' Test DDP with a manipulator
     '''
@@ -180,11 +178,12 @@ if __name__=='__main__':
         U_bar[i,:] = tau_g
     
     ''' TASK FUNCTION  '''
-    lmbda = 1e-2           # control regularization
+    lmbda = 1e-3           # control regularization
     H_xx = np.zeros((N+1, n, n));
     h_x  = np.zeros((N+1, n));
     h_s  = np.zeros(N+1);
-    W = np.diagflat(np.concatenate([np.ones(nq), np.zeros(nv)]))
+    W = np.diagflat(np.concatenate([np.ones(nq), 1e-2*np.ones(nv)]))
+    # cost = ||x - x_task||_W^2 
     for i in range(N_task):
         H_xx[i,:,:]  = W
         h_x[i,:]     = -W @ x_tasks
@@ -201,14 +200,15 @@ if __name__=='__main__':
     solver.print_statistics(x0, U, K, X);
     
     print("Show reference motion")
-    for i in range(0, N):
-        time_start = time.time()
-        simu.display(X[i,:nq])
-        time_spent = time.time() - time_start
-        if(time_spent < dt):
-            time.sleep(dt-time_spent)
-    print("Reference motion finished")
+    solver.callback(X,U)
     time.sleep(1)
     
-    print("Show real simulation")
+    print("Show simulation without feedback gains")
+    solver.start_simu(X, U, 0*K, conf.dt_sim)
+    time.sleep(1)
+    
+    print("Show simulation with feedback gains")
     solver.start_simu(X, U, K, conf.dt_sim)
+    
+    print("Max value of K matrix for each time step")
+    print(np.array([np.max(np.abs(K[i,:,:])) for i in range(N)]))
