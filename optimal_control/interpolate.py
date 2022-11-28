@@ -6,8 +6,10 @@ Created on Thu Jul 28 03:19:54 2022
 @author: adelprete
 """
 import numpy as np
-import single_shooting_conf as conf
+import orc.optimal_control.single_shooting.single_shooting_conf as conf
 import orc.utils.plot_utils as plut
+import matplotlib.pyplot as plt
+
 
 dt_robot = 0.001
 
@@ -19,14 +21,18 @@ dt_robot = 0.001
 #INPUTS = [{'filename': 'table_2_belt', 'pause': 0.5}]
 #OUTPUT_FINE_NAME = 'table_2_belt'
 
-INPUTS = [{'filename': 'belt_2_home', 'pause': 0.5}]
-OUTPUT_FINE_NAME = 'belt_2_home'
+#INPUTS = [{'filename': 'belt_2_home', 'pause': 0.5}]
+#OUTPUT_FINE_NAME = 'belt_2_home'
+
+INPUTS = [{'filename': 'home_2_table', 'pause': 0.1}]
+OUTPUT_FINE_NAME = 'home_2_table'
+
 
 q_in = []
 N_out = 0
 ratio = int(conf.dt/dt_robot)
 for dict_in in INPUTS:
-    data = np.load(conf.data_folder+dict_in['filename']+'.npz') # , q=X[:,:nq], v=X[:,nv:], u=U
+    data = np.load(conf.DATA_FOLDER+dict_in['filename']+'.npz') # , q=X[:,:nq], v=X[:,nv:], u=U
     q_in.append(data['q'])
     N_in = q_in[-1].shape[0]
     N_out += 1 + (N_in-1)*ratio + int(dict_in['pause']/dt_robot)
@@ -71,4 +77,6 @@ for k in range(len(INPUTS)):
     leg = ax[-1].legend()
     leg.get_frame().set_alpha(0.5)
 
-np.savez_compressed(conf.data_folder+OUTPUT_FINE_NAME+'_robot', q=q_out)
+plt.show()
+
+np.savez_compressed(conf.DATA_FOLDER+OUTPUT_FINE_NAME+'_robot', q=q_out)
