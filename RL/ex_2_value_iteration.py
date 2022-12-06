@@ -5,8 +5,8 @@ Example of Value iteration with a simple discretized 1-DoF pendulum.
 import numpy as np
 from dpendulum import DPendulum
 from ex_0_policy_evaluation import render_policy
-from sol.ex_2_value_iteration_sol_prof import value_iteration
-#from sol.ex_2_value_iteration_sol import value_iteration
+#from sol.ex_2_value_iteration_sol_prof import value_iteration
+from sol.ex_2_value_iteration_sol import value_iteration
 
 ### --- Hyper paramaters
 MAX_ITERS       = 200     # Max number of iterations for the algorirthm
@@ -51,5 +51,5 @@ V = value_iteration(env, DISCOUNT, V, MAX_ITERS, VALUE_THR, PLOT, NPRINT)
   
 pi = compute_policy_from_V(env, V)      
 env.plot_policy(pi)
-#render_policy(env, policy, env.x2i(env.c2d([np.pi,0.])))
+render_policy(env, pi, env.x2i(env.c2d([np.pi,0.])))
     

@@ -7,13 +7,12 @@ Created on Mon Nov 29 23:56:07 2021
 """
 import numpy as np
 
-def mc_policy_eval(env, gamma, pi, V0, nEpisodes, maxEpisodeLength, 
+def mc_policy_eval(env, gamma, pi, nEpisodes, maxEpisodeLength, 
                    V_real, plot=False, nprint=1000):
     ''' Monte-Carlo Policy Evaluation:
         env: environment 
         gamma: discount factor
         pi: policy to evaluate
-        V0: initial guess for V table
         nEpisodes: number of episodes to be used for evaluation
         maxEpisodeLength: maximum length of an episode
         V_real: real Value table
@@ -22,7 +21,7 @@ def mc_policy_eval(env, gamma, pi, V0, nEpisodes, maxEpisodeLength,
     '''
     N = np.zeros(env.nx) # number of times each state has been visited
     C = np.zeros(env.nx) # cumulative cost associated to each state
-    V = np.copy(V0)      # Value table
+    V = np.zeros(env.nx) # Value table
     V_err = []           # evolution of the error between real and estimated V table
     
     for k in range(nEpisodes): # for each episode
@@ -31,7 +30,6 @@ def mc_policy_eval(env, gamma, pi, V0, nEpisodes, maxEpisodeLength,
         c_list = [] # list of costs received at each state in this episode
     
         for t in range(maxEpisodeLength):
-#            x = env.x2i(env.x)  # convert state from discrete 2d to discrete 1d representation
             x = env.x
             x_list.append(x)    # store state
             if(callable(pi)):

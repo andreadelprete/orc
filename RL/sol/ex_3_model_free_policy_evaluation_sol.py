@@ -7,13 +7,12 @@ Created on Mon Nov 29 23:56:07 2021
 """
 import numpy as np
 
-def mc_policy_eval(env, gamma, pi, V0, nEpisodes, maxEpisodeLength, 
+def mc_policy_eval(env, gamma, pi, nEpisodes, maxEpisodeLength, 
                    V_real, plot=False, nprint=1000):
     ''' Monte-Carlo Policy Evaluation:
         env: environment 
         gamma: discount factor
         pi: policy to evaluate
-        V0: initial guess for V table
         nEpisodes: number of episodes to be used for evaluation
         maxEpisodeLength: maximum length of an episode
         V_real: real Value table

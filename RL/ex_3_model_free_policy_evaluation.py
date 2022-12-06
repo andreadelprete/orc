@@ -42,8 +42,8 @@ if __name__=="__main__":
         MAX_EPISOD_LENGTH = 100     # max length of an episode
         LEARNING_RATES    = [0.5, 1.0]     # TD0 learning rates
         CONVERGENCE_THR   = 1e-5    # convergence threshold of policy evaluation
-        NOISE_STDDEV      = 0.1     # standard deviation of the noise acting on the dynamics
-        NPRINT            = 100     # print some info every NPRINT iterations
+        NOISE_STDDEV      = 0.0     # standard deviation of the noise acting on the dynamics
+        NPRINT            = 200     # print some info every NPRINT iterations
         
         from dpendulum import DPendulum
         nq=21   # number of discretization steps for the joint angle q
@@ -80,7 +80,7 @@ if __name__=="__main__":
         env.pendulum.noise_stddev = NOISE_STDDEV
     
     print("\nEstimate Value function with MC")
-    V_mc, err_mc = mc_policy_eval(env, DISCOUNT, policy, V, N_EPISODS, MAX_EPISOD_LENGTH,
+    V_mc, err_mc = mc_policy_eval(env, DISCOUNT, policy, N_EPISODS, MAX_EPISOD_LENGTH,
                        V_real, DO_PLOTS, NPRINT)
     
     V_td = len(LEARNING_RATES)*[None]

@@ -4,8 +4,8 @@ Example of policy evaluation with a simple discretized 1-DoF pendulum.
 
 import numpy as np
 from dpendulum import DPendulum
-from sol.ex_0_policy_evaluation_sol_prof import policy_eval
-#from sol.ex_0_policy_evaluation_sol import policy_eval
+#from sol.ex_0_policy_evaluation_sol_prof import policy_eval
+from sol.ex_0_policy_evaluation_sol import policy_eval
 
 def policy(env, x):
     ''' The policy to be evaluated '''
@@ -42,13 +42,13 @@ if __name__=="__main__":
     ### --- Hyper paramaters
     MAX_ITERS         = 200         # Max number of iterations
     CONVERGENCE_THR   = 1e-4        # convergence threshold
-    NPRINT            = 5           # Print info every NPRINT iterations
+    NPRINT            = 10          # Print info every NPRINT iterations
     PLOT              = True        # Plot the V table
-    DISCOUNT          = 0.9         # Discount factor 
+    DISCOUNT          = 0.9        # Discount factor 
     
     ### --- Environment
-    nq=21   # number of discretization steps for the joint angle q
-    nv=11   # number of discretization steps for the joint velocity v
+    nq=51   # number of discretization steps for the joint angle q
+    nv=21   # number of discretization steps for the joint velocity v
     nu=11   # number of discretization steps for the joint torque u
     env = DPendulum(nq, nv, nu) # create the environment
     kd = 1.0/env.dt             # derivative gain used in the control policy
