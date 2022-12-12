@@ -59,7 +59,7 @@ Q_target = get_critic(nx, nu)
 
 Q.summary()
 
-# Set initial weights of targets equal to those of actor and critic
+# Set initial weights of targets equal to those of the critic
 Q_target.set_weights(Q.get_weights())
 
 # Set optimizer specifying the learning rates
@@ -67,10 +67,10 @@ critic_optimizer = tf.keras.optimizers.Adam(QVALUE_LEARNING_RATE)
 
 w = Q.get_weights()
 for i in range(len(w)):
-    print("Q weights layer", i, w[i].shape)
+    print("Shape Q weights layer", i, w[i].shape)
     
 for i in range(len(w)):
-    print("Q weights layer", i, np.linalg.norm(w[i]))
+    print("Norm Q weights layer", i, np.linalg.norm(w[i]))
     
 print("\nDouble the weights")
 for i in range(len(w)):
@@ -79,7 +79,7 @@ Q.set_weights(w)
 
 w = Q.get_weights()
 for i in range(len(w)):
-    print("Q weights layer", i, np.linalg.norm(w[i]))
+    print("Norm Q weights layer", i, np.linalg.norm(w[i]))
 
 print("\nSave NN weights to file (in HDF5)")
 Q.save_weights("namefile.h5")
@@ -89,5 +89,5 @@ Q_target.load_weights("namefile.h5")
 
 w = Q_target.get_weights()
 for i in range(len(w)):
-    print("Q weights layer", i, np.linalg.norm(w[i]))
+    print("Norm Q weights layer", i, np.linalg.norm(w[i]))
     
