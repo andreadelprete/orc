@@ -4,8 +4,9 @@ Example of Q-table learning with a simple discretized 1-pendulum environment.
 
 import numpy as np
 from dpendulum import DPendulum
-from sol.ex_0_policy_evaluation_sol_prof import policy_eval
+from sol.ex_0_policy_evaluation_sol import policy_eval
 from sol.ex_5_sarsa_sol import sarsa
+#from sol.ex_5_sarsa_sol_prof import sarsa
 import matplotlib.pyplot as plt
 import time
 from ex_4_q_learning import render_greedy_policy, compute_V_pi_from_Q
@@ -52,7 +53,6 @@ V_pi = policy_eval(env, DISCOUNT, pi, V, MAX_EVAL_ITERS, VALUE_THR, False)
 env.plot_V_table(V_pi)
 print("Average/min/max Value:", np.mean(V_pi), np.min(V_pi), np.max(V_pi)) 
 
-print("Total rate of success: %.3f" % (-sum(h_ctg)/NEPISODES))
 render_greedy_policy(env, Q, DISCOUNT)
 plt.plot( np.cumsum(h_ctg)/range(1,len(h_ctg)+1) )
 plt.title("Average cost-to-go")

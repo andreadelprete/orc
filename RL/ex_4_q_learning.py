@@ -4,12 +4,13 @@ Example of Q-table learning with a simple discretized 1-pendulum environment.
 
 import numpy as np
 from dpendulum import DPendulum
-from sol.ex_0_policy_evaluation_sol_prof import policy_eval
+from sol.ex_0_policy_evaluation_sol import policy_eval
 from sol.ex_4_q_learning_sol import q_learning
+#from sol.ex_4_q_learning_sol_prof import q_learning
 import matplotlib.pyplot as plt
 import time
 
-def render_greedy_policy(env, Q, gamma, x0=None, maxiter=100):
+def render_greedy_policy(env, Q, gamma, x0=None, maxiter=20):
     '''Roll-out from random state using greedy policy.'''
     x0 = x = env.reset(x0)
     costToGo = 0.0
@@ -99,8 +100,7 @@ if __name__=='__main__':
     env.plot_V_table(V_opt)
     print("Average/min/max Value:", np.mean(V_opt), np.min(V_opt), np.max(V_opt)) 
     
-    print("Total rate of success: %.3f" % (-sum(h_ctg)/NEPISODES))
     render_greedy_policy(env, Q, DISCOUNT)
-    plt.plot( np.cumsum(h_ctg)/range(1,NEPISODES+1) )
+    plt.plot( np.cumsum(h_ctg)/range(1,NEPISODES) )
     plt.title ("Average cost-to-go")
     plt.show()
