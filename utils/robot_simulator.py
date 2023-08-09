@@ -3,7 +3,6 @@ import numpy as np
 from numpy.linalg import norm
 import os
 import math
-import gepetto.corbaserver
 import time
 import subprocess
 
@@ -173,6 +172,7 @@ class RobotSimulator:
                 # import webbrowser
                 # webbrowser.open(self.viz.viewer.url())
 
+            self.robot.setVisualizer(VISUALIZER()) 
             self.robot.initViewer(loadModel=True, open=True)
             self.robot.displayCollisions(False)
             self.robot.displayVisuals(True)

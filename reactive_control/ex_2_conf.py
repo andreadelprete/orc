@@ -36,6 +36,7 @@ simulation_type = 'timestepping' #either 'timestepping' or 'euler'
 tau_coulomb_max = 10*np.ones(6) # expressed as percentage of torque max
 
 use_viewer = True
+which_viewer = 'meshcat'
 show_floor = False
 PRINT_N = 1                   # print every PRINT_N time steps
 DISPLAY_N = 1              # update robot configuration in viwewer every DISPLAY_N time steps

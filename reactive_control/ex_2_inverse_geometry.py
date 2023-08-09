@@ -3,6 +3,7 @@ from numpy import nan
 from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
 import orc.utils.plot_utils as plut
+from orc.utils.viz_utils import addViewerSphere, applyViewerConfiguration
 import time
 from orc.utils.robot_loaders import loadUR
 from orc.utils.robot_wrapper import RobotWrapper
@@ -22,8 +23,8 @@ PLOT_GRADIENT  = 1
 r = loadUR()
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
 simu = RobotSimulator(conf, robot)
-simu.gui.addSphere('world/target', conf.REF_SPHERE_RADIUS, conf.REF_SPHERE_COLOR)
-simu.gui.applyConfiguration('world/target', conf.x_des.tolist()+[0.,0.,0.,1.])
+addViewerSphere(robot.viz, 'world/target', conf.REF_SPHERE_RADIUS, conf.REF_SPHERE_COLOR)
+applyViewerConfiguration(robot.viz, 'world/target', conf.x_des.tolist()+[0.,0.,0.,1.])
 
 # get the ID corresponding to the frame we want to work with
 assert(robot.model.existFrame(conf.frame_name))

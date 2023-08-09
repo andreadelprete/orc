@@ -45,15 +45,21 @@ def display_disi_lab(simu):
 def display_disi_lab_meshcat(simu):
     import meshcat.geometry as g
     import meshcat.transformations as tf
+    table_normal = np.array([0., 0., 1.])
+    table_stl_pos = np.array([-0.5, -0.35, -1.77])
+    table_pos = np.array([0, 0.05, -0.92])
+    table_size = np.array([1.2, 1.0, 0.02])
+    backwall_size = np.array([1.0, 0.01, 2.0])
+    backwall_pos = np.array([0., -0.33, -0.75])
 
     table_box = simu.viz.viewer['world/table_box'].set_object(g.Box([table_size[0], table_size[1], table_size[2]]), g.MeshBasicMaterial(color=0x0BFFAA, opacity=0.5))
     table_box = simu.viz.viewer['world/table_box']
-    table_box.set_transform(tf.translation_matrix(table_pos))
+    table_box.set_transform(tf.translation_matrix(table_pos)) # This is an absolute translation. The object will be placed at the specified position
 
     obj = g.StlMeshGeometry.from_file(TABLE_STL_FILE)
-    table = simu.viz.viewer["world/table"].set_object(obj, g.MeshBasicMaterial(color=0x0BFFAA, opacity=0.5))
-    table = simu.viz.viewer["world/table"]
-    table.set_transform(tf.scale_matrix(0.001) )
+    table_t = simu.viz.viewer["world/table"].set_object(obj, g.MeshBasicMaterial(color=0xa5bcb6, opacity=0.5))
+    table_t = simu.viz.viewer["world/table"]
+    table_t.set_transform(tf.scale_matrix(0.001, table_stl_pos) )
 
     backwall = simu.viz.viewer['world/backwall'].set_object(g.Box([backwall_size[0], backwall_size[1], backwall_size[2]]), g.MeshBasicMaterial(color=0x0BFFAA, opacity=0.5))
     backwall = simu.viz.viewer['world/backwall']

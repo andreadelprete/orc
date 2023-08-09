@@ -35,6 +35,7 @@ randomize_robot_model = 1
 model_variation = 30.0
 
 use_viewer = 0
+which_viewer = 'meshcat'
 simulate_real_time = 0          # flag specifying whether simulation should be real time or as fast as possible
 show_floor = False
 PRINT_T = 10                   # print some info every PRINT_T seconds

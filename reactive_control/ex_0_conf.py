@@ -33,6 +33,7 @@ randomize_robot_model = 0
 model_variation = 30.0
 
 use_viewer = True
+which_viewer = 'meshcat'
 simulate_real_time = True
 show_floor = False
 PRINT_T = 1                   # print every PRINT_N time steps
