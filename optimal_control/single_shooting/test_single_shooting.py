@@ -15,6 +15,7 @@ from orc.utils.robot_loaders import loadUR, loadURlab
 from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 import orc.utils.lab_utils as lab
+from orc.utils.viz_utils import addViewerSphere, applyViewerConfiguration
 
 from single_shooting_problem import SingleShootingProblem
 import single_shooting_conf as conf
@@ -70,11 +71,12 @@ if(conf.use_viewer):
 
     # show a blue sphere to display the target end-effector position in the viewer (if any)
     if(conf.weight_final_ee_pos>0):
-        simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
-        simu.gui.setVisibility('world/target', 'ON')
+        addViewerSphere(robot.viz, 'world/target', 0.05, (0., 0., 1., 1.))
+        # simu.gui.addSphere('world/target', 0.05, (0., 0., 1., 1.))
+        # simu.gui.setVisibility('world/target', 'ON')
         robot.applyConfiguration('world/target', conf.p_des.tolist()+[0.,0.,0.,1.])
-    else:
-        simu.gui.setVisibility('world/target', 'OFF')
+    #else:
+    #    simu.gui.setVisibility('world/target', 'OFF')
     
     # add red spheres to display the volumes used for collision avoidance
     for (frame, dist) in conf.table_collision_frames:

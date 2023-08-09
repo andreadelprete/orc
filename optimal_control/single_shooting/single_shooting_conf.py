@@ -23,8 +23,8 @@ DATA_FILE_NAME = 'home_2_table'
 INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
 #INITIAL_GUESS_FILE = DATA_FILE_NAME
 
-#system = 'ur'
-system = 'ur-lab'
+system = 'ur'
+#system = 'ur-lab'
 #system='double-pendulum'
 
 weight_final_ee_pos = 0    # final cost weight for end-effector position
@@ -102,6 +102,7 @@ simulation_type = 'timestepping' # either 'timestepping' or 'euler'
 tau_coulomb_max = 0*np.ones(nq)   # expressed as percentage of torque max
 randomize_robot_model = 0
 use_viewer = True
+which_viewer = 'meshcat'
 simulate_real_time = 1          # flag specifying whether simulation should be real time or as fast as possible
 show_floor = False
 DISPLAY_T = 0.02              # update robot configuration in viwewer every DISPLAY_T seconds
