@@ -3,6 +3,7 @@ from numpy import nan
 import matplotlib.pyplot as plt
 import time
 import pinocchio as pin
+from pinocchio.visualize import (GepettoVisualizer, MeshcatVisualizer)
 from example_robot_data.robots_loader import load
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
@@ -26,16 +27,8 @@ robot = load('ur5')
 
 # launch the viewer
 if(use_viewer):
-    if(which_viewer=="meshcat"):
-        import pinocchio as pin
-        import webbrowser
-        viz = pin.visualize.MeshcatVisualizer(robot.model, robot.collision_model,robot.visual_model)
-        viz.initViewer()
-        webbrowser.open(viz.viewer.url())
-        viz.loadViewerModel()
-        viz.display(q0)
-        time.sleep(3)
-    else:
+    if(which_viewer=="gepetto"):
+        VISUALIZER = GepettoVisualizer
         import subprocess, os
         try:
             prompt = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
@@ -44,8 +37,13 @@ if(use_viewer):
             time.sleep(1)
         except:
             pass
-        robot.initViewer(loadModel=True)
-        robot.display(q0)            
+    else:
+        VISUALIZER = MeshcatVisualizer
+
+    robot.setVisualizer(VISUALIZER())    
+    robot.initViewer(loadModel=True, open=True)
+    robot.display(q0)
+    if(which_viewer=="gepetto"):
         robot.viewer.gui.setCameraTransform('python-pinocchio', CAMERA_TRANSFORM)
 
 N  = int(T_SIMULATION/dt)      # number of time steps

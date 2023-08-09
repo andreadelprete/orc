@@ -6,10 +6,11 @@ Created on Thu Jul 28 11:45:47 2022
 @author: adelprete
 """
 import numpy as np
+import os
 
 fixed_world_translation = np.array([0.5, 0.35, 1.75])
-
-TABLE_STL_FILE = '/home/adelprete/devel/src/locosim/ros_impedance_controller/worlds/models/tavolo/mesh/tavolo.stl'
+LOCOSIM_DIR = os.getenv('LOCOSIM_DIR', '/home/adelprete/devel/src/locosim')
+TABLE_STL_FILE = LOCOSIM_DIR + '/ros_impedance_controller/worlds/models/tavolo/mesh/tavolo.stl'
 table_stl_pos = np.array([0.0, 0.0, -0.02])
 
 table_normal = np.array([0., 0., 1.])
@@ -40,3 +41,20 @@ def display_disi_lab(simu):
     
 #    simu.gui.addURDF('world/finger', '/home/adelprete/devel/src/locosim/gripper_description/urdf/finger.urdf')
 #    simu.gui.addURDF('world/finger', '/mnt/hgfs/My Drive/[LM] Advanced Robot Control/code/lab_doc/grippers/gripper_description/urdf/finger.urdf')
+
+def display_disi_lab_meshcat(simu):
+    import meshcat.geometry as g
+    import meshcat.transformations as tf
+
+    table_box = simu.viz.viewer['world/table_box'].set_object(g.Box([table_size[0], table_size[1], table_size[2]]), g.MeshBasicMaterial(color=0x0BFFAA, opacity=0.5))
+    table_box = simu.viz.viewer['world/table_box']
+    table_box.set_transform(tf.translation_matrix(table_pos))
+
+    obj = g.StlMeshGeometry.from_file(TABLE_STL_FILE)
+    table = simu.viz.viewer["world/table"].set_object(obj, g.MeshBasicMaterial(color=0x0BFFAA, opacity=0.5))
+    table = simu.viz.viewer["world/table"]
+    table.set_transform(tf.scale_matrix(0.001) )
+
+    backwall = simu.viz.viewer['world/backwall'].set_object(g.Box([backwall_size[0], backwall_size[1], backwall_size[2]]), g.MeshBasicMaterial(color=0x0BFFAA, opacity=0.5))
+    backwall = simu.viz.viewer['world/backwall']
+    backwall.set_transform(tf.translation_matrix(backwall_pos))

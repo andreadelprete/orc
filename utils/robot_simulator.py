@@ -154,25 +154,36 @@ class RobotSimulator:
         # for gepetto viewer
         self.gui = None
         if(conf.use_viewer):
-            try:
-                prompt = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
-                if int(prompt[1]) == 0:
-                    os.system('gepetto-gui &')
-                time.sleep(1)
-            except:
-                pass
-            gepetto.corbaserver.Client()
-            self.robot.initViewer(loadModel=False)
-            self.gui = self.robot.viewer.gui
-            if(conf.show_floor):
-                self.robot.viewer.gui.createSceneWithFloor('world')
-                self.gui.setLightingMode('world/floor', 'OFF')
-    
-            self.robot.loadViewerModel()
+            if(conf.which_viewer=="gepetto"):
+                from pinocchio.visualize import GepettoVisualizer
+                VISUALIZER = GepettoVisualizer
+                import subprocess, os
+                try:
+                    prompt = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
+                    if int(prompt[1]) == 0:
+                        os.system('gepetto-gui &')
+                    time.sleep(1)
+                except:
+                    pass
+            else:
+                from pinocchio.visualize import MeshcatVisualizer
+                VISUALIZER = MeshcatVisualizer
+                # self.viz = MeshcatVisualizer(robot.model, robot.collision_model,robot.visual_model)
+                # self.viz.initViewer()
+                # import webbrowser
+                # webbrowser.open(self.viz.viewer.url())
+
+            self.robot.initViewer(loadModel=True, open=True)
             self.robot.displayCollisions(False)
             self.robot.displayVisuals(True)
-            self.robot.display(self.q)            
-            
+            self.robot.display(self.q)
+
+            if(conf.which_viewer=='gepetto'):
+                self.gui = self.robot.viewer.gui
+                if(conf.show_floor):
+                    self.gui.createSceneWithFloor('world')
+                    self.gui.setLightingMode('world/floor', 'OFF')
+
 #            LOCOSIM_PATH = "/home/adelprete/devel/src/locosim"
 #            success = self.gui.addMesh("world/pinocchio/tavolo", LOCOSIM_PATH+"/ros_impedance_controller/worlds/models/tavolo/mesh/tavolo.stl")
 #            if(success):
