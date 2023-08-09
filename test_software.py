@@ -11,6 +11,7 @@ T_SIMULATION = 5             # number of time steps simulated
 dt = 0.01                      # controller time step
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ]).T  # initial configuration
 use_viewer = True
+which_viewer = "meshcat"
 simulate_real_time = True
 PLOT_JOINT_POS = True
 PRINT_T = 1                   # print every PRINT_N time steps
@@ -25,17 +26,27 @@ robot = load('ur5')
 
 # launch the viewer
 if(use_viewer):
-    import subprocess, os
-    try:
-        prompt = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
-        if int(prompt[1]) == 0:
-            os.system('gepetto-gui &')
-        time.sleep(1)
-    except:
-        pass
-    robot.initViewer(loadModel=True)
-    robot.display(q0)            
-    robot.viewer.gui.setCameraTransform('python-pinocchio', CAMERA_TRANSFORM)
+    if(which_viewer=="meshcat"):
+        import pinocchio as pin
+        import webbrowser
+        viz = pin.visualize.MeshcatVisualizer(robot.model, robot.collision_model,robot.visual_model)
+        viz.initViewer()
+        webbrowser.open(viz.viewer.url())
+        viz.loadViewerModel()
+        viz.display(q0)
+        time.sleep(3)
+    else:
+        import subprocess, os
+        try:
+            prompt = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
+            if int(prompt[1]) == 0:
+                os.system('gepetto-gui &')
+            time.sleep(1)
+        except:
+            pass
+        robot.initViewer(loadModel=True)
+        robot.display(q0)            
+        robot.viewer.gui.setCameraTransform('python-pinocchio', CAMERA_TRANSFORM)
 
 N  = int(T_SIMULATION/dt)      # number of time steps
 q  = np.empty((robot.nq, N+1))*nan  # joint angles
