@@ -32,6 +32,17 @@ def addViewerBox(viz, name, sizex, sizey, sizez, rgba):
     else:
         raise AttributeError("Viewer %s is not supported." % viz.__class__)
 
+def addViewerCapsule(viz, name, radius, length, rgba):
+    if isinstance(viz, pin.visualize.MeshcatVisualizer):
+        import meshcat
+
+        viz.viewer[name].set_object(
+            meshcat.geometry.Box([radius, radius, length]), meshcat_material(*rgba)
+        )
+    elif isinstance(viz, pin.visualize.GepettoVisualizer):
+        viz.viewer.gui.addCapsule(name, radius, length, rgba)
+    else:
+        raise AttributeError("Viewer %s is not supported." % viz.__class__)
 
 def addViewerSphere(viz, name, size, rgba):
     if isinstance(viz, pin.visualize.MeshcatVisualizer):

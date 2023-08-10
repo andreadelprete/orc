@@ -46,10 +46,9 @@ class Pendulum:
     an object Visual (see above).    
     '''
 
-    def __init__(self, nbJoint=1, noise_stddev=0.0):
+    def __init__(self, nbJoint=1, noise_stddev=0.0, which_viewer='meshcat'):
         '''Create a Pinocchio model of a N-pendulum, with N the argument <nbJoint>.'''
-        self.viewer     = Display()
-        self.visuals    = []
+        self.viewer     = Display(which_viewer)
         self.model      = pin.Model()
         self.createPendulum(nbJoint)
         self.data       = self.model.createData()
@@ -75,17 +74,17 @@ class Pendulum:
         inertia = pin.Inertia(mass,
                               np.array([0.0,0.0,length/2]).T,
                               mass/5*np.diagflat([ 1e-2,length**2,  1e-2 ]) )
-
+        
         for i in range(nbJoint):
             istr = str(i)
             name      = prefix+"joint"+istr
             jointName = name+"_joint"
             jointId   = self.model.addJoint(jointId, pin.JointModelRY(), jointPlacement, jointName)
             self.model.appendBodyToJoint(jointId, inertia,pin.SE3.Identity())
-            try:self.viewer.viewer.gui.addSphere('world/'+prefix+'sphere'+istr, 0.15,colorred)
+            try: self.viewer.addSphere('world/'+prefix+'sphere'+istr, 0.15,colorred)
             except: pass
             self.visuals.append( Visual('world/'+prefix+'sphere'+istr, jointId, pin.SE3.Identity()) )
-            try:self.viewer.viewer.gui.addCapsule('world/'+prefix+'arm'+istr, .1,.8*length, color)
+            try: self.viewer.addCapsule('world/'+prefix+'arm'+istr, .1,.8*length, color)
             except:pass
             self.visuals.append( Visual('world/'+prefix+'arm'+istr, jointId,
                                         pin.SE3(np.eye(3), np.array([0.,0.,length/2]))))
@@ -98,7 +97,7 @@ class Pendulum:
         pin.forwardKinematics(self.model, self.data,q)
         for visual in self.visuals:
             visual.place( self.viewer, self.data.oMi[visual.jointParent] )
-        self.viewer.viewer.gui.refresh()
+        self.viewer.refresh()
 
 
     ''' Size of the q vector '''
