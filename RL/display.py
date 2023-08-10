@@ -1,18 +1,18 @@
 # Typical header of a Python script using Pinocchio
 from pinocchio.utils import *
 import pinocchio as pin
-from orc.util.viz_utils import applyViewerConfiguration, addViewerSphere, addViewerCapsule
+from orc.utils.viz_utils import applyViewerConfiguration, addViewerSphere, addViewerCapsule
 
-# Example of a class Display that connect to Gepetto-viewer and implement a
+# Example of a class Display that connect to the viewer and implement a
 # 'place' method to set the position/rotation of a 3D visual object in a scene.
 class Display():
     '''
-    Class Display: Example of a class implementing a client for the Gepetto-viewer server. The main
+    Class Display: Example of a class implementing a client for the viewer. The main
     method of the class is 'place', that sets the position/rotation of a 3D visual object in a scene.
     '''
     def __init__(self, which_viewer='meshcat', windowName = "pinocchio" ):
         '''
-        This function connect with the Gepetto-viewer server and open a window with the given name.
+        This function connects with the viewer and opens a window with the given name.
         If the window already exists, it is kept in the current state. Otherwise, the newly-created
         window is set up with a scene named 'world'.
         '''
@@ -21,7 +21,6 @@ class Display():
             from pinocchio.visualize import MeshcatVisualizer
             self.viewer = MeshcatVisualizer()
             self.viewer.initViewer()
-
         elif(which_viewer=="gepetto"):
             # from pinocchio.visualize import GepettoVisualizer
             # VISUALIZER = GepettoVisualizer

@@ -49,6 +49,7 @@ class Pendulum:
     def __init__(self, nbJoint=1, noise_stddev=0.0, which_viewer='meshcat'):
         '''Create a Pinocchio model of a N-pendulum, with N the argument <nbJoint>.'''
         self.viewer     = Display(which_viewer)
+        self.visuals    = []
         self.model      = pin.Model()
         self.createPendulum(nbJoint)
         self.data       = self.model.createData()

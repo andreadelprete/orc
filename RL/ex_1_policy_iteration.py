@@ -29,7 +29,7 @@ nu=11   # number of discretization steps for the joint torque u
 ### --- Environment
 env = DPendulum(nq, nv, nu)
 V  = np.zeros(env.nx)                       # Value table initialized to 0
-pi = env.c2du(0.0)*np.ones(env.nx, np.int)  # policy table initialized to zero torque
+pi = env.c2du(0.0)*np.ones(env.nx, np.int32)  # policy table initialized to zero torque
   
 pi = policy_iteration(env, DISCOUNT, pi, V, MAX_EVAL_ITERS, MAX_IMPR_ITERS, VALUE_THR, POLICY_THR, PLOT, NPRINT)
         

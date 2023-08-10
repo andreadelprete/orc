@@ -27,7 +27,7 @@ def render_greedy_policy(env, Q, gamma, x0=None, maxiter=20):
 def compute_V_pi_from_Q(env, Q):
     ''' Compute Value table and greedy policy pi from Q table. '''
     V = np.zeros(Q.shape[0])
-    pi = np.zeros(Q.shape[0], np.int)
+    pi = np.zeros(Q.shape[0], np.int32)
     for x in range(Q.shape[0]):
 #        pi[x] = np.argmin(Q[x,:])
         # Rather than simply using argmin we do something slightly more complex
@@ -95,7 +95,7 @@ if __name__=='__main__':
     VALUE_THR         = 1e-3    # convergence threshold for policy evaluation
     POLICY_THR        = 1e-4    # convergence threshold for policy improvement
     V_opt  = np.zeros(env.nx)                       # Value table initialized to 0
-    pi_opt = env.c2du(0.0)*np.ones(env.nx, np.int)  # policy table initialized to zero torque
+    pi_opt = env.c2du(0.0)*np.ones(env.nx, np.int32)  # policy table initialized to zero torque
     pi_opt = policy_iteration(env, DISCOUNT, pi_opt, V_opt, MAX_EVAL_ITERS, MAX_IMPR_ITERS, VALUE_THR, POLICY_THR, False, 10000)
     env.plot_V_table(V_opt)
     print("Average/min/max Value:", np.mean(V_opt), np.min(V_opt), np.max(V_opt)) 
