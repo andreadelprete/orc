@@ -3,12 +3,11 @@ from numpy import nan
 from numpy.linalg import norm as norm
 import matplotlib.pyplot as plt
 import orc.utils.plot_utils as plut
+from orc.utils.robot_loaders import loadUR, loadUR_urdf
+from orc.utils.robot_wrapper import RobotWrapper
+from orc.utils.robot_simulator import RobotSimulator
 import time
-import pinocchio as se3
 import tsid
-import gepetto.corbaserver
-import subprocess
-import os
 import ex_0_ur5_conf as conf
 
 print("".center(conf.LINE_WIDTH,'#'))
@@ -19,10 +18,14 @@ PLOT_JOINT_POS = 1
 PLOT_JOINT_VEL = 1
 PLOT_JOINT_ACC = 1
 PLOT_TORQUES = 1
-USE_VIEWER = 1
 
-robot = tsid.RobotWrapper(conf.urdf, [conf.path], False)
+urdf, path = loadUR_urdf()
+robot = tsid.RobotWrapper(urdf, [path], False)
 model = robot.model()
+
+r = loadUR()
+robot_simu = RobotWrapper(r.model, r.collision_model, r.visual_model)
+simu = RobotSimulator(conf, robot_simu)
 
 formulation = tsid.InverseDynamicsFormulationAccForce("tsid", robot, False)
 q0 = conf.q0
@@ -46,19 +49,6 @@ formulation.addMotionTask(jointBoundsTask, conf.w_joint_bounds, 0, 0.0)
 solver = tsid.SolverHQuadProgFast("qp solver")
 solver.resize(formulation.nVar, formulation.nEq, formulation.nIn)
 
-if(USE_VIEWER):
-    robot_display = se3.RobotWrapper.BuildFromURDF(conf.urdf, [conf.path, ])
-    l = subprocess.getstatusoutput("ps aux |grep 'gepetto-gui'|grep -v 'grep'|wc -l")
-    if int(l[1]) == 0:
-        os.system('gepetto-gui &')
-    time.sleep(1)
-    gepetto.corbaserver.Client()
-    robot_display.initViewer(loadModel=True)
-    robot_display.displayCollisions(False)
-    robot_display.displayVisuals(True)
-    robot_display.display(q0)
-    robot_display.viewer.gui.setCameraTransform('python-pinocchio', conf.CAMERA_TRANSFORM)
-
 N = conf.N_SIMULATION
 tau    = np.empty((robot.na, N))*nan
 q      = np.empty((robot.nq, N+1))*nan
@@ -70,9 +60,9 @@ dv_ref = np.empty((robot.nv, N))*nan
 dv_des = np.empty((robot.nv, N))*nan
 samplePosture = trajPosture.computeNext()
 
-amp                  = np.array([0.2, 0.3, 0.4, 0.0, 0.0, 0.0])           # amplitude
-phi                  = np.array([0.0, 0.5*np.pi, 0.0, 0.0, 0.0, 0.0])     # phase
-two_pi_f             = 2*np.pi*np.array([1.0, 0.5, 0.3, 0.0, 0.0, 0.0])   # frequency (time 2 PI)
+amp                  = conf.amp        # amplitude
+phi                  = conf.phase      # phase
+two_pi_f             = conf.two_pi_f   # frequency (time 2 PI)
 two_pi_f_amp         = two_pi_f * amp
 two_pi_f_squared_amp = two_pi_f * two_pi_f_amp
 
@@ -106,20 +96,20 @@ for i in range(0, N):
         print("Time %.3f"%(t))
         print("\ttracking err %s: %.3f"%(postureTask.name.ljust(20,'.'), norm(postureTask.position_error, 2)))
 
-    # numerical integration
-    v_mean = v[:,i] + 0.5*dt*dv[:,i]
-    v[:,i+1] = v[:,i] + dt*dv[:,i]
-    q[:,i+1] = se3.integrate(model, q[:,i], dt*v_mean)
-    t += conf.dt
+    # send torque commands to simulator
+    simu.simulate(tau[:,i], dt)
+    q[:,i+1] = simu.q
+    v[:,i+1] = simu.v
+    t += dt
     
     if i%conf.DISPLAY_N == 0: 
-        robot_display.display(q[:,i])
+        simu.display(q[:,i])
 
     time_spent = time.time() - time_start
-    if(time_spent < conf.dt): time.sleep(conf.dt-time_spent)
+    if(time_spent < dt): time.sleep(dt-time_spent)
 
 # PLOT STUFF
-time = np.arange(0.0, N*conf.dt, conf.dt)
+time = np.arange(0.0, N*dt, dt)
 
 if(PLOT_JOINT_POS):    
     (f, ax) = plut.create_empty_figure(int(robot.nv/2),2)

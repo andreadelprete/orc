@@ -43,6 +43,9 @@ q[:,0], v[:,0] = simu.q, simu.v
 kp, kd = conf.kp, conf.kd
 PRINT_N = int(conf.PRINT_T/conf.dt)
 
+print("Waiting 2 seconds before starting")
+time.sleep(2)
+print("Starting simulation")
 for i in range(0, N):
     time_start = time.time()
     

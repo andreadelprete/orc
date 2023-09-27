@@ -3,6 +3,10 @@ from numpy import nan
 from numpy.linalg import norm as norm
 import matplotlib.pyplot as plt
 import orc.utils.plot_utils as plut
+from orc.utils.robot_loaders import loadUR
+from orc.utils.robot_wrapper import RobotWrapper
+from orc.utils.robot_simulator import RobotSimulator
+from orc.utils.viz_utils import addViewerSphere, applyViewerConfiguration
 import time
 from tsid_manipulator import TsidManipulator
 
@@ -19,6 +23,10 @@ PLOT_JOINT_VEL = 1
 PLOT_TORQUES = 1
 
 tsid = TsidManipulator(conf)
+
+r = loadUR()
+robot_simu = RobotWrapper(r.model, r.collision_model, r.visual_model)
+simu = RobotSimulator(conf, robot_simu)
 
 N = conf.N_SIMULATION
 tau    = np.empty((tsid.robot.na, N))*nan
@@ -44,8 +52,8 @@ pEE = offset.copy()
 vEE = np.zeros(6)
 aEE = np.zeros(6)
 
-tsid.gui.addSphere('world/ee', conf.SPHERE_RADIUS, conf.EE_SPHERE_COLOR)
-tsid.gui.addSphere('world/ee_ref', conf.REF_SPHERE_RADIUS, conf.EE_REF_SPHERE_COLOR)
+addViewerSphere(simu.robot.viz, 'world/ee', conf.SPHERE_RADIUS, conf.EE_SPHERE_COLOR)
+addViewerSphere(simu.robot.viz, 'world/ee_ref', conf.REF_SPHERE_RADIUS, conf.EE_REF_SPHERE_COLOR)
 
 t = 0.0
 q[:,0], v[:,0] = tsid.q, tsid.v
@@ -85,13 +93,15 @@ for i in range(0, N):
         print(("Time %.3f"%(t)))
         print(("\ttracking err %s: %.3f"%(tsid.eeTask.name.ljust(20,'.'), norm(tsid.eeTask.position_error, 2))))
 
-    q[:,i+1], v[:,i+1] = tsid.integrate_dv(q[:,i], v[:,i], dv, conf.dt)
+    # send torque commands to simulator
+    simu.simulate(tau[:,i], conf.dt)
+    q[:,i+1] = simu.q
+    v[:,i+1] = simu.v
     t += conf.dt
     
     if i%conf.DISPLAY_N == 0: 
-        tsid.robot_display.display(q[:,i])
-        tsid.gui.applyConfiguration('world/ee',     ee_pos[:,i].tolist()+[0,0,0,1.])
-        tsid.gui.applyConfiguration('world/ee_ref', ee_pos_ref[:,i].tolist()+[0,0,0,1.])
+        applyViewerConfiguration(simu.robot.viz, 'world/ee',     ee_pos[:,i].tolist()+[0,0,0,1.])
+        applyViewerConfiguration(simu.robot.viz, 'world/ee_ref', ee_pos_ref[:,i].tolist()+[0,0,0,1.])
 
     time_spent = time.time() - time_start
     time_avg = (i * time_avg + time_spent) / (i + 1)

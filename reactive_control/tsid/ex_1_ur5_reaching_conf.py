@@ -6,7 +6,6 @@ Created on Thu Apr 18 09:47:07 2019
 """
 
 import numpy as np
-import os
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
@@ -35,16 +34,17 @@ v_max_scaling = 0.4             # scaling factor of velocity bounds
 ee_frame_name = "ee_fixed_joint"        # end-effector frame name
 ee_task_mask = np.array([1., 1, 1, 0, 0, 0])
 
-PRINT_N = 500                   # print every PRINT_N time steps
-DISPLAY_N = 20                  # update robot configuration in viwewer every DISPLAY_N time steps
-CAMERA_TRANSFORM = [2.582354784011841, 1.620774507522583, 1.0674564838409424, 0.2770655155181885, 0.5401807427406311, 0.6969326734542847, 0.3817386031150818]
 SPHERE_RADIUS = 0.03
 REF_SPHERE_RADIUS = 0.03
 EE_SPHERE_COLOR  = (1, 0.5, 0, 0.5)
 EE_REF_SPHERE_COLOR  = (1, 0, 0, 0.5)
 
-#ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
-#path      = os.environ.get('UR5_MODEL_DIR', ERROR_MSG)
-path      = '/opt/openrobots/share/'
-urdf      = path + "example-robot-data/robots/ur_description/urdf/ur5_robot.urdf";
-srdf      = path + 'example-robot-data/robots/ur_description/srdf/ur5_robot.srdf'
+PRINT_N = 500                   # print every PRINT_N time steps
+DISPLAY_N = 20                  # update robot configuration in viewer every DISPLAY_N time steps
+DISPLAY_T = DISPLAY_N*dt
+randomize_robot_model = 0
+use_viewer = True
+simulate_coulomb_friction = 0
+simulation_type = 'timestepping' #either 'timestepping' or 'euler'
+tau_coulomb_max = 0.0*np.ones(6) # expressed as percentage of torque max
+which_viewer = 'meshcat'

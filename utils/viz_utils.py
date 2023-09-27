@@ -47,7 +47,6 @@ def addViewerCapsule(viz, name, radius, length, rgba):
 def addViewerSphere(viz, name, size, rgba):
     if isinstance(viz, pin.visualize.MeshcatVisualizer):
         import meshcat
-
         viz.viewer[name].set_object(
             meshcat.geometry.Sphere(size), meshcat_material(*rgba)
         )
