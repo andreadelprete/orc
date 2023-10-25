@@ -21,7 +21,7 @@ def loadURlab():
         print("Warning: could not find environment variable LOCOSIM_DIR. Using default path: /home/student/ros_ws/src/locosim")
         LOCOSIM_PATH = "/home/student/ros_ws/src/locosim"
     URDF = LOCOSIM_PATH+"/robot_descriptions/ur_description/urdf/ur5.urdf"
-    modelPath = '/opt/openrobots/share/'
+    modelPath = LOCOSIM_PATH+"/robot_descriptions/"
     gripperPath = LOCOSIM_PATH+'/robot_descriptions/gripper_description/'
     robot = RobotWrapper.BuildFromURDF(URDF, [modelPath, gripperPath])
     robot.model.addBodyFrame("gripper", 6, pin.SE3(np.eye(3), np.array([0.0, 0.0, 0.18])), 28)
