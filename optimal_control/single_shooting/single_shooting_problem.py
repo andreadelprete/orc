@@ -490,15 +490,13 @@ class SingleShootingProblem:
             return True
     
         for (w,c) in self.running_costs:
-            print(colored("\t Running cost %60s: %7.3f %7.3f"%(c.name, 
+            print("\t Running cost %60s: %7.3f %7.3f"%(c.name, 
                                                                self.last_values.__dict__[c.name], 
-                                                               self.last_values.__dict__[c.name+'_grad']),
-                          "grey"))
+                                                               self.last_values.__dict__[c.name+'_grad']))
         for (w,c) in self.final_costs:
-            print(colored("\t Final cost   %60s: %7.3f %7.3f"%(c.name, 
+            print("\t Final cost   %60s: %7.3f %7.3f"%(c.name, 
                                                                self.last_values.__dict__[c.name], 
-                                                               self.last_values.__dict__[c.name+'_grad']),
-                            "grey"))
+                                                               self.last_values.__dict__[c.name+'_grad']))
         for c in self.path_ineqs:
             v = np.min(self.last_values.__dict__[c.name])
             if(v<=0.0): color = 'red'
@@ -512,13 +510,12 @@ class SingleShootingProblem:
             if(v<=self.ineq_print_threshold):
                 print(colored('\t Final ineq   %60s: %7.3f'%(c.name, v), color))
         for c in self.final_eqs:
-            print(colored('\t Final eq     %60s: %7.3f'%(c.name, 
-                                                         norm(self.last_values.__dict__[c.name])),
-                            "grey"))
+            print('\t Final eq     %60s: %7.3f'%(c.name, 
+                                                         norm(self.last_values.__dict__[c.name])))
     
         # Display motion every time the trajectory has changed significantly
         # and every 50-th iteration
-        if(self.iter%50==0 or np.max(np.abs(self.last_X_displayed-self.X))>0.5):
+        if(self.iter%50==0 or np.max(np.abs(self.last_X_displayed-self.X))>1.0):
             print("Display motion...")
 #            self.last_values.cost_last_display = self.last_values.cost
             self.last_X_displayed = np.copy(self.X)
