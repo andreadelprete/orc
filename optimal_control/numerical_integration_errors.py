@@ -26,28 +26,11 @@ if __name__=='__main__':
     print(" Numerical integration errors ".center(conf.LINE_WIDTH, '#'))
     print("".center(conf.LINE_WIDTH,'#'), '\n')
     
-    dt = 0.1                   # time step
-    N = int(conf.T/dt);         # horizon size
-    ndt_ground_truth = 1000     # number of inner time steps used for computing the ground truth
-    PLOT_STUFF = 1
-    linestyles = ['-*', '--*', ':*', '-.*']
-    # choose which system you want to integrate
-    system = 'ur'
-#    system='double-pendulum'
-#    system='pendulum-ode'
-#    system = 'linear'
-#    system = 'sin'
-#    system = 'stiff-diehl'
-    
-    integrators = []
-    integrators += [{'scheme': 'RK-1'      , 'nf': 1}]
-    integrators += [{'scheme': 'RK-2'      , 'nf': 2}] # nf = number of function evaluation per step
-    integrators += [{'scheme': 'RK-3'      , 'nf': 3}]
-    integrators += [{'scheme': 'RK-4'      , 'nf': 4}]
-    
-    
-    
-    ndt_list = np.array([int(i) for i in 2**np.arange(1.5,8,0.5)])
+    system = conf.system
+    dt = conf.dt
+    N = conf.N
+    integrators = conf.integrators
+    ndt_list = conf.ndt_list
     print('Testing system', system)
         
     if(system=='ur' or system=='double-pendulum'):
@@ -89,7 +72,7 @@ if __name__=='__main__':
     integrator = Integrator('integrator')
     
     print('Compute ground truth')
-    x_gt = integrator.integrate(ode, x0, U, 0.0, dt, ndt_ground_truth, N, 'RK-4')
+    x_gt = integrator.integrate(ode, x0, U, 0.0, dt, conf.ndt_ground_truth, conf.N, 'RK-4')
     
     for params in integrators:
         scheme = params['scheme']
@@ -101,7 +84,8 @@ if __name__=='__main__':
             print("Integration %10s"%scheme, 'ndt=%4d'%ndt, 'log(err)', np.log10(err))
             
     # PLOT STUFF    
-    if(PLOT_STUFF):
+    linestyles = conf.linestyles
+    if(conf.PLOT_STUFF):
         (f, ax) = plut.create_empty_figure()
         i_ls = 0
         for params in integrators:

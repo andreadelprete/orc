@@ -12,26 +12,27 @@ from math import sqrt
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
+T = 1.0                     # integration horizon in seconds
+dt = 0.1                    # time step duration in seconds
+N = int(T/dt)               # number of time steps
+ndt_ground_truth = 1000     # number of inner time steps used for computing the ground truth
+PLOT_STUFF = 1
+linestyles = ['-*', '--*', ':*', '-.*']
+
+# choose which system you want to integrate
+system = 'ur'
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
-dt = 0.1                     # time step
-T = 1.0
 
-simulate_coulomb_friction = 0    # flag specifying whether coulomb friction is simulated
-simulation_type = 'euler' # either 'timestepping' or 'euler'
-tau_coulomb_max = 5*np.ones(6)   # expressed as percentage of torque max
+# system='double-pendulum'
+# system='pendulum-ode'
+# system = 'linear'
+# system = 'sin'
+# system = 'stiff-diehl'
 
-randomize_robot_model = 0
-model_variation = 30.0
+integrators = []
+integrators += [{'scheme': 'RK-1'      , 'nf': 1}]
+integrators += [{'scheme': 'RK-2'      , 'nf': 2}] # nf = number of function evaluation per step
+integrators += [{'scheme': 'RK-3'      , 'nf': 3}]
+integrators += [{'scheme': 'RK-4'      , 'nf': 4}]
 
-use_viewer = 0
-simulate_real_time = 0          # flag specifying whether simulation should be real time or as fast as possible
-show_floor = False
-PRINT_T = 1                   # print some info every PRINT_T seconds
-DISPLAY_T = 0.02              # update robot configuration in viwewer every DISPLAY_T seconds
-CAMERA_TRANSFORM = [2.582354784011841, 1.620774507522583, 1.0674564838409424, 
-                    0.2770655155181885, 0.5401807427406311, 0.6969326734542847, 0.3817386031150818]
-
-#ERROR_MSG = 'You should set the environment variable UR5_MODEL_DIR to something like "$DEVEL_DIR/install/share"\n';
-#path      = os.environ.get('UR5_MODEL_DIR', ERROR_MSG)
-#urdf      = path + "/ur_description/urdf/ur5_robot.urdf";
-#srdf      = path + '/ur_description/srdf/ur5_robot.srdf'
+ndt_list = np.array([int(i) for i in 2**np.arange(1.5,8,0.5)])
