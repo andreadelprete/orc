@@ -21,21 +21,21 @@ DATA_FOLDER = '../data/'
 DATA_FILE_NAME = 'home_2_table'
 
 INITIAL_GUESS_FILE = None # use None if you don't have an initial guess
-#INITIAL_GUESS_FILE = DATA_FILE_NAME
+# INITIAL_GUESS_FILE = DATA_FILE_NAME
 
-system = 'ur'
-#system = 'ur-lab'
+# system = 'ur'
+system = 'ur-lab'
 #system='double-pendulum'
 
-weight_final_ee_pos = 0    # final cost weight for end-effector position
-weight_final_ee_vel = 0    # final cost weight for end-effector velocity
-weight_final_q  = 0  # final cost weight for joint positions
-weight_final_dq = 0  # final cost weight for joint velocities
-weight_dq  = 1e-1       # running cost weight for joint velocities
-weight_ddq = 1e-2       # running cost weight for joint accelerations
-weight_u   = 0          # running cost weight for joint torques
-activate_joint_bounds = 1           # joint pos/vel bounds
-activate_final_state_constraint = 1 # final state constraint
+weight_final_ee_pos = 0     # final cost weight for end-effector position
+weight_final_ee_vel = 0     # final cost weight for end-effector velocity
+weight_final_q  = 1e1         # final cost weight for joint positions
+weight_final_dq = 1e1         # final cost weight for joint velocities
+weight_dq  = 1e-1           # running cost weight for joint velocities
+weight_ddq = 1e-2           # running cost weight for joint accelerations
+weight_u   = 0              # running cost weight for joint torques
+activate_joint_bounds = 0           # joint pos/vel bounds
+activate_final_state_constraint = 0 # final state constraint
 
 table_collision_frames = []
 self_collision_frames = []
@@ -52,11 +52,11 @@ elif(system=='ur-lab'):
     nq = 6
     frame_name = 'tool0'
     # list of frames that should not collide with table, and their minimum distance
-    table_collision_frames = [('gripper',       0.017), #0.045),
-                              ('tool0',         0.07),
-                              ('wrist_1_joint', 0.07),
-                              ('wrist_2_joint', 0.07),
-                              ('forearm_link_end_fixed_joint', 0.07)]
+    # table_collision_frames = [('gripper',       0.017), #0.045),
+    #                           ('tool0',         0.07),
+    #                           ('wrist_1_joint', 0.07),
+    #                           ('wrist_2_joint', 0.07),
+    #                           ('forearm_link_end_fixed_joint', 0.07)]
     
     # list of frame pairs that should not collide together
 #    self_collision_frames = [('gripper',       'shoulder_pan_joint', 0.15),

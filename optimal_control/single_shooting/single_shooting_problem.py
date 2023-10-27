@@ -207,8 +207,8 @@ class SingleShootingProblem:
             for i in range(X.shape[0]):
                 print("Time step", i, "||x||=", np.linalg.norm(X[i,:]))
                 if(np.any(np.isnan(X[i,:]))): break
-            import sys
-            sys.exit()
+            # import sys
+            # sys.exit()
         if(np.any(np.isnan(dXdU))):
             print(colored("\t[Compute cost] The sensitivities (dXdU) contain NaN!", "red"))
         

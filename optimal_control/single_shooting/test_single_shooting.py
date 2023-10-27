@@ -90,10 +90,14 @@ ode = ODERobot('ode', robot)
 problem = SingleShootingProblem('ssp', ode, conf.x0, dt, N, conf.integration_scheme, simu)
 
 # simulate motion with initial guess    
-#print("Showing initial motion in viewer")
-#integrator = Integrator('tmp')
-#X = integrator.integrate(ode, conf.x0, U, 0.0, dt, 1, N, conf.integration_scheme)
-#simu.display_motion(X[:,:nq], dt)
+print("Showing initial motion in viewer in 3 seconds")
+from time import sleep
+sleep(3)
+print("Starting motion")
+integrator = Integrator('tmp')
+X = integrator.integrate(ode, conf.x0, U, 0.0, dt, 1, N, conf.integration_scheme)
+simu.display_motion(X[:,:nq], dt)
+print("Motion ended")
   
 ''' Create cost function terms '''
 if(conf.weight_final_ee_pos>0):
