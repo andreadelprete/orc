@@ -13,7 +13,7 @@ from tkinter import HORIZONTAL, Button, Entry, Frame, Label, Scale, Tk, mainloop
 import numpy as np
 import pinocchio as pin
 
-import ex_2_conf as conf
+import talos_conf as conf
 import vizutils
 from tsid_biped import TsidBiped
 
