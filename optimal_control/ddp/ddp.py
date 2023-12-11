@@ -95,7 +95,7 @@ class DDPSolver:
             
             for jj in range(self.max_line_search_iter):
                 (X,U) = self.simulate_system(x0, U_bar + alpha*self.w, self.K, X_bar)
-                new_cost = self.cost(X, U);
+                new_cost = self.cost(X, U)
                 exp_impr = alpha*self.d1 + 0.5*(alpha**2)*self.d2
 #                print("Expected improvement", exp_impr, "Real improvement", new_cost-cst)
                 if(exp_impr>0.0):
