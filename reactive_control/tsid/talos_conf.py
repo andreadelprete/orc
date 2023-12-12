@@ -6,7 +6,7 @@ from example_robot_data.robots_loader import getModelPath
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
-N_SIMULATION = 4000  # number of time steps simulated
+N_SIMULATION = 1000  # number of time steps simulated
 dt = 0.005           # controller time step
 
 lxp = 0.10                                  # foot length in positive x direction
@@ -21,7 +21,7 @@ rf_frame_name = "leg_right_sole_fix_joint"  # right foot frame name
 lf_frame_name = "leg_left_sole_fix_joint"   # left foot frame name
 contactNormal = np.array([0., 0., 1.])      # direction of the normal to the contact surface
 
-w_com = 1.0             # weight of center of mass task
+w_com = 10.0             # weight of center of mass task
 w_am = 1e-3             # weight of angular momentum task
 w_foot = 1e-1           # weight of the foot motion task
 w_contact = -1.0        # weight of foot in contact (negative means infinite weight)
@@ -80,7 +80,7 @@ kp_posture = 1.0        # proportional gain of joint posture task
 
 viewer = pin.visualize.MeshcatVisualizer
 PRINT_N = 500           # print every PRINT_N time steps
-DISPLAY_N = 20          # update robot configuration in viwewer every DISPLAY_N time steps
+DISPLAY_N = 4          # update robot configuration in viwewer every DISPLAY_N time steps
 CAMERA_TRANSFORM = [4.0, -0.2, 0.4, 0.5243823528289795, 0.518651008605957, 0.4620114266872406, 0.4925136864185333]
 
 SPHERE_RADIUS = 0.03
