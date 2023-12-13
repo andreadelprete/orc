@@ -190,9 +190,9 @@ class TsidBiped:
         return self.robot.framePosition(self.formulation.data(), self.RF)
 
     def set_com_ref(self, pos, vel, acc):
-        self.sample_com.pos(pos)
-        self.sample_com.vel(vel)
-        self.sample_com.acc(acc)
+        self.sample_com.value(pos)
+        self.sample_com.derivative(vel)
+        self.sample_com.second_derivative(acc)
         self.comTask.setReference(self.sample_com)
 
     def set_RF_3d_ref(self, pos, vel, acc):

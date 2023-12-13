@@ -8,7 +8,8 @@ Created on Thu Apr 18 09:47:07 2019
 import os
 
 import numpy as np
-# import pinocchio as pin
+import pinocchio as pin
+from example_robot_data.robots_loader import getModelPath
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
@@ -18,10 +19,17 @@ DATA_FILE_TSID = "romeo_walking_traj_tsid.npz"
 
 # robot parameters
 # ----------------------------------------------
-filename = str(os.path.dirname(os.path.abspath(__file__)))
-path = filename + "/../models/romeo"
-urdf = path + "/urdf/romeo.urdf"
-srdf = path + "/srdf/romeo_collision.srdf"
+urdf = "/romeo_description/urdf/romeo_small.urdf"
+path = getModelPath(urdf)
+urdf = path + urdf
+srdf = path + '/romeo_description/srdf/romeo_small.srdf'
+path = os.path.join(path, '../..')
+
+# filename = str(os.path.dirname(os.path.abspath(__file__)))
+# path = filename + "/../models/romeo"
+# urdf = path + "/urdf/romeo.urdf"
+# srdf = path + "/srdf/romeo_collision.srdf"
+
 nv = 37
 foot_scaling = 1.0
 lxp = foot_scaling * 0.10  # foot length in positive x direction
@@ -81,7 +89,7 @@ masks_posture = np.ones(nv - 6)
 
 # configuration for viewer
 # ----------------------------------------------
-# viewer = pin.visualize.GepettoVisualizer
+viewer = pin.visualize.MeshcatVisualizer
 PRINT_N = 500  # print every PRINT_N time steps
 DISPLAY_N = 20  # update robot configuration in viwewer every DISPLAY_N time steps
 CAMERA_TRANSFORM = [
