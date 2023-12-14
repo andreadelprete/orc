@@ -16,14 +16,14 @@ print("".center(conf.LINE_WIDTH, "#"), "\n")
 tsid = TsidBiped(conf, conf.viewer)
 
 N = conf.N_SIMULATION
-com_pos = np.empty((3, N))
-com_vel = np.empty((3, N))
-com_acc = np.empty((3, N))
+com_pos = np.empty((3, N)) * nan
+com_vel = np.empty((3, N)) * nan
+com_acc = np.empty((3, N)) * nan
 
-com_pos_ref = np.empty((3, N))
-com_vel_ref = np.empty((3, N))
-com_acc_ref = np.empty((3, N))
-com_acc_des = np.empty((3, N))  # acc_des = acc_ref - Kp*pos_err - Kd*vel_err
+com_pos_ref = np.empty((3, N)) * nan
+com_vel_ref = np.empty((3, N)) * nan
+com_acc_ref = np.empty((3, N)) * nan
+com_acc_des = np.empty((3, N)) * nan # acc_des = acc_ref - Kp*pos_err - Kd*vel_err
 
 offset = tsid.robot.com(tsid.formulation.data())
 amp = np.array([0.0, 0.05, 0.0])

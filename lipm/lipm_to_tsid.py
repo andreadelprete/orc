@@ -146,13 +146,8 @@ def interpolate_lipm_traj(T_step, nb_steps, dt_mpc, dt_ctrl, com_z, g,
 
 if __name__=='__main__':
     import romeo_conf as conf
-    # import LMPC_walking.second_order.plot_utils as plot_utils
     import matplotlib.pyplot as plt
     import numpy as np
-    # from LMPC_walking.second_order.LIPM_to_whole_body import (
-    #     compute_foot_traj,
-    #     interpolate_lipm_traj,
-    # )
 
     # READ COM-COP TRAJECTORIES COMPUTED WITH LIPM MODEL
     data = np.load(conf.DATA_FILE_LIPM)

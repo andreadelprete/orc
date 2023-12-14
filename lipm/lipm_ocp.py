@@ -31,10 +31,10 @@ class LipmOcp:
 
         ch = cosh(w*self.dt)
         sh = sinh(w*self.dt)
-        A = casadi.numpy.array([[ch, sh/w],
-                                [w*sh, ch]])
-        B = casadi.numpy.array([[1-ch],
-                                [w*sh]])
+        # A = casadi.numpy.array([[ch, sh/w],
+        #                         [w*sh, ch]])
+        # B = casadi.numpy.array([[1-ch],
+        #                         [w*sh]])
         for i in range(N):
             self.opti.subject_to( x[0,i+1] == ch*x[0,i] + sh*x[1,i]/w + (1-ch)*u[i] )
             self.opti.subject_to( x[1,i+1] == w*sh*x[0,i] + ch*x[1,i] - w*sh*u[i])
@@ -89,6 +89,7 @@ if __name__=="__main__":
     plt.figure()
     plt.plot(com_state_x[0,:],  label="CoM X pos")
     plt.plot(com_state_x[1,:],  label="CoM X vel")
+    plt.plot(DC_ref,            label="Ref CoM Vel X")
     plt.plot(cop_x,             label="CoP X")
     plt.plot(U_ref[:,0], ':',   label="foot steps X")
     plt.legend()
