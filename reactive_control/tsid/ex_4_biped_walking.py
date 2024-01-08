@@ -137,7 +137,7 @@ for i in range(-N_pre, N + N_post):
         tsid_biped.set_com_ref(
             com_pos_ref[:, 0], 0 * com_vel_ref[:, 0], 0 * com_acc_ref[:, 0]
         )
-    elif i < N:
+    elif i < N-1:
         tsid_biped.set_com_ref(com_pos_ref[:, i], com_vel_ref[:, i], com_acc_ref[:, i])
         tsid_biped.set_LF_3d_ref(x_LF_ref[:, i], dx_LF_ref[:, i], ddx_LF_ref[:, i])
         tsid_biped.set_RF_3d_ref(x_RF_ref[:, i], dx_RF_ref[:, i], ddx_RF_ref[:, i])
@@ -148,7 +148,7 @@ for i in range(-N_pre, N + N_post):
     if sol.status != 0:
         print("QP problem could not be solved! Error code:", sol.status)
         break
-    if norm(v, 2) > 40.0:
+    if norm(v, 2) > 10.0:
         print("Time %.3f Velocities are too high, stop everything!" % (t), norm(v))
         break
 
@@ -200,9 +200,8 @@ for i in range(-N_pre, N + N_post):
     q, v = tsid_biped.integrate_dv(q, v, dv, conf.dt)
     t += conf.dt
 
-    q_list.append(q)
-
     if i % conf.DISPLAY_N == 0:
+        q_list.append(q)
         tsid_biped.display(q)
 
     time_spent = time.time() - time_start
@@ -214,6 +213,7 @@ while True:
     if replay.lower() == "y":
         for q in q_list:
             tsid_biped.display(q)
+            time.sleep(conf.DISPLAY_N*conf.dt)
     else:
         break
 # PLOT STUFF
