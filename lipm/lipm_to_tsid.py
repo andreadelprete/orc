@@ -142,6 +142,7 @@ def interpolate_lipm_traj(T_step, nb_steps, dt_mpc, dt_ctrl, com_z, g,
             ddcom[:2,ii] = g/com_z * (com[:2,ii] - cop[:,ii])
             
             if(j>0): contact_phase[ii] = contact_phase[ii-1]
+    contact_phase[-1] = contact_phase[-2]
     return com, dcom, ddcom, cop, contact_phase, foot_steps
 
 if __name__=='__main__':
@@ -273,4 +274,4 @@ if __name__=='__main__':
     # plt.gca().set_xlim([-0.2, 0.4])
     # plt.gca().set_ylim([-0.3, 0.3])
 
-    plt.show()
+    # plt.show()
