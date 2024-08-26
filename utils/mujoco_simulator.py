@@ -138,6 +138,24 @@ class MujocoSimulator:
         geom_id = self.sphere_name_to_id[name]
         scene = self.viz.user_scn
         scene.geoms[geom_id].pos = pos
+
+    
+    def add_visual_trajectory(self, name, pos_list, width, rgba):
+        """Adds a list of geometric lines to the viewer scene."""
+        scene = self.viz.user_scn
+        for i in range(pos_list.shape[1]-1):
+            if scene.ngeom >= scene.maxgeom:
+                print("ERROR: Max number of geom in scene has been reached!")
+                return
+            scene.ngeom += 1  # increment ngeom
+            # initialise geom-line and add it to the scene
+            mujoco.mjv_initGeom(scene.geoms[scene.ngeom-1],
+                            mujoco.mjtGeom.mjGEOM_LINE, np.zeros(3),
+                            np.zeros(3), np.eye(3).flatten(), rgba.astype(np.float32))
+            mujoco.mjv_makeConnector(scene.geoms[scene.ngeom-1],
+                                    mujoco.mjtGeom.mjGEOM_LINE, width,
+                                    pos_list[0,i],   pos_list[1,i],   pos_list[2,i],
+                                    pos_list[0,i+1], pos_list[1,i+1], pos_list[2,i+1])
         
 
     def add_visual_capsule(self, point1, point2, radius, rgba):
