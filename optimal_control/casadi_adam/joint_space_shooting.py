@@ -7,8 +7,6 @@ from time import sleep
 
 import orc.utils.plot_utils as plut
 from example_robot_data.robots_loader import load
-from orc.utils.robot_simulator import RobotSimulator
-from orc.utils.robot_wrapper import RobotWrapper
 import orc.optimal_control.casadi_adam.conf_ur5 as conf_ur5
 from orc.utils.mujoco_simulator import MujocoSimulator
 
@@ -18,7 +16,6 @@ robot = load("ur5")
 
 print("Create KinDynComputations object")
 joints_name_list = [s for s in robot.model.names[1:]] # skip the first name because it is "universe"
-# joints_name_list = joints_name_list[:3] # reduce the number of joints to speed up the script
 nq = len(joints_name_list)  # number of joints
 nx = 2*nq # size of the state variable
 kinDyn = KinDynComputations(robot.urdf, joints_name_list)

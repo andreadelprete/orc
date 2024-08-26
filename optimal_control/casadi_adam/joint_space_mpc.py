@@ -8,8 +8,6 @@ from termcolor import colored
 
 import orc.utils.plot_utils as plut
 from example_robot_data.robots_loader import load
-from orc.utils.robot_simulator import RobotSimulator
-from orc.utils.robot_wrapper import RobotWrapper
 import orc.optimal_control.casadi_adam.conf_ur5 as conf_ur5
 from orc.utils.mujoco_simulator import MujocoSimulator
 
