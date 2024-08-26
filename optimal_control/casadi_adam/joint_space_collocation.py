@@ -53,16 +53,16 @@ param_q_des = opti.parameter(nq)
 cost = 0
 
 # create the dynamics function
-q   = cs.MX.sym('q', nq)
-dq  = cs.MX.sym('dq', nq)
-ddq = cs.MX.sym('ddq', nq)
+q   = cs.SX.sym('q', nq)
+dq  = cs.SX.sym('dq', nq)
+ddq = cs.SX.sym('ddq', nq)
 state = cs.vertcat(q, dq)
 rhs    = cs.vertcat(dq, ddq)
 f = cs.Function('f', [state, ddq], [rhs])
 
 # create a Casadi inverse dynamics function
-H_b = cs.MX.eye(4)     # base configuration
-v_b = cs.MX.zeros(6)   # base velocity
+H_b = cs.SX.eye(4)     # base configuration
+v_b = cs.SX.zeros(6)   # base velocity
 bias_forces = kinDyn.bias_force_fun()
 mass_matrix = kinDyn.mass_matrix_fun()
 # discard the first 6 elements because they are associated to the robot base
