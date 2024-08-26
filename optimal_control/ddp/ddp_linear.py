@@ -27,19 +27,25 @@ class DDPSolverLinearDyn(DDPSolver):
         self.lmbda = lmbda
         self.dt = dt
         self.nx = h_x.shape[1]
-        self.nu = self.nx
+        self.nu = 1
+        self.A = np.eye(self.nx)
+        self.B = dt
+
+    def set_linear_dynamics(self, A, B):
+        self.A = A
+        self.B = B
         
     ''' System dynamics '''
     def f(self, x, u):
-        return x + self.dt*u
+        return self.A @ x + self.B @ u
            
     ''' Partial derivatives of system dynamics w.r.t. x '''
     def f_x(self, x, u):
-        return 1
+        return self.A
     
     ''' Partial derivatives of system dynamics w.r.t. u '''       
     def f_u(self, x, u):
-        return self.dt
+        return self.B
         
     def cost(self, X, U):
         ''' total cost (running+final) for state trajectory X and control trajectory U '''
@@ -99,29 +105,42 @@ class DDPSolverSinDyn(DDPSolverLinearDyn):
     
     def f(self, x, u):
         ''' System dynamics '''
+        # return x - self.dt*x + 3*sin(u)
+        # return x - self.dt*x + 3*u
+        # return x - self.dt*x**2 + 3*u
         return x - self.dt*x**2 + 3*sin(u)
            
     def f_x(self, x, u):
         ''' Partial derivatives of system dynamics w.r.t. x '''
+        # return 1 - self.dt
         return 1 - 2*self.dt*x
+    
+    def f_xx(self, x, u):
+        ''' Second partial derivatives of system dynamics w.r.t. x '''
+        return - 2*self.dt
     
     def f_u(self, x, u):
         ''' Partial derivatives of system dynamics w.r.t. u '''
+        # return 3
         return 3*cos(u)
+    
+    def f_uu(self, x, u):
+        ''' Second partial derivatives of system dynamics w.r.t. u '''
+        return -3*sin(u)
 
     
     
 if __name__=='__main__':
-    np.set_printoptions(precision=3, suppress=True);
+    np.set_printoptions(precision=3, suppress=True)
     
     ''' Test DDP with a simple 1d nonlinear system:
             x_{t+1} = x_t - dt*x_t^2 + sin(u_t)
     '''
         
     SYSTEM_ID = 2
-    N = 10;                 # horizon size
-    dt = 0.1;               # control time step
-    mu =1e-4;               # initial regularization
+    N = 10                 # horizon size
+    dt = 0.1               # control time step
+    mu = 1e-4               # initial regularization
     ddp_params = {}
     ddp_params['alpha_factor'] = 0.5
     ddp_params['mu_factor'] = 10.
@@ -131,28 +150,36 @@ if __name__=='__main__':
     ddp_params['max_line_search_iter'] = 10
     ddp_params['exp_improvement_threshold'] = 1e-6
     ddp_params['max_iter'] = 20
-    DEBUG = False;
+    DEBUG = False
     
-    n = 1;                          # state size
-    m = 1;                          # control size
-    U_bar = np.zeros((N,m));        # initial guess for control inputs
-    x0 = np.array([0.0]);           # initial state
-    x_tasks = np.array([-5.0]);     # goal state
-    N_task = N;                     # time step to reach goal state
+    if(SYSTEM_ID==1):
+        n = 2                          # state size
+        x0 = np.zeros(n)
+    elif(SYSTEM_ID==2):
+        n = 1
+        x0 = np.array([0.0])           # initial state
+    m = 1                          # control size
+    U_bar = np.zeros((N,m))        # initial guess for control inputs
+    
+    x_tasks = np.array([-4.0])     # goal state
+    N_task = N                     # time step to reach goal state
     
     ''' TASK FUNCTION  '''
     lmbda = 1e-4;           # control regularization
-    H_xx = np.zeros((N+1, n, n));
-    h_x  = np.zeros((N+1, n));
-    h_s  = np.zeros(N+1);
-    H_xx[N_task,:,:]  = np.identity(n);
-    h_x[N_task,:]     = -x_tasks;
-    h_s[N_task]       = 0.5*np.dot(x_tasks.T, x_tasks);   
+    H_xx = np.zeros((N+1, n, n))
+    h_x  = np.zeros((N+1, n))
+    h_s  = np.zeros(N+1)
+    H_xx[N_task,:,:]  = np.identity(n)
+    h_x[N_task,:]     = -x_tasks
+    h_s[N_task]       = 0.5*np.dot(x_tasks.T, x_tasks)
     
     if(SYSTEM_ID==1):
+        A = np.array([[1, dt], [0, 1]])
+        B = np.array([[0], [dt]])
         solver = DDPSolverLinearDyn("LinDyn", ddp_params, H_xx, h_x, h_s, lmbda, dt, DEBUG)
+        solver.set_linear_dynamics(A, B)
     elif(SYSTEM_ID==2):
         solver = DDPSolverSinDyn("SinDyn", ddp_params, H_xx, h_x, h_s, lmbda, dt, DEBUG)
     
-    (X,U,K) = solver.solve(x0, U_bar, mu);
-    solver.print_statistics(x0, U, K, X);
+    (X,U,K) = solver.solve(x0, U_bar, mu, verbose=True)
+    solver.print_statistics(x0, U, K, X)
