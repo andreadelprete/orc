@@ -167,11 +167,11 @@ print("ee desired:  ", ee_des)
 print("ee final:    ", ee[:,-1])
 print("dq final:    ", dq_sol[:,-1])
 
-
   
 if(USE_MUJOCO_SIMULATOR):
-    print("Display optimized motion")
     simu.add_visual_trajectory("ee-traj", ee, 10, np.array((1,1,0,1)))
+
+    print("Display optimized motion")
     # simu.display_motion(q_sol.T, dt)
     def display_motion(dt):
         for i in range(N):
