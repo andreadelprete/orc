@@ -18,7 +18,6 @@ robot = load("ur5")
 
 print("Create KinDynComputations object")
 joints_name_list = [s for s in robot.model.names[1:]] # skip the first name because it is "universe"
-# joints_name_list = joints_name_list[:3] # reduce the number of joints to speed up the script
 nq = len(joints_name_list)  # number of joints
 nx = 2*nq # size of the state variable
 kinDyn = KinDynComputations(robot.urdf, joints_name_list)
@@ -40,8 +39,8 @@ frame_name = "ee_link"
 if(frame_name not in kinDyn.rbdalgos.model.links.keys()):
     print("ERROR. Frame name can only take values from this list")
 ee_des = np.array([0, -0.75, 0]) # desired end-effector position
-w_v = 0e-4          # velocity weight
-w_a = 0e-6          # acceleration weight
+w_v = 1e-4          # velocity weight
+w_a = 1e-6          # acceleration weight
 w_final = 1e4       # final cost weight
 
 # JOINT FEEDBACK GAINS USED FOR THE SIMULATION
@@ -51,11 +50,11 @@ kd = np.sqrt(kp)
 if(USE_MUJOCO_SIMULATOR):
     print("Creating robot simulator...")
     simu = MujocoSimulator("ur5", dt_sim)
-    if(ADD_SPHERE):
-        simu.add_sphere(SPHERE_POS, SPHERE_SIZE, SPHERE_RGBA)
-
     simu.add_visual_sphere("ee_target", ee_des, 0.05, np.array([1, 0, 0, 0.5]))
     simu.add_visual_sphere("ee_pos", np.zeros(3), 0.05, np.array([0, 0, 1, 0.5]))
+
+    if(ADD_SPHERE):
+        simu.add_sphere(SPHERE_POS, SPHERE_SIZE, SPHERE_RGBA)
     
     print("Simulator created")
 

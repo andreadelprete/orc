@@ -171,19 +171,22 @@ class MujocoSimulator:
         self.model = self.spec.compile()
         self.data = mujoco.MjData(self.model)
         
+        # reload model in viewer
+        self.viz._sim().load(self.model, self.data, "")
+
         # re-launch viewer
-        self.viz.close()
-        viewer_not_launched = True
-        counter = 0
-        while(viewer_not_launched and counter<5):
-            try:
-                time.sleep(0.1)
-                self.viz = viewer.launch_passive(model=self.model, data=self.data)
-                viewer_not_launched = False
-            except Exception as e:
-                counter += 1
-                if(counter<5):
-                    print("Failed to launch viewer. Gonna try again in a little bit.")
-                else:
-                    print("Giving up on launching viewer")
-                    raise e
+        # self.viz.close()
+        # viewer_not_launched = True
+        # counter = 0
+        # while(viewer_not_launched and counter<5):
+        #     try:
+        #         time.sleep(0.1)
+        #         self.viz = viewer.launch_passive(model=self.model, data=self.data)
+        #         viewer_not_launched = False
+        #     except Exception as e:
+        #         counter += 1
+        #         if(counter<5):
+        #             print("Failed to launch viewer. Gonna try again in a little bit.")
+        #         else:
+        #             print("Giving up on launching viewer")
+        #             raise e
