@@ -72,8 +72,13 @@ class MujocoSimulator:
         
         # Add an ambient light
         light = self.spec.worldbody.add_light()
-        light.pos = np.array([0, 0, 3.0])
-        light.diffuse = 0.5*np.ones(3)
+        light.pos = np.array([0, 0, 4.0])
+        light.diffuse = 0.8*np.ones(3)
+        light.specular = 0.3*np.ones(3)
+        light.cutoff = 30
+        light.mode = mujoco.mjtCamLight.mjCAMLIGHT_TARGETBODYCOM
+        light.targetbody = self.spec.worldbody.first_body().name
+        self.light = light
 
 
     def set_state(self, q, v):
