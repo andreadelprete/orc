@@ -26,7 +26,7 @@ def a2s(a, format_string ='{0:.2f} '):
     return res[:-2]+']'; 
     #[format_string.format(v,i) for i,v in enumerate(a)]
     
-def backward_pass(solver, X_bar, U_bar, mu):
+def backward_pass(solver, X_bar, U_bar, mu, use_second_derivative=1):
         n = X_bar.shape[1]
         m = U_bar.shape[1]
         N = U_bar.shape[0]
@@ -71,6 +71,12 @@ def backward_pass(solver, X_bar, U_bar, mu):
             solver.Q_xx[i,:,:]  = solver.l_xx[i,:,:] + A[i,:,:].T @ V_xx[i+1,:,:] @ A[i,:,:]
             solver.Q_uu[i,:,:]  = solver.l_uu[i,:,:] + B[i,:,:].T @ V_xx[i+1,:,:] @ B[i,:,:]
             solver.Q_xu[i,:,:]  = solver.l_xu[i,:,:] + A[i,:,:].T @ V_xx[i+1,:,:] @ B[i,:,:]
+
+            if(use_second_derivative):
+                Fxx = solver.f_xx(X_bar[i,:], U_bar[i,:])
+                Fuu = solver.f_uu(X_bar[i,:], U_bar[i,:])
+                solver.Q_xx[i,:,:] += Fxx * V_x[i+1,:]
+                solver.Q_uu[i,:,:] += Fuu * V_x[i+1,:]
             
             if(solver.DEBUG):
                 print("Q_x, Q_u, Q_xx, Q_uu, Q_xu", a2s(solver.Q_x[i,rx]), a2s(solver.Q_u[i,ru]), 
@@ -81,8 +87,8 @@ def backward_pass(solver, X_bar, U_bar, mu):
             solver.w[i,:]       = - Qbar_uu_pinv @ solver.Q_u[i,:]
             solver.K[i,:,:]     = - Qbar_uu_pinv @ solver.Q_xu[i,:,:].T
             if(solver.DEBUG):
-                print("Qbar_uu, Qbar_uu_pinv",a2s(Qbar_uu), a2s(Qbar_uu_pinv));
-                print("w, K", a2s(solver.w[i,ru]), a2s(solver.K[i,ru,rx]));
+                print("Qbar_uu, Qbar_uu_pinv",a2s(Qbar_uu), a2s(Qbar_uu_pinv))
+                print("w, K", a2s(solver.w[i,ru]), a2s(solver.K[i,ru,rx]))
                 
             # update Value function
             V_x[i,:]    = (solver.Q_x[i,:] + 
