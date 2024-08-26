@@ -23,6 +23,11 @@ nq = len(joints_name_list)  # number of joints
 nx = 2*nq # size of the state variable
 kinDyn = KinDynComputations(robot.urdf, joints_name_list)
 
+ADD_SPHERE = 1
+SPHERE_POS = np.array([0.7, -0.7, 0.])
+SPHERE_SIZE = np.ones(3)*0.2
+SPHERE_RGBA = np.array([0, 1, 0, .5])
+OBSTACLE_MIN_DISTANCE = 0.2
 
 USE_MUJOCO_SIMULATOR = 1
 DO_PLOTS = 0
@@ -34,10 +39,10 @@ dq0= np.zeros(nq)   # initial joint velocities
 frame_name = "ee_link"
 if(frame_name not in kinDyn.rbdalgos.model.links.keys()):
     print("ERROR. Frame name can only take values from this list")
-ee_des = np.array([0, -1.0, 0]) # desired end-effector position
-w_v = 1e-4          # velocity weight
+ee_des = np.array([0, -0.75, 0]) # desired end-effector position
+w_v = 0e-4          # velocity weight
 w_a = 0e-6          # acceleration weight
-w_final = 1e2       # final cost weight
+w_final = 1e4       # final cost weight
 
 # JOINT FEEDBACK GAINS USED FOR THE SIMULATION
 kp = 10
@@ -46,8 +51,12 @@ kd = np.sqrt(kp)
 if(USE_MUJOCO_SIMULATOR):
     print("Creating robot simulator...")
     simu = MujocoSimulator("ur5", dt_sim)
+    if(ADD_SPHERE):
+        simu.add_sphere(SPHERE_POS, SPHERE_SIZE, SPHERE_RGBA)
+
     simu.add_visual_sphere("ee_target", ee_des, 0.05, np.array([1, 0, 0, 0.5]))
     simu.add_visual_sphere("ee_pos", np.zeros(3), 0.05, np.array([0, 0, 1, 0.5]))
+    
     print("Simulator created")
 
 print("Create optimization parameters")
@@ -113,6 +122,10 @@ for k in range(N):
     # print("Add torque constraints")
     opti.subject_to( opti.bounded(tau_min, inv_dyn(X[k], U[k]), tau_max))
 
+    # add collision avoidance constraint
+    if(ADD_SPHERE):
+        opti.subject_to( cs.norm_2(fk(X[k][:nq]) - SPHERE_POS) >= SPHERE_SIZE[0]+OBSTACLE_MIN_DISTANCE )
+
 # add the final cost
 ee_pos = fk(X[-1][:nq])
 cost += w_final * (ee_pos - param_ee_des).T @ (ee_pos - param_ee_des)
@@ -160,11 +173,14 @@ print("dq final:    ", dq_sol[:,-1])
 if(USE_MUJOCO_SIMULATOR):
     print("Display optimized motion")
     # simu.display_motion(q_sol.T, dt)
-    for i in range(N):
-        simu.display(q_sol[:,i])
-        simu.move_visual_sphere("ee_pos", fk(q_sol[:,i]).toarray().squeeze())
-        sleep(dt)
+    def display_motion(dt):
+        for i in range(N):
+            simu.display(q_sol[:,i])
+            simu.move_visual_sphere("ee_pos", fk(q_sol[:,i]).toarray().squeeze())
+            sleep(dt)
+    display_motion(dt)
     sleep(1)
+    print("To display the optimized motion again run: display_motion(dt)")
 
     # closed-loop simulation
     print("Simulate robot to track optimized motion")
@@ -175,6 +191,7 @@ if(USE_MUJOCO_SIMULATOR):
             simu.move_visual_sphere("ee_pos", fk(simu.data.qpos).toarray().squeeze())
             sleep(dt)
     simulate()
+    print("To simulate the robot tracking again run: simulate()")
     print("x final simu:", fk(simu.data.qpos))
 
     
@@ -187,7 +204,7 @@ if(DO_PLOTS):
     time = np.arange(0, (N+1)*dt, dt)
 
     plt.figure(figsize=(10, 6))
-    for i in range(q_sol.shape[0]):
+    for i in range(3):
         plt.plot([time[0], time[-1]], [ee_des[i], ee_des[i]], ':', label=f'EE des {i}', alpha=0.7)
         plt.plot(time, ee[i,:].T, label=f'EE {i}', alpha=0.7)
     plt.xlabel('Time [s]')
