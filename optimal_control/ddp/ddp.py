@@ -53,7 +53,7 @@ class DDPSolver:
     ''' Differential Dynamic Programming
         The pseudoinverses in the algorithm are regularized by the damping factor mu.
     '''
-    def solve(self, x0, U_bar, mu):                    
+    def solve(self, x0, U_bar, mu, verbose=False):                    
         # each control law is composed by a feedforward w and a feedback K
         self.N = N = U_bar.shape[0]     # horizon length
         m = U_bar.shape[1]              # size of u
@@ -79,7 +79,7 @@ class DDPSolver:
         
         converged = False
         for j in range(self.max_iter):
-            print("\n*** Iter %d" % j)
+            if(verbose): print("\n*** Iter %d" % j)
             
             # compute nominal state trajectory X_bar
             (X_bar, U_bar) = self.simulate_system(x0, U_bar, self.K, X_bar)
@@ -103,7 +103,7 @@ class DDPSolver:
                 relative_impr = (new_cost-cst)/exp_impr
                 
                 if(relative_impr > self.min_cost_impr):
-                    print("Cost improved from %.3f to %.3f. Exp. impr %.3f. Rel. impr. %.1f%%" % (cst, new_cost, exp_impr, 1e2*relative_impr))
+                    if(verbose): print("Cost improved from %.3f to %.3f. Exp. impr %.3f. Rel. impr. %.1f%%" % (cst, new_cost, exp_impr, 1e2*relative_impr))
                     line_search_succeeded = True
                     U_bar += alpha*self.w
                     cst = new_cost
@@ -112,25 +112,25 @@ class DDPSolver:
             
             if(not line_search_succeeded):
                 mu = mu*self.mu_factor
-                print("No cost improvement, increasing mu to", mu)
+                if(verbose): print("No cost improvement, increasing mu to", mu)
                 if(mu>self.mu_max):
-                    print("Max regularization reached. Algorithm failed to converge.")
+                    if(verbose): print("Max regularization reached. Algorithm failed to converge.")
                     converged = True
             else:
-                print("Line search succeeded with alpha", alpha)
+                if(verbose): print("Line search succeeded with alpha", alpha)
                 if(alpha>=self.min_alpha_to_increase_mu):
                     mu = mu/self.mu_factor
-                    print("Decreasing mu to ", mu)
+                    if(verbose): print("Decreasing mu to ", mu)
                 else:
                     mu = mu*self.mu_factor
-                    print("Alpha is small => increasing mu to", mu)
+                    if(verbose): print("Alpha is small => increasing mu to", mu)
                     if(mu>self.mu_max):
-                        print("Max regularization reached. Algorithm failed to converge.")
+                        if(verbose): print("Max regularization reached. Algorithm failed to converge.")
                         converged = True
                 self.callback(X_bar, U_bar)
                     
             if(abs(exp_impr) < self.exp_improvement_threshold):
-                print("Algorithm converged. Expected improvement", exp_impr)
+                if(verbose): print("Algorithm converged. Expected improvement", exp_impr)
                 converged = True
                 
             if(converged):
