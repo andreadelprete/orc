@@ -8,7 +8,6 @@ from time import sleep
 import orc.utils.plot_utils as plut
 from example_robot_data.robots_loader import load
 import orc.optimal_control.casadi_adam.conf_ur5 as conf_ur5
-from orc.utils.mujoco_simulator import MujocoSimulator
 
 time_start = clock()
 print("Load robot model")
@@ -46,6 +45,7 @@ kp = 10
 kd = np.sqrt(kp)
 
 if(USE_MUJOCO_SIMULATOR):
+    from orc.utils.mujoco_simulator import MujocoSimulator
     print("Creating robot simulator...")
     simu = MujocoSimulator("ur5", dt_sim)
     simu.add_visual_sphere("ee_target", ee_des, 0.05, np.array([1, 0, 0, 0.5]))
