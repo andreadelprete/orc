@@ -6,46 +6,63 @@ import numpy as np
 from example_robot_data.robots_loader import loader
 
 class MujocoSimulator:
+
+    # Constants
+    PIN_2_MJ_POS = [0,1,2,6,3,4,5]
+    MJ_2_PIN_POS = [0,1,2,4,5,6,3]
     
     def __init__(self, robot_name, time_step):
-        # read the URDF file of the robot using example_robot_data
-        inst = loader(robot_name)
-        urdf_file = open(inst.robot.urdf, "r")
-        urdf_content = urdf_file.readlines()
-        urdf_file.close()
+        model_loaded = False
+        try:
+            from robot_descriptions.loaders.mujoco import load_robot_description
+            self.model = load_robot_description(robot_name)
+            model_loaded = True
+        except:
+            print("Failed to load robot model with robot_descriptions package")
 
-        mesh_dir_found = False
-        for s in urdf_content:
-            # search for a line in the URDF containing the relative path of a mesh (stl) file
-            if("package://" in s and ".stl" in s):
-                start_ind = s.find("package://")
-                end_ind = s.find(".stl")
-                path = s[start_ind+10:end_ind]
-                meshdir = join(inst.model_path, "../../", path[:path.rfind("/")])
-                # print("Mesh path found:", meshdir)
-                mesh_dir_found = True
-                break
+        if(not model_loaded):
+            # read the URDF file of the robot using example_robot_data
+            inst = loader(robot_name)
+            self.robot_wrapper = inst.robot
+            print("urdf file name: ", inst.robot.urdf)
+            urdf_file = open(inst.robot.urdf, "r")
+            urdf_content = urdf_file.readlines()
+            urdf_file.close()
 
-        if(not mesh_dir_found):
-            print("WARNING! Could not find mesh dir in URDF file.")
+            mesh_dir_found = False
+            for mesh_extension in [".stl", ".dae"]:
+                for s in urdf_content:
+                    # search for a line in the URDF containing the relative path of a mesh (stl) file
+                    if("package://" in s and mesh_extension in s):
+                        start_ind = s.find("package://")
+                        end_ind = s.find(mesh_extension)
+                        path = s[start_ind+10:end_ind]
+                        meshdir = join(inst.model_path, "../../", path[:path.rfind("/")])
+                        # print("Mesh path found:", meshdir)
+                        mesh_dir_found = True
+                        break
+                if(mesh_dir_found):
+                    break
 
-        xml = ""
-        for s in urdf_content:
-            xml += s
-            # after the line containing the "robot" tag, add the "mujoco" tag
-            if(s.startswith("<robot ")):
-                xml += '<mujoco>\n'+ '<compiler meshdir="' + meshdir + \
-                    '" balanceinertia="true" discardvisual="false"/>\n' +\
-                    '</mujoco>\n'
-        self.xml = xml
-        self.create_basic_spec()
-        # create the Mujoco model from the augmented URDF file 
-        self.model = self.spec.compile()
+            if(not mesh_dir_found):
+                print("WARNING! Could not find mesh dir in URDF file.")
+
+            xml = ""
+            for s in urdf_content:
+                xml += s
+                # after the line containing the "robot" tag, add the "mujoco" tag
+                if(s.startswith("<robot ")):
+                    xml += '<mujoco>\n'+ '<compiler meshdir="' + meshdir + \
+                        '" balanceinertia="true" discardvisual="false"/>\n' +\
+                        '</mujoco>\n'
+            self.xml = xml
+            self.create_basic_spec()
+            # create the Mujoco model from the augmented URDF file 
+            self.model = self.spec.compile()
 
         # self.model = mujoco.MjModel.from_xml_string(xml)
         self.data = mujoco.MjData(self.model)
         self.viz = viewer.launch_passive(model=self.model, data=self.data)
-        self.robot_wrapper = inst.robot
         
         self.model.opt.timestep = time_step
         self.viz.cam.distance = 3.0
@@ -53,6 +70,10 @@ class MujocoSimulator:
         # self.viz.cam.azimuth       self.viz.cam.elevation     self.viz.cam.lookat        self.viz.cam.trackbodyid
         # self.viz.cam.distance      self.viz.cam.fixedcamid    self.viz.cam.orthographic  self.viz.cam.type
         self.sphere_name_to_id = {}
+
+        J_ID = list(range(7, self.model.nq))
+        self.xyzw2wxyz_id = MujocoSimulator.PIN_2_MJ_POS + J_ID
+        self.wxyz2xyzw_id = MujocoSimulator.MJ_2_PIN_POS + J_ID
 
 
     def create_basic_spec(self):
@@ -85,6 +106,43 @@ class MujocoSimulator:
         self.data.qpos = q
         self.data.qvel = v
         mujoco.mj_step1(self.model, self.data)
+
+    
+    def get_state(self):
+        """
+        Return MuJoCo state in (x, y, z, qx, qy, qz, qw) format, compatible with Pinocchio.
+        
+        Returns:
+            q (NDArray[np.float64]): Joint position
+            v (NDArray[np.float64], optional): Joint velocities
+        """
+        q = self.wxyz2xyzw(self.data.qpos)
+        v = self.data.qvel
+        return q, v
+    
+
+    def wxyz2xyzw(self, q_wxyz):
+        """
+        Convert MuJoCo to Pinocchio state format.
+        Args:
+            q_mj (NDArray[np.float64]): State in mj format.
+        Returns:
+            NDArray[np.float64]: State in pin format.
+        """
+        q_xyzw = np.take(q_wxyz, self.wxyz2xyzw_id, mode="clip")
+        return q_xyzw
+    
+
+    def xyzw2wxyz(self, q_xyzw):
+        """
+        Convert Pinocchio to MuJoCo state format.
+        Args:
+            q (NDArray[np.float64]): State in pin format.
+        Returns:
+            NDArray[np.float64]: State in mj format.
+        """
+        q_wxyz = np.take(q_xyzw, self.xyzw2wxyz_id, mode="clip")
+        return q_wxyz
 
 
     # Simulate and display video
@@ -134,10 +192,7 @@ class MujocoSimulator:
         mujoco.mjv_initGeom(scene.geoms[scene.ngeom-1],
                             mujoco.mjtGeom.mjGEOM_SPHERE, radius*np.ones(3),
                             center.astype(np.float32), np.eye(3).flatten(), rgba.astype(np.float32))
-        # mujoco.mjv_makeConnector(scene.geoms[scene.ngeom-1],
-        #                         mujoco.mjtGeom.mjGEOM_LINE, 10,
-        #                         center[0]-radius, center[1], center[2],
-        #                         center[0]+radius, center[1], center[2])
+
 
     def move_visual_sphere(self, name, pos):
         geom_id = self.sphere_name_to_id[name]
