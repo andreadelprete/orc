@@ -8,7 +8,6 @@ from time import sleep
 import orc.utils.plot_utils as plut
 from example_robot_data.robots_loader import load
 import orc.optimal_control.casadi_adam.conf_ur5 as conf_ur5
-from orc.utils.mujoco_simulator import MujocoSimulator
 
 time_start = clock()
 print("Load robot model")
@@ -21,7 +20,7 @@ nx = 2*nq # size of the state variable
 kinDyn = KinDynComputations(robot.urdf, joints_name_list)
 
 
-USE_MUJOCO_SIMULATOR = True
+USE_MUJOCO_SIMULATOR = 0
 DO_PLOTS = False
 dt = 0.01 # time step
 dt_sim = 0.002
@@ -35,6 +34,7 @@ w_final = 1e2 # final cost weight
 
 print("Creating robot viewer...")
 if(USE_MUJOCO_SIMULATOR):
+    from orc.utils.mujoco_simulator import MujocoSimulator
     simu = MujocoSimulator("ur5", dt_sim)
     print("Simulator created")
     print("Simulator time step: ", simu.model.opt.timestep)
@@ -156,10 +156,20 @@ if(USE_MUJOCO_SIMULATOR):
     simu.add_sphere(pos=np.array([0.5, 0.0, 0.5]), size=np.ones(3)*0.1, rgba=np.array([0, 0, 1, 1.]))
     print("Blue sphere added. Going to simulate again")
     simulate()
-    
+else:
+    # display sparsity patter of constraint Jacobian matrix
+    J = sol.value(cs.jacobian(opti.g,opti.x))
+    plt.figure()
+    plt.spy(J)
+    plt.title("Constraint Jacobian")
 
-# # display sparsity patter of constraint Jacobian matrix
-# # sol.value(cs.jacobian(opti.g,opti.x))
+    # display sparsity patter of cost Hessian matrix
+    plt.figure()
+    H = sol.value(cs.hessian(opti.f, opti.x)[0])
+    plt.spy(H)
+    plt.title("Cost Hessian")
+
+    plt.show()
 
 # plot joint trajectories
 if(DO_PLOTS):
