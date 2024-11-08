@@ -14,7 +14,7 @@ q0    = np.array([ 0. , -1.0,      0.7,   0. ,  0. ,  0. ])  # initial configura
 
 # SIMULATION PARAMETERS
 simulate_coulomb_friction = 0    # flag specifying whether coulomb friction is simulated
-simulation_type = 'timestepping' # either 'timestepping' or 'euler'
+simulation_type = 'euler' # either 'timestepping' or 'euler'
 tau_coulomb_max = 0*np.ones(nq)   # expressed as percentage of torque max
 randomize_robot_model = 0
 use_viewer = True

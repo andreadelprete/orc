@@ -22,17 +22,12 @@ nq = len(joints_name_list)  # number of joints
 nx = 2*nq # size of the state variable
 kinDyn = KinDynComputations(robot.urdf, joints_name_list)
 
+# Add a sphere in the simulator (only possible with Mujoco)
 ADD_SPHERE = 0
 SPHERE_POS = np.array([0.2, -0.10, 0.5])
 SPHERE_SIZE = np.ones(3)*0.1
 SPHERE_RGBA = np.array([1, 0, 0, 1.])
 
-# WITH THIS CONFIGURATION THE SOLVER ENDS UP VIOLATING THE JOINT LIMITS
-# ADDING THE TERMINAL CONSTRAINT FIXES EVERYTHING!
-# BUT SO DOES:
-# - DECREASING THE POSITION WEIGHT IN THE COST
-# - INCREASING THE ACCELERATION WEIGHT IN THE COST
-# - INCREASING THE MAX NUMBER OF ITERATIONS OF THE SOLVER
 DO_WARM_START = True
 SOLVER_TOLERANCE = 1e-4
 SOLVER_MAX_ITER = 3
@@ -43,13 +38,13 @@ VEL_BOUNDS_SCALING_FACTOR = 2.0
 qMin = POS_BOUNDS_SCALING_FACTOR * robot.model.lowerPositionLimit
 qMax = POS_BOUNDS_SCALING_FACTOR * robot.model.upperPositionLimit
 vMax = VEL_BOUNDS_SCALING_FACTOR * robot.model.velocityLimit
-dt_sim = 0.002
+dt_sim = 0.002      # simulation time step
 N_sim = 100
 q0 = np.zeros(nq)  # initial joint configuration
 dq0= np.zeros(nq)  # initial joint velocities
 
-dt = 0.010 # time step MPC
-N = 6  # time horizon MPC
+dt = 0.010      # MPC time step
+N = 6           # MPC time horizon
 # q_des = np.array([0, -1.57, 0, 0, 0, 0]) # desired joint configuration
 q_des = q0.copy()
 J = 1
@@ -58,8 +53,6 @@ w_p = 1e2   # position weight
 w_v = 0e-6  # velocity weight
 w_a = 1e-5  # acceleration weight
 w_final_v = 0e0 # final velocity cost weight
-USE_TERMINAL_CONSTRAINT = 0
-
 
 if(SIMULATOR=="mujoco"):
     from orc.utils.mujoco_simulator import MujocoSimulator
@@ -74,10 +67,6 @@ else:
     
 
 print("Create optimization parameters")
-''' The parameters P contain:
-    - the initial state (first 12 values)
-    - the target configuration (last 6 values)
-'''
 opti = cs.Opti()
 param_x_init = opti.parameter(nx)
 param_q_des = opti.parameter(nq)
@@ -134,9 +123,6 @@ for k in range(N):
 # add the final cost
 cost += w_final_v * X[-1][nq:].T @ X[-1][nq:]
 
-if(USE_TERMINAL_CONSTRAINT):
-    opti.subject_to(X[-1][nq:] == 0.0)
-
 opti.minimize(cost)
 
 print("Create the optimization problem")
@@ -161,37 +147,15 @@ x = np.concatenate([q0, dq0])
 opti.set_value(param_q_des, q_des)
 opti.set_value(param_x_init, x)
 sol = opti.solve()
-opts["ipopt.max_iter"] = SOLVER_MAX_ITER
+
+# set the maximum number of iterations to a small number
+opts["ipopt.max_iter"] = SOLVER_MAX_ITER 
 opti.solver("ipopt", opts)
 
 print("Start the MPC loop")
 for i in range(N_sim):
-    start_time = clock()
 
-    if(DO_WARM_START):
-        # use current solution as initial guess for next problem
-        for t in range(N):
-            opti.set_initial(X[t], sol.value(X[t+1]))
-        for t in range(N-1):
-            opti.set_initial(U[t], sol.value(U[t+1]))
-        opti.set_initial(X[N], sol.value(X[N]))
-        opti.set_initial(U[N-1], sol.value(U[N-1]))
-        # initialize dual variables
-        lam_g0 = sol.value(opti.lam_g)
-        opti.set_initial(opti.lam_g, lam_g0)
-    
-    print("Time step", i, "State", x)
-    opti.set_value(param_x_init, x)
-    try:
-        sol = opti.solve()
-    except:
-        sol = opti.debug
-        # print("Convergence failed!")
-    end_time = clock()
-
-    print("Comput. time: %.3f s"%(end_time-start_time), 
-          "Iters: %3d"%sol.stats()['iter_count'], 
-          "Tracking err: %.3f"%np.linalg.norm(q_des-x[:nq]))
+    # implement here the MPC loop with warm-start
     
     tau = inv_dyn(sol.value(X[0]), sol.value(U[0])).toarray().squeeze()
     if(SIMULATOR=="mujoco"):
