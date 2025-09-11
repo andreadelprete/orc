@@ -5,6 +5,7 @@ import time
 import pinocchio as pin
 from pinocchio.visualize import (GepettoVisualizer, MeshcatVisualizer)
 from example_robot_data.robots_loader import load
+import orc.utils.plot_utils as plut
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 80
