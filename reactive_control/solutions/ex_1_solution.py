@@ -9,25 +9,21 @@ import numpy as np
 from numpy.linalg import inv
 
 def operational_motion_control(q, v, ddx_des, h, M, J, dJdq, conf):
+    use_simplified_law = False
     Minv = inv(M)
-    J_Minv = J @ Minv
-    Lambda = inv(J_Minv @ J.T)
-#    if(not np.isfinite(Lambda).all()):
-#    print('Eigenvalues J*Minv*J.T', np.linalg.eigvals(J_Minv @ J.T))
-    mu = Lambda @ (J_Minv @ h - dJdq)
-    f = Lambda @ ddx_des + mu
-    tau = J.T @ f
-    # secondary task
-    J_T_pinv = Lambda @ J_Minv
-    nv = J.shape[1]
-    NJ = np.eye(nv) - J.T @ J_T_pinv
-    tau_0 = M @ (conf.kp_j * (conf.q0 - q) - conf.kd_j*v) + h
-    tau += NJ @ tau_0
-    
-#    tau[:,i] = h + J.T @ Lambda @ ddx_des[:,i] + NJ @ tau_0
-    
-#    print("tau", tau[:,i].T)
-#    print("JT*f", (J.T @ f).T)
-#    print("dJdq", (J.T @ Lambda @ dJdq).T)
+    Lambda = inv( J @ Minv @ J.T)
+    if(use_simplified_law):
+        tau = J.T @ Lambda @ ddx_des + h
+    else:
+        mu = J.T @ Lambda @ (J @ Minv @ h - dJdq)
+        tau = J.T @ Lambda @ ddx_des + mu
+
+    # add secondary task in joint space
+    N = np.eye(v.shape[0]) - J.T @ Lambda @ J @ Minv
+    tau1 = M @ (conf.kp_j * (conf.q0 - q) - conf.kd_j * v)
+    if(use_simplified_law):
+        tau += N @ tau1 
+    else:
+        tau += N @ (tau1 + h)
 
     return tau
