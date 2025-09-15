@@ -84,7 +84,7 @@ After running the script you should be able to see a robot manipulator moving in
 Rather than running scripts from the terminal, it is more convenient to use a customized python editor. For instance, you can use the software spyder3, or Visual Studio Code. I suggest you run the IDE in your host machine rather than inside the docker image, and then use the docker image just for launching the script.
 
 If you want instead to run the script inside the IDE you should run the IDE (e.g., spyder3) from the terminal by typing:
-````
+```
 spyder3
 ```
 Once spyder3 is open, you can use "File->Open" to open a python script, and then click on the "Run file" button (green "play" shape) to execute the script. The first time that you run a script in spyder3, you must set up the configuration options. In particular, you must choose the type of console between these 3 options:
