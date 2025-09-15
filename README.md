@@ -100,7 +100,9 @@ pip install adam-robotics[casadi] meshcat
 ```
 
 # Running the software
-Inside the home folder of the default user (/home/student) of the provided docker image you can find the "orc" folder, already configured to be used. If you want to put the orc folder in a different path (e.g., inside the shared folder, so that your changes to the code are not lost every time you quit the container) you can clone it with the following command:
+Note for users using docker: If you installed the docker image, inside the home folder of the default user (`/home/student`) of the provided docker image you can find the "orc" folder, already configured to be used. However, we recommend you not to use that folder, but instead to put the orc folder in the shared folder, so that your changes to the code are not lost every time you quit the container. For doing this follow the following instructions.
+
+You can clone the orc folder with the following command:
 ```
 git clone https://github.com/andreadelprete/orc.git
 ```
@@ -127,7 +129,7 @@ python3 test_software.py
 After running the script you should be able to see a robot manipulator moving in a simulation environment (meshcat). To be able to see the viewer you must open a window on your browser at the specified URL (127.0.0.1:7000). If you are using docker, you do not need to open the browser inside the docker image, but you can open it directly on your host machine.
 
 ## Using an IDE
-Rather than running scripts from the terminal, it is more convenient to use a customized python editor. For instance, you can use the software spyder3, or Visual Studio Code. I suggest you run the IDE in your host machine rather than inside the docker image, and then use the docker image just for launching the script.
+Rather than running scripts from the terminal, it is more convenient to use a customized python editor. For instance, you can use the software Visual Studio Code, or spyder3. I suggest you run the IDE in your host machine rather than inside the docker image, and then use the docker image just for launching the script.
 
 If you want instead to run the script inside the IDE you should run the IDE (e.g., spyder3) from the terminal by typing:
 ```
