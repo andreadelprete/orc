@@ -59,7 +59,7 @@ Inside the home folder of the default user (/home/student) of the provided docke
 git clone https://github.com/andreadelprete/orc.git
 ```
 To make sure you have the most updated version of the code you should run this command (inside the orc folder) before starting to modify the code:
-````
+```
 git pull
 ```
 Trying to execute this command after you have already modified the code will not work.
