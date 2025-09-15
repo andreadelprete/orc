@@ -53,47 +53,6 @@ Some information regarding potential problems related to docker and how to solve
 https://github.com/mfocchi/lab-docker/blob/master/install_docker.md#docker_issues
 https://github.com/mfocchi/lab-docker
 
-### Running the software
-Inside the home folder of the default user (/home/student) of the provided docker image you can find the "orc" folder, already configured to be used. If you want to put the orc folder in a different path (e.g., inside the shared folder, so that your changes to the code are not lost every time you quit the container) you can clone it with the following command:
-```
-git clone https://github.com/andreadelprete/orc.git
-```
-To make sure you have the most updated version of the code you should run this command (inside the orc folder) before starting to modify the code:
-```
-git pull
-```
-Trying to execute this command after you have already modified the code will not work.
-
-You can execute a python script directly from the terminal using the following command:
-````
-python3 script_name.py
-````
-
-If you want to keep interacting with the interpreter after the execution of the script use the following command:
-````
-python3 -i script_name.py
-````
-
-You can use the script "test_software.py" to check whether your environment is working fine:
-````
-python3 test_software.py
-````
-After running the script you should be able to see a robot manipulator moving in a simulation environment (meshcat). To be able to see the viewer you must open a window on your browser at the specified URL (127.0.0.1:7000). If you are using docker, you do not need to open the browser inside the docker image, but you can open it directly on your host machine.
-
-### Using an IDE
-Rather than running scripts from the terminal, it is more convenient to use a customized python editor. For instance, you can use the software spyder3, or Visual Studio Code. I suggest you run the IDE in your host machine rather than inside the docker image, and then use the docker image just for launching the script.
-
-If you want instead to run the script inside the IDE you should run the IDE (e.g., spyder3) from the terminal by typing:
-```
-spyder3
-```
-Once spyder3 is open, you can use "File->Open" to open a python script, and then click on the "Run file" button (green "play" shape) to execute the script. The first time that you run a script in spyder3, you must set up the configuration options. In particular, you must choose the type of console between these 3 options:
-* current console
-* dedicated console
-* external system terminal
-
-Typically option 1 (which is the default choice) does not work, so you should use either option 2 or 3. I typically use option 2, but option 3 is fine as well. If you have already run a file on spyder3 and you want to change the console to use, you can do it via the menu "Run -> Configuration per file".
-Side note: depending on your OS version, option 2 and/or option 3 also allow you to check the option "Interact with the Python console after execution", which is useful to explore the value of the script variables after the execution has ended.
 
 ## Installation instructions for native MAC OS
 While on Mac OS you can still use docker, it may be worth it to go through the initial effort of setting up a native installation to gain computational speed. For instance, on my M2 mac, using docker it took about 13 s to solve a simple optimal control problem for a robot manipulator. When switching to a native installation the time went down to 2 s. 
@@ -139,3 +98,45 @@ For using the adam and the meshcat viewer you need to install them with pip:
 ```
 pip install adam-robotics[casadi] meshcat
 ```
+
+# Running the software
+Inside the home folder of the default user (/home/student) of the provided docker image you can find the "orc" folder, already configured to be used. If you want to put the orc folder in a different path (e.g., inside the shared folder, so that your changes to the code are not lost every time you quit the container) you can clone it with the following command:
+```
+git clone https://github.com/andreadelprete/orc.git
+```
+To make sure you have the most updated version of the code you should run this command (inside the orc folder) before starting to modify the code:
+```
+git pull
+```
+Trying to execute this command after you have already modified the code will not work.
+
+You can execute a python script directly from the terminal using the following command:
+````
+python3 script_name.py
+````
+
+If you want to keep interacting with the interpreter after the execution of the script use the following command:
+````
+python3 -i script_name.py
+````
+
+You can use the script "test_software.py" to check whether your environment is working fine:
+````
+python3 test_software.py
+````
+After running the script you should be able to see a robot manipulator moving in a simulation environment (meshcat). To be able to see the viewer you must open a window on your browser at the specified URL (127.0.0.1:7000). If you are using docker, you do not need to open the browser inside the docker image, but you can open it directly on your host machine.
+
+## Using an IDE
+Rather than running scripts from the terminal, it is more convenient to use a customized python editor. For instance, you can use the software spyder3, or Visual Studio Code. I suggest you run the IDE in your host machine rather than inside the docker image, and then use the docker image just for launching the script.
+
+If you want instead to run the script inside the IDE you should run the IDE (e.g., spyder3) from the terminal by typing:
+```
+spyder3
+```
+Once spyder3 is open, you can use "File->Open" to open a python script, and then click on the "Run file" button (green "play" shape) to execute the script. The first time that you run a script in spyder3, you must set up the configuration options. In particular, you must choose the type of console between these 3 options:
+* current console
+* dedicated console
+* external system terminal
+
+Typically option 1 (which is the default choice) does not work, so you should use either option 2 or 3. I typically use option 2, but option 3 is fine as well. If you have already run a file on spyder3 and you want to change the console to use, you can do it via the menu "Run -> Configuration per file".
+Side note: depending on your OS version, option 2 and/or option 3 also allow you to check the option "Interact with the Python console after execution", which is useful to explore the value of the script variables after the execution has ended.
