@@ -2,9 +2,16 @@ Material for the lab sessions of the course "Learning and Optimization for Robot
 
 # Installation Instructions
 
-Instead of using a virtual machine, the recommended way to run the code of this course is via Docker. Docker is in many ways similar to a virtual machine, but it is lighter and faster. On the downside, it is a bit more complex to use, so expect a slightly steeper learning curve in the beginning. Moreover, since the provided docker image is for an x86 architecture, if your laptop is a macbook with Apple chip (M1 or M2), the docker image is going to be quite slow.
+There are different ways to install the software:
+* native installation (recommended for maximum computational speed)
+* docker (probably the easiest)
+* nix-shell 
 
-As an alternative to docker, if you have a Linux or Mac OS, then you can decide to install all the software directly on your computer (instructions below). Actually even if you are using Windows, thanks to WSL (Windows Subsystem for Linux) you can still install all the software natively on your machine. This has the advantage of having faster code execution.
+All the detailed instructions for the different kinds of installation can be found below.
+
+The easiest way to install the dependencies is probably via Docker. Docker is in many ways similar to a virtual machine, but it is lighter and faster. On the downside, it is a bit more complex to use, so expect a slightly steeper learning curve in the beginning. Moreover, since the provided docker image is for an x86 architecture, if your laptop is a macbook with Apple chip (M1 or M2), the docker image is going to be quite slow.
+
+As an alternative to docker, if you have a Linux or Mac OS, then you can decide to install all the software directly on your computer (native installation). Even if you are using Windows, thanks to WSL (Windows Subsystem for Linux) you can still install all the software natively on your machine. This has the advantage of having faster code execution.
 
 ## Installation using Docker
 Docker should be extremely straightforward to set up for Linux users, and also for Windows users that are using the Windows Subsystem for Linux ([WSL](https://learn.microsoft.com/en-us/windows/wsl/install)). Mac users should go through a few extra steps, which are described below.
@@ -98,6 +105,16 @@ For using the adam and the meshcat viewer you need to install them with pip:
 ```
 pip install adam-robotics[casadi] meshcat
 ```
+
+## Installation instructions for nix-shell
+
+Another alternative to install the software is to use nix-shell. At [this link](https://github.com/lucaSartore/nixos-config/tree/main/shells%2Fros-olrc) you can find a flake to run a nix-shell containing all the dependencies. 
+The shell can be executed with the command
+```
+nix develop PATH_CONTAINING_FLAKE.NIX
+```
+This will create the environment from scratch (without virtualization overhead). Once you exit the shell, the local environment will remain unaffected. This has only been tested in NixOS, and not in other Linux distros or macOS.
+
 
 # Running the software
 Note for users using docker: If you installed the docker image, inside the home folder of the default user (`/home/student`) of the provided docker image you can find the "orc" folder, already configured to be used. However, we recommend you not to use that folder, but instead to put the orc folder in the shared folder, so that your changes to the code are not lost every time you quit the container. For doing this follow the following instructions.
