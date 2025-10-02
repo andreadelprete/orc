@@ -81,8 +81,8 @@ for i in range(0, N):
     tau[:,i] = tsid.formulation.getActuatorForces(sol)
     dv = tsid.formulation.getAccelerations(sol)
     
-    ee_pos[:,i] = tsid.robot.framePosition(tsid.formulation.data(), tsid.EE).translation
-    ee_vel[:,i] = tsid.robot.frameVelocityWorldOriented(tsid.formulation.data(), tsid.EE).linear
+    ee_pos[:,i] = robot_simu.framePlacement(q[:,i], tsid.EE).translation
+    ee_vel[:,i] = robot_simu.frameVelocity(q[:,i], v[:,i], tsid.EE).linear
     ee_acc[:,i] = tsid.eeTask.getAcceleration(dv)[:3]
     ee_pos_ref[:,i] = sampleEE.value()[:3]
     ee_vel_ref[:,i] = sampleEE.derivative()[:3]
