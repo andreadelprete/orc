@@ -32,10 +32,13 @@ q0 = conf.q0
 v0 = np.zeros(robot.nv)
 formulation.computeProblemData(0.0, q0, v0)
         
+CONSTRAINT_LEVEL = 0
+COST_LEVEL = 1
+
 postureTask = tsid.TaskJointPosture("task-posture", robot)
 postureTask.setKp(conf.kp_posture * np.ones(robot.nv))
 postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv))
-formulation.addMotionTask(postureTask, conf.w_posture, 1, 0.0)
+formulation.addMotionTask(postureTask, conf.w_posture, COST_LEVEL, 0.0)
 
 trajPosture = tsid.TrajectoryEuclidianConstant("traj_joint", q0)
 postureTask.setReference(trajPosture.computeNext())
@@ -44,7 +47,7 @@ v_max = conf.v_max_scaling * model.velocityLimit
 v_min = -v_max
 jointBoundsTask = tsid.TaskJointBounds("task-joint-bounds", robot, conf.dt)
 jointBoundsTask.setVelocityBounds(v_min, v_max)
-formulation.addMotionTask(jointBoundsTask, conf.w_joint_bounds, 0, 0.0)
+formulation.addMotionTask(jointBoundsTask, conf.w_joint_bounds, CONSTRAINT_LEVEL, 0.0)
 
 solver = tsid.SolverHQuadProgFast("qp solver")
 solver.resize(formulation.nVar, formulation.nEq, formulation.nIn)
