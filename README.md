@@ -70,6 +70,16 @@ pip install numpy matplotlib casadi==3.6.5 example-robot-data 'adam-robotics[cas
 ```
 The latest version of casadi would be 3.6.6, but it gave me problems, so I suggest you use 3.6.5.
 
+After that you should configure your environment variables by editing the file `.zshrc` that is located in your home folder. For instance you can open it with Visual Studio Code by using the following command:
+```
+code ~/.zshrc
+```
+Inside the file add the following line:
+```
+export PYTHONPATH=$PYTHONPATH:<path_to_folder_containing_orc>
+```
+where `<path_to_folder_containing_orc>` must be replaced with the path to the folder containing the ORC repository.
+
 
 ## Installation instructions for native Ubuntu machine
 
