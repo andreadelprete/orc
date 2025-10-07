@@ -3,7 +3,7 @@ from numpy import nan
 from numpy.linalg import norm as norm
 import matplotlib.pyplot as plt
 import orc.utils.plot_utils as plut
-from orc.utils.robot_loaders import loadUR, loadUR_urdf
+from example_robot_data.robots_loader import loader
 from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 import time
@@ -19,11 +19,9 @@ PLOT_JOINT_VEL = 1
 PLOT_JOINT_ACC = 1
 PLOT_TORQUES = 1
 
-urdf, path = loadUR_urdf()
-robot = tsid.RobotWrapper(urdf, [path], False)
-model = robot.model()
-
-r = loadUR()
+inst = loader(conf.robot_name)
+robot = tsid.RobotWrapper(inst.df_path, [inst.model_path], False)
+r = inst.robot
 robot_simu = RobotWrapper(r.model, r.collision_model, r.visual_model)
 simu = RobotSimulator(conf, robot_simu)
 
@@ -43,7 +41,7 @@ formulation.addMotionTask(postureTask, conf.w_posture, COST_LEVEL, 0.0)
 trajPosture = tsid.TrajectoryEuclidianConstant("traj_joint", q0)
 postureTask.setReference(trajPosture.computeNext())
 
-v_max = conf.v_max_scaling * model.velocityLimit
+v_max = conf.v_max_scaling * robot.model().velocityLimit
 v_min = -v_max
 jointBoundsTask = tsid.TaskJointBounds("task-joint-bounds", robot, conf.dt)
 jointBoundsTask.setVelocityBounds(v_min, v_max)
@@ -60,7 +58,7 @@ dv     = np.empty((robot.nv, N+1))*nan
 q_ref  = np.empty((robot.nq, N))*nan
 v_ref  = np.empty((robot.nv, N))*nan
 dv_ref = np.empty((robot.nv, N))*nan
-dv_des = np.empty((robot.nv, N))*nan
+dv_des = np.empty((robot.nv, N))*nan        # dv_des = dv_ref + kp*(q_ref-q) + kd*(v_ref-v)
 samplePosture = trajPosture.computeNext()
 
 amp                  = conf.amp        # amplitude
@@ -100,7 +98,7 @@ for i in range(0, N):
         print("\ttracking err %s: %.3f"%(postureTask.name.ljust(20,'.'), norm(postureTask.position_error, 2)))
 
     # send torque commands to simulator
-    simu.simulate(tau[:,i], dt)
+    simu.simulate(tau[:,i], dt, ndt=5)
     q[:,i+1] = simu.q
     v[:,i+1] = simu.v
     t += dt

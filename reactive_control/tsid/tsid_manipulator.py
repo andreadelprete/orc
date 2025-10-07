@@ -2,7 +2,7 @@ import pinocchio as se3
 import tsid
 import numpy as np
 import os
-from orc.utils.robot_loaders import loadUR, loadUR_urdf
+from example_robot_data.robots_loader import loader
 import time
 import subprocess
 
@@ -17,8 +17,8 @@ class TsidManipulator:
     
     def __init__(self, conf, viewer=True):
         self.conf = conf
-        urdf, path = loadUR_urdf()
-        self.robot = tsid.RobotWrapper(urdf, [path], False)
+        inst = loader(conf.robot_name)
+        self.robot = tsid.RobotWrapper(inst.df_path, [inst.model_path], False)
         robot = self.robot
         self.model = model = robot.model()
         try:
@@ -38,6 +38,7 @@ class TsidManipulator:
         postureTask.setKd(2.0 * np.sqrt(conf.kp_posture) * np.ones(robot.nv))
         formulation.addMotionTask(postureTask, conf.w_posture, 1, 0.0)
         
+        # SE(3)
         self.eeTask = tsid.TaskSE3Equality("task-ee", self.robot, self.conf.ee_frame_name)
         self.eeTask.setKp(self.conf.kp_ee * np.ones(6))
         self.eeTask.setKd(2.0 * np.sqrt(self.conf.kp_ee) * np.ones(6))

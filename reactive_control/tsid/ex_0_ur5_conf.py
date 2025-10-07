@@ -9,8 +9,9 @@ import numpy as np
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
-N_SIMULATION = 2000             # number of time steps simulated
-dt = 0.002                      # controller time step
+robot_name = "ur10"
+N_SIMULATION = 500             # number of time steps simulated
+dt = 0.01                      # controller time step
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
 
 # REFERENCE SINUSOIDAL TRAJECTORY
@@ -29,7 +30,7 @@ tau_max_scaling = 0.4           # scaling factor of torque bounds
 v_max_scaling = 0.4             # scaling factor of velocity bounds
 
 PRINT_N = 500                   # print every PRINT_N time steps
-DISPLAY_N = 20                  # update robot configuration in viewer every DISPLAY_N time steps
+DISPLAY_N = 4                  # update robot configuration in viewer every DISPLAY_N time steps
 DISPLAY_T = DISPLAY_N*dt
 randomize_robot_model = 0
 use_viewer = True
