@@ -173,7 +173,10 @@ class RobotSimulator:
                 # webbrowser.open(self.viz.viewer.url())
 
             self.robot.setVisualizer(VISUALIZER()) 
-            self.robot.initViewer(loadModel=True, open=True)
+            try:
+                self.robot.initViewer(loadModel=True, open=conf.open_viewer)
+            except:
+                self.robot.initViewer(loadModel=True, open=True)
             self.robot.displayCollisions(False)
             self.robot.displayVisuals(True)
             self.robot.display(self.q)

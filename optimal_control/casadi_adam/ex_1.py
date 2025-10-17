@@ -1,3 +1,8 @@
+'''
+SINGLE SHOOTING FORMULATION
+JOINT SPACE TASK
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 from adam.casadi.computations import KinDynComputations

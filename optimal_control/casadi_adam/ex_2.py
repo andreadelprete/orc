@@ -1,3 +1,8 @@
+'''
+COLLOCATION FORMULATION
+JOINT SPACE TASK
+MODEL PREDICTIVE CONTROL
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 from adam.casadi.computations import KinDynComputations

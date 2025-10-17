@@ -20,8 +20,8 @@ nx = 2*nq # size of the state variable
 kinDyn = KinDynComputations(robot.urdf, joints_name_list)
 
 
-USE_MUJOCO_SIMULATOR = 0
-DO_PLOTS = 1
+USE_MUJOCO_SIMULATOR = 1
+DO_PLOTS = 0
 dt = 0.01 # time step
 dt_sim = 0.002
 N = 60  # time horizon

@@ -19,6 +19,7 @@ tau_coulomb_max = 0*np.ones(nq)   # expressed as percentage of torque max
 randomize_robot_model = 0
 use_viewer = True
 which_viewer = 'meshcat'
+open_viewer = False
 simulate_real_time = 1          # flag specifying whether simulation should be real time or as fast as possible
 show_floor = False
 DISPLAY_T = 0.02              # update robot configuration in viwewer every DISPLAY_T seconds

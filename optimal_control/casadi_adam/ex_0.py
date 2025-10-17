@@ -1,3 +1,7 @@
+'''
+COLLOCATION FORMULATION
+JOINT SPACE TASK
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 from adam.casadi.computations import KinDynComputations
@@ -66,9 +70,10 @@ ubx = robot.model.upperPositionLimit.tolist() + robot.model.velocityLimit.tolist
 tau_min = (-robot.model.effortLimit).tolist()
 tau_max = robot.model.effortLimit.tolist()
 
-# create the decision variables, the cost and the constraints
+# create the decision variables using opti.variable(size)
+# minimize a cost using opti.minimize(cost)
+# create constraints using opti.subject_to(...)
 ...
-# opti.minimize(cost)
 
 print("Create the optimization problem")
 opts = {
