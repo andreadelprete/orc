@@ -20,7 +20,7 @@ class Display():
         if(which_viewer=='meshcat'):
             from pinocchio.visualize import MeshcatVisualizer
             self.viewer = MeshcatVisualizer()
-            self.viewer.initViewer()
+            self.viewer.initViewer(open=True)
         elif(which_viewer=="gepetto"):
             # from pinocchio.visualize import GepettoVisualizer
             # VISUALIZER = GepettoVisualizer
