@@ -64,11 +64,10 @@ https://github.com/mfocchi/lab-docker
 ## Installation instructions for native MAC OS
 While on Mac OS you can still use docker, it may be worth it to go through the initial effort of setting up a native installation to gain computational speed. For instance, on my M2 mac, using docker it took about 13 s to solve a simple optimal control problem for a robot manipulator. When switching to a native installation the time went down to 2 s. 
 
-Use pip to install these packages:
+Use pip to install these packages (the specified versions are compatible with python 3.9):
 ```
-pip install numpy matplotlib casadi==3.6.5 example-robot-data 'adam-robotics[casadi]' tsid meshcat quadprog
+pip install numpy matplotlib casadi==3.7.2 example-robot-data example-robot-data-loaders 'adam-robotics[casadi]==0.3.0' tsid meshcat quadprog
 ```
-The latest version of casadi would be 3.6.6, but it gave me problems, so I suggest you use 3.6.5.
 
 After that you should configure your environment variables by editing the file `.zshrc` that is located in your home folder. For instance you can open it with Visual Studio Code by using the following command:
 ```
