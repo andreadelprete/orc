@@ -11,7 +11,7 @@ from numpy.random import randint, uniform
 def q_learning(env, gamma, Q, nEpisodes, maxEpisodeLength, 
                learningRate, exploration_prob, exploration_decreasing_decay,
                min_exploration_prob, compute_V_pi_from_Q, plot=False, nprint=1000):
-    ''' Q learning algorithm:
+    ''' Q-learning algorithm:
         env: environment 
         gamma: discount factor
         Q: initial guess for Q table
@@ -36,7 +36,7 @@ def q_learning(env, gamma, Q, nEpisodes, maxEpisodeLength,
     # Compute reference Q-value at state x
     # Update Q-Table with the given learningRate
     # keep track of the cost to go
-    # update the exploration probability with an exponential decay: eps = exp(-decay*episode)
+    # update epsilon with an exponential decay: eps = exp(-decay*episode)
     
     # use the function compute_V_pi_from_Q(env, Q) to compute and plot V and pi
     
