@@ -46,9 +46,9 @@ class Pendulum:
     an object Visual (see above).    
     '''
 
-    def __init__(self, nbJoint=1, noise_stddev=0.0, which_viewer='meshcat'):
+    def __init__(self, nbJoint=1, noise_stddev=0.0, which_viewer='meshcat', open_viewer=True):
         '''Create a Pinocchio model of a N-pendulum, with N the argument <nbJoint>.'''
-        self.viewer     = Display(which_viewer)
+        self.viewer     = Display(which_viewer, open_viewer=open_viewer)
         self.visuals    = []
         self.model      = pin.Model()
         self.createPendulum(nbJoint)

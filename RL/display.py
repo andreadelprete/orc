@@ -10,7 +10,7 @@ class Display():
     Class Display: Example of a class implementing a client for the viewer. The main
     method of the class is 'place', that sets the position/rotation of a 3D visual object in a scene.
     '''
-    def __init__(self, which_viewer='meshcat', windowName = "pinocchio" ):
+    def __init__(self, which_viewer='meshcat', windowName = "pinocchio", open_viewer=True ):
         '''
         This function connects with the viewer and opens a window with the given name.
         If the window already exists, it is kept in the current state. Otherwise, the newly-created
@@ -20,7 +20,7 @@ class Display():
         if(which_viewer=='meshcat'):
             from pinocchio.visualize import MeshcatVisualizer
             self.viewer = MeshcatVisualizer()
-            self.viewer.initViewer(open=True)
+            self.viewer.initViewer(open=open_viewer)
         elif(which_viewer=="gepetto"):
             # from pinocchio.visualize import GepettoVisualizer
             # VISUALIZER = GepettoVisualizer

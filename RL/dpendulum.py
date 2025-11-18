@@ -10,8 +10,9 @@ class DPendulum:
         Guassian noise can be added in the dynamics. 
         Cost is -1 if the goal state has been reached, zero otherwise.
     '''
-    def __init__(self, nq=51, nv=21, nu=11, vMax=5, uMax=5, dt=0.2, ndt=1, noise_stddev=0, which_viewer='meshcat'):
-        self.pendulum = Pendulum(1,noise_stddev, which_viewer)
+    def __init__(self, nq=51, nv=21, nu=11, vMax=5, uMax=5, dt=0.2, ndt=1, noise_stddev=0, 
+                 which_viewer='meshcat', open_viewer=True):
+        self.pendulum = Pendulum(1,noise_stddev, which_viewer, open_viewer)
         self.pendulum.DT  = dt
         self.pendulum.NDT = ndt
         self.nq = nq        # Number of discretization steps for joint angle
