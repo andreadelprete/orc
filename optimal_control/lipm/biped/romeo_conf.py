@@ -14,8 +14,9 @@ from example_robot_data.robots_loader import getModelPath
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
-DATA_FILE_LIPM = "romeo_walking_traj_lipm.npz"
-DATA_FILE_TSID = "romeo_walking_traj_tsid.npz"
+dir_path = os.path.dirname(os.path.realpath(__file__))
+DATA_FILE_LIPM = dir_path+"/romeo_walking_traj_lipm.npz"
+DATA_FILE_TSID = dir_path+"/romeo_walking_traj_tsid.npz"
 
 # robot parameters
 # ----------------------------------------------
