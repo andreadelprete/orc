@@ -12,6 +12,8 @@ from math import sqrt
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
+robot_name = "ur10"
+
 q0 = np.array([ 0. , -1.0,  0.7,  0. ,  0. ,  0. ])  # initial configuration
 T_SIMULATION = 4             # simulation time
 dt = 0.001                   # controller time step

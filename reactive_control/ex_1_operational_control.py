@@ -4,7 +4,8 @@ from numpy.linalg import inv
 import matplotlib.pyplot as plt
 import orc.utils.plot_utils as plut
 import time
-from orc.utils.robot_loaders import loadUR
+# from orc.utils.robot_loaders import loadUR
+from example_robot_data.robots_loader import loader
 from orc.utils.robot_wrapper import RobotWrapper
 from orc.utils.robot_simulator import RobotSimulator
 import ex_1_conf as conf
@@ -20,7 +21,8 @@ PLOT_JOINT_ACC = 0
 PLOT_TORQUES = 0
 PLOT_EE_POS = 1
 
-r = loadUR()
+# r = loadUR()
+r = loader(conf.robot_name).robot
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
 simu = RobotSimulator(conf, robot)
 

@@ -12,6 +12,7 @@ from math import sqrt
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 LINE_WIDTH = 60
 
+robot_name = "ur10"
 T_SIMULATION = 5             # number of time steps simulated
 dt = 0.01                      # controller time step
 ndt = 10
